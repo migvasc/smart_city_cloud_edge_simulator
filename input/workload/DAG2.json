@@ -1,0 +1,178 @@
+{
+  "name": "req2",
+  "schemaVersion": "1.0",
+  "tasks": [
+      {
+          "name": "a_0",
+          "flopsAmount": 13.5e9,
+          "machine": "bus_stop_10",
+          "parents": []
+      },
+      {
+          "name": "b_0",
+          "flopsAmount": 13.5e9,
+          "machine": "bus_stop_10",
+          "parents": []
+      },
+      {
+          "name": "c_0",
+          "flopsAmount": 13.5e9,
+          "machine": "bus_stop_2",
+          "parents": []
+      },
+      {
+          "name": "d_0",
+          "flopsAmount": 13.5e9,
+          "machine": "bus_stop_5",
+          "parents": []
+      },
+      {
+          "name": "e_0",
+          "flopsAmount": 13.5e9,
+          "machine": "bus_stop_5",
+          "parents": []
+      },
+      {
+          "name": "f_0",
+          "flopsAmount": 13.5e9,
+          "machine": "bus_stop_10",
+          "parents": []
+      },
+      {
+          "name": "g_0",
+          "flopsAmount": 13.5e9,
+          "machine": "bus_stop_10",
+          "parents": []
+      },
+      {
+          "name": "h_0",
+          "flopsAmount": 13.5e9,
+          "machine": "bus_stop_5",
+          "parents": []
+      },
+      {
+          "name": "i_0",
+          "flopsAmount": 13.5e9,
+          "machine": "bus_stop_5",
+          "parents": []
+      },
+      {
+          "name": "j_0",
+          "flopsAmount": 13.5e9,
+          "machine": "bus_stop_5",
+          "parents": []
+      },
+      {
+          "name": "k_0",
+          "flopsAmount": 13.5e9,
+          "machine": "bus_stop_10",
+          "parents": []
+      },
+      {
+          "name": "f_1",
+          "flopsAmount": 13.5e9,
+          "machine": "bus_stop_10",
+          "parents": [
+              "a_0",
+              "b_0",
+              "c_0"
+          ]
+      },
+      {
+          "name": "l_1",
+          "flopsAmount": 13.5e9,
+          "machine": "bus_stop_10",
+          "parents": [
+              "d_0",
+              "e_0",
+              "c_0"
+          ]
+      },
+      {
+          "name": "m_1",
+          "flopsAmount": 13.5e9,
+          "machine": "bus_stop_10",
+          "parents": [
+              "e_0"
+          ]
+      },
+      {
+          "name": "n_1",
+          "flopsAmount": 13.5e9,
+          "machine": "bus_stop_5",
+          "parents": [
+              "e_0"
+          ]
+      },
+      {
+          "name": "b_1",
+          "flopsAmount": 13.5e9,
+          "machine": "bus_stop_10",
+          "parents": [
+              "f_0",
+              "g_0",
+              "c_0"
+          ]
+      },
+      {
+          "name": "o_1",
+          "flopsAmount": 13.5e9,
+          "machine": "bus_stop_5",
+          "parents": [
+              "d_0",
+              "h_0",
+              "i_0",
+              "j_0"
+          ]
+      },
+      {
+          "name": "k_1",
+          "flopsAmount": 13.5e9,
+          "machine": "bus_stop_10",
+          "parents": [
+              "d_0",
+              "k_0"
+          ]
+      },
+      {
+          "name": "e_2",
+          "flopsAmount": 13.5e9,
+          "machine": "bus_stop_5",
+          "parents": [
+              "l_1",
+              "m_1",
+              "n_1"
+          ]
+      },
+      {
+          "name": "c_2",
+          "flopsAmount": 13.5e9,
+          "machine": "bus_stop_2",
+          "parents": [
+              "f_1",
+              "l_1",
+              "b_1"
+          ]
+      },
+      {
+          "name": "d_2",
+          "flopsAmount": 13.5e9,
+          "machine": "bus_stop_5",
+          "parents": [
+              "l_1",
+              "o_1",
+              "k_1"
+          ]
+      },
+      {
+          "name": "l_3",
+          "flopsAmount": 13.5e9,
+          "machine": "bus_stop_10",
+          "parents": [
+              "c_2",
+              "d_2",
+              "e_2"
+          ]
+      }
+  ]
+}

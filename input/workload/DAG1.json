@@ -1,0 +1,27 @@
+{
+  "name": "req1",
+  "schemaVersion": "1.0",
+  "tasks": [
+      {
+      "name": "ac15",
+      "parents": [],
+      "flopsAmount": 13.5e9,
+      "machine":"bus_stop_10"
+
+    },      
+    {
+      "name": "ac1",
+      "parents": ["ac15"],
+      "flopsAmount": 13.5e9,
+      "machine":"bus_stop_5"
+
+    } ,
+    {
+      "name": "ac2",
+      "parents": ["ac1"],
+      "flopsAmount": 13.5e9,
+      "machine":"bus_stop_1"
+
+    }      
+  ]
+}

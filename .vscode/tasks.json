@@ -1,0 +1,70 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "shell",
+			"label": "exec make",
+			"command": "make",
+			"args": [],
+			"options": {
+				"cwd": "${workspaceFolder}/build/"
+			},
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			}
+		},
+		{
+			"type": "shell",
+			"label": "clean",
+			"command": "make clean",
+			"args": [],
+			"options": {
+				"cwd": "${workspaceFolder}/build/"
+			},
+			"problemMatcher": [
+				"$gcc"
+			]
+		},
+		{
+			"type": "shell",
+			"label": "exec cmake",
+			"command": " cmake ..  ",
+			"args": [],
+			"options": {
+				"cwd": "${workspaceFolder}/build/"
+			},
+			"problemMatcher": [
+				"$gcc"
+			]
+		},
+		{
+			"type": "shell",
+			"label": "exec rm",
+			"command": "rm",
+			"args": [
+				"-rf",
+				"*"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/build/"
+			},
+			"problemMatcher": [
+				"$gcc"
+			]
+		},
+		{
+			"label": "Full Make",
+			"dependsOrder": "sequence",
+			"dependsOn": [
+				"exec rm",
+				"exec cmake",
+				"exec make"
+			],
+			"problemMatcher": []
+		}
+	]
+}

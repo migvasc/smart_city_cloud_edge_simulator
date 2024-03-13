@@ -1,0 +1,13 @@
+<?xml version='1.0'?>
+<!DOCTYPE platform SYSTEM "https://simgrid.org/simgrid.dtd">
+<platform version="4.1">
+  <actor host="bus_stop_0" function="dagmanager">  
+    <!-- Parameter to chose the scheduling strategy for the VMs.
+    0: Baseline
+    1: BestFit
+  -->
+  <argument value="1"/>	
+  </actor>
+  <!-- The master actor (with some arguments) -->
+  <actor host="bus_stop_0" function="dagdispatcher"/>
+</platform>
