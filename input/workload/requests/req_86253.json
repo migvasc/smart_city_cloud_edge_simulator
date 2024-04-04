@@ -1,0 +1,75 @@
+{
+    "name": "req-86253",
+    "schemaVersion": "1.0",
+    "tasks": [
+        {
+            "name": "req-86253-581942025_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_4",
+            "parents": []
+        },
+        {
+            "name": "req-86253-255191427_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_4",
+            "parents": []
+        },
+        {
+            "name": "req-86253-581942058_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_4",
+            "parents": []
+        },
+        {
+            "name": "req-86253-583490272_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_4",
+            "parents": []
+        },
+        {
+            "name": "req-86253-581942026_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_4",
+            "parents": [
+                "req-86253-581942025_0",
+                "req-86253-255191427_0",
+                "req-86253-581942058_0"
+            ]
+        },
+        {
+            "name": "req-86253-255191439_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_4",
+            "parents": [
+                "req-86253-255191427_0",
+                "req-86253-583490272_0"
+            ]
+        },
+        {
+            "name": "req-86253-255191427_2",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_4",
+            "parents": [
+                "req-86253-581942026_1",
+                "req-86253-255191439_1"
+            ]
+        },
+        {
+            "name": "req-86253-583490272_2",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_4",
+            "parents": [
+                "req-86253-255191439_1"
+            ]
+        },
+        {
+            "name": "req-86253-255191439_3",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_4",
+            "parents": [
+                "req-86253-255191427_2",
+                "req-86253-583490272_2"
+            ]
+        }
+    ]
+}

@@ -1,0 +1,67 @@
+{
+    "name": "req-1798",
+    "schemaVersion": "1.0",
+    "tasks": [
+        {
+            "name": "req-1798-255190788_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_8",
+            "parents": []
+        },
+        {
+            "name": "req-1798-2923311197_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_7",
+            "parents": []
+        },
+        {
+            "name": "req-1798-10915667297_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_15",
+            "parents": [
+                "req-1798-255190788_0",
+                "req-1798-2923311197_0"
+            ]
+        },
+        {
+            "name": "req-1798-255190801_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_11",
+            "parents": [
+                "req-1798-2923311197_0"
+            ]
+        },
+        {
+            "name": "req-1798-2923311196_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_8",
+            "parents": [
+                "req-1798-2923311197_0"
+            ]
+        },
+        {
+            "name": "req-1798-2923311197_2",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_7",
+            "parents": [
+                "req-1798-10915667297_1",
+                "req-1798-255190801_1",
+                "req-1798-2923311196_1"
+            ]
+        },
+        {
+            "name": "req-1798-255190801_3",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_11",
+            "parents": [
+                "req-1798-2923311197_2"
+            ]
+        }
+    ],
+    "path": [
+        255190788,
+        10915667297,
+        2923311197,
+        255190801
+    ]
+}

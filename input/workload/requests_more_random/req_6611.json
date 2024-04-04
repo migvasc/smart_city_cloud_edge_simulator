@@ -1,0 +1,88 @@
+{
+    "name": "req-6611",
+    "schemaVersion": "1.0",
+    "tasks": [
+        {
+            "name": "req-6611-255596109_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_0",
+            "parents": []
+        },
+        {
+            "name": "req-6611-2570830459_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_14",
+            "parents": []
+        },
+        {
+            "name": "req-6611-11383382298_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_16",
+            "parents": []
+        },
+        {
+            "name": "req-6611-255596094_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_0",
+            "parents": []
+        },
+        {
+            "name": "req-6611-255596112_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_0",
+            "parents": []
+        },
+        {
+            "name": "req-6611-255596112_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_0",
+            "parents": [
+                "req-6611-255596109_0",
+                "req-6611-2570830459_0",
+                "req-6611-11383382298_0"
+            ]
+        },
+        {
+            "name": "req-6611-2570830451_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_0",
+            "parents": [
+                "req-6611-11383382298_0"
+            ]
+        },
+        {
+            "name": "req-6611-2570830459_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_14",
+            "parents": [
+                "req-6611-255596094_0",
+                "req-6611-255596112_0",
+                "req-6611-11383382298_0"
+            ]
+        },
+        {
+            "name": "req-6611-11383382298_2",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_16",
+            "parents": [
+                "req-6611-255596112_1",
+                "req-6611-2570830451_1",
+                "req-6611-2570830459_1"
+            ]
+        },
+        {
+            "name": "req-6611-2570830451_3",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_0",
+            "parents": [
+                "req-6611-11383382298_2"
+            ]
+        }
+    ],
+    "path": [
+        255596109,
+        255596112,
+        11383382298,
+        2570830451
+    ]
+}

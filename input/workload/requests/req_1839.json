@@ -1,0 +1,81 @@
+{
+    "name": "req-1839",
+    "schemaVersion": "1.0",
+    "tasks": [
+        {
+            "name": "req-1839-581942025_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_4",
+            "parents": []
+        },
+        {
+            "name": "req-1839-255191427_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_4",
+            "parents": []
+        },
+        {
+            "name": "req-1839-581942058_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_4",
+            "parents": []
+        },
+        {
+            "name": "req-1839-583490272_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_4",
+            "parents": []
+        },
+        {
+            "name": "req-1839-581942026_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_4",
+            "parents": [
+                "req-1839-581942025_0",
+                "req-1839-255191427_0",
+                "req-1839-581942058_0"
+            ]
+        },
+        {
+            "name": "req-1839-255191439_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_4",
+            "parents": [
+                "req-1839-255191427_0",
+                "req-1839-583490272_0"
+            ]
+        },
+        {
+            "name": "req-1839-255191427_2",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_4",
+            "parents": [
+                "req-1839-581942026_1",
+                "req-1839-255191439_1"
+            ]
+        },
+        {
+            "name": "req-1839-583490272_2",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_4",
+            "parents": [
+                "req-1839-255191439_1"
+            ]
+        },
+        {
+            "name": "req-1839-255191439_3",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_4",
+            "parents": [
+                "req-1839-255191427_2",
+                "req-1839-583490272_2"
+            ]
+        }
+    ],
+    "path": [
+        581942025,
+        581942026,
+        255191427,
+        255191439
+    ]
+}

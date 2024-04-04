@@ -1,0 +1,74 @@
+{
+    "name": "req-15191",
+    "schemaVersion": "1.0",
+    "tasks": [
+        {
+            "name": "req-15191-10915667367_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_1",
+            "parents": []
+        },
+        {
+            "name": "req-15191-255596808_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_13",
+            "parents": []
+        },
+        {
+            "name": "req-15191-1432574946_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_0",
+            "parents": []
+        },
+        {
+            "name": "req-15191-2569086944_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_7",
+            "parents": [
+                "req-15191-10915667367_0",
+                "req-15191-255596808_0"
+            ]
+        },
+        {
+            "name": "req-15191-255596789_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_12",
+            "parents": [
+                "req-15191-255596808_0"
+            ]
+        },
+        {
+            "name": "req-15191-12146777_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_5",
+            "parents": [
+                "req-15191-255596808_0",
+                "req-15191-1432574946_0"
+            ]
+        },
+        {
+            "name": "req-15191-255596808_2",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_13",
+            "parents": [
+                "req-15191-2569086944_1",
+                "req-15191-12146777_1",
+                "req-15191-255596789_1"
+            ]
+        },
+        {
+            "name": "req-15191-255596789_3",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_12",
+            "parents": [
+                "req-15191-255596808_2"
+            ]
+        }
+    ],
+    "path": [
+        10915667367,
+        2569086944,
+        255596808,
+        255596789
+    ]
+}

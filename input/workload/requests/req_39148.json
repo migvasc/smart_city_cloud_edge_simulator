@@ -1,0 +1,139 @@
+{
+    "name": "req-39148",
+    "schemaVersion": "1.0",
+    "tasks": [
+        {
+            "name": "req-39148-581942026_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_4",
+            "parents": []
+        },
+        {
+            "name": "req-39148-581942052_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_4",
+            "parents": []
+        },
+        {
+            "name": "req-39148-1451034425_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_14",
+            "parents": []
+        },
+        {
+            "name": "req-39148-255191448_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_14",
+            "parents": []
+        },
+        {
+            "name": "req-39148-255191459_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_14",
+            "parents": []
+        },
+        {
+            "name": "req-39148-1451034444_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_12",
+            "parents": []
+        },
+        {
+            "name": "req-39148-10915667312_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_15",
+            "parents": []
+        },
+        {
+            "name": "req-39148-1480037117_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_11",
+            "parents": []
+        },
+        {
+            "name": "req-39148-581942058_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_4",
+            "parents": [
+                "req-39148-581942026_0",
+                "req-39148-581942052_0",
+                "req-39148-1451034425_0"
+            ]
+        },
+        {
+            "name": "req-39148-1451034453_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_4",
+            "parents": [
+                "req-39148-1451034425_0"
+            ]
+        },
+        {
+            "name": "req-39148-255191437_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_14",
+            "parents": [
+                "req-39148-255191448_0",
+                "req-39148-255191459_0",
+                "req-39148-1451034425_0"
+            ]
+        },
+        {
+            "name": "req-39148-255191472_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_14",
+            "parents": [
+                "req-39148-255191448_0",
+                "req-39148-1451034444_0",
+                "req-39148-10915667312_0"
+            ]
+        },
+        {
+            "name": "req-39148-1480037114_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_11",
+            "parents": [
+                "req-39148-255191448_0",
+                "req-39148-1480037117_0"
+            ]
+        },
+        {
+            "name": "req-39148-1451034425_2",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_14",
+            "parents": [
+                "req-39148-581942058_1",
+                "req-39148-255191437_1",
+                "req-39148-1451034453_1"
+            ]
+        },
+        {
+            "name": "req-39148-255191459_2",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_14",
+            "parents": [
+                "req-39148-255191437_1"
+            ]
+        },
+        {
+            "name": "req-39148-255191448_2",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_14",
+            "parents": [
+                "req-39148-255191437_1",
+                "req-39148-255191472_1",
+                "req-39148-1480037114_1"
+            ]
+        },
+        {
+            "name": "req-39148-255191437_3",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_14",
+            "parents": [
+                "req-39148-1451034425_2",
+                "req-39148-255191448_2",
+                "req-39148-255191459_2"
+            ]
+        }
+    ]
+}

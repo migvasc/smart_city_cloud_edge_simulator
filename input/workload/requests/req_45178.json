@@ -1,0 +1,75 @@
+{
+    "name": "req-45178",
+    "schemaVersion": "1.0",
+    "tasks": [
+        {
+            "name": "req-45178-3574495212_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_12",
+            "parents": []
+        },
+        {
+            "name": "req-45178-12146792_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_6",
+            "parents": []
+        },
+        {
+            "name": "req-45178-2569086678_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_13",
+            "parents": []
+        },
+        {
+            "name": "req-45178-12146794_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_6",
+            "parents": []
+        },
+        {
+            "name": "req-45178-255595238_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_6",
+            "parents": [
+                "req-45178-12146792_0"
+            ]
+        },
+        {
+            "name": "req-45178-255595328_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_6",
+            "parents": [
+                "req-45178-3574495212_0",
+                "req-45178-12146792_0",
+                "req-45178-2569086678_0"
+            ]
+        },
+        {
+            "name": "req-45178-1480037132_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_11",
+            "parents": [
+                "req-45178-12146792_0",
+                "req-45178-12146794_0"
+            ]
+        },
+        {
+            "name": "req-45178-12146792_2",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_6",
+            "parents": [
+                "req-45178-255595328_1",
+                "req-45178-255595238_1",
+                "req-45178-1480037132_1"
+            ]
+        },
+        {
+            "name": "req-45178-255595238_3",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_6",
+            "parents": [
+                "req-45178-12146792_2"
+            ]
+        }
+    ]
+}

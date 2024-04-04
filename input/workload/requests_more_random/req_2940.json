@@ -1,0 +1,81 @@
+{
+    "name": "req-2940",
+    "schemaVersion": "1.0",
+    "tasks": [
+        {
+            "name": "req-2940-1451034425_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_14",
+            "parents": []
+        },
+        {
+            "name": "req-2940-581942026_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_4",
+            "parents": []
+        },
+        {
+            "name": "req-2940-581942052_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_4",
+            "parents": []
+        },
+        {
+            "name": "req-2940-255191439_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_4",
+            "parents": []
+        },
+        {
+            "name": "req-2940-581942025_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_4",
+            "parents": [
+                "req-2940-581942026_0"
+            ]
+        },
+        {
+            "name": "req-2940-581942058_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_4",
+            "parents": [
+                "req-2940-1451034425_0",
+                "req-2940-581942026_0",
+                "req-2940-581942052_0"
+            ]
+        },
+        {
+            "name": "req-2940-255191427_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_4",
+            "parents": [
+                "req-2940-255191439_0",
+                "req-2940-581942026_0"
+            ]
+        },
+        {
+            "name": "req-2940-581942026_2",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_4",
+            "parents": [
+                "req-2940-581942058_1",
+                "req-2940-255191427_1",
+                "req-2940-581942025_1"
+            ]
+        },
+        {
+            "name": "req-2940-581942025_3",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_4",
+            "parents": [
+                "req-2940-581942026_2"
+            ]
+        }
+    ],
+    "path": [
+        1451034425,
+        581942058,
+        581942026,
+        581942025
+    ]
+}

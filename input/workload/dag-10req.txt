@@ -1,0 +1,11 @@
+dagdispatcher send_DAG 0 input/workload/req_0.json
+dagdispatcher send_DAG 0 input/workload/req_1.json
+dagdispatcher send_DAG 0 input/workload/req_2.json
+dagdispatcher send_DAG 0 input/workload/req_3.json
+dagdispatcher send_DAG 0 input/workload/req_4.json
+dagdispatcher send_DAG 0 input/workload/req_5.json
+dagdispatcher send_DAG 0 input/workload/req_6.json
+dagdispatcher send_DAG 0 input/workload/req_7.json
+dagdispatcher send_DAG 0 input/workload/req_8.json
+dagdispatcher send_DAG 0 input/workload/req_9.json
+dagdispatcher stop 200

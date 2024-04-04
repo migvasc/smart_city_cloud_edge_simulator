@@ -1,0 +1,143 @@
+{
+    "name": "req-6701",
+    "schemaVersion": "1.0",
+    "tasks": [
+        {
+            "name": "req-6701-255596017_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_13",
+            "parents": []
+        },
+        {
+            "name": "req-6701-2923178604_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_7",
+            "parents": []
+        },
+        {
+            "name": "req-6701-10915667367_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_1",
+            "parents": []
+        },
+        {
+            "name": "req-6701-12146784_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_9",
+            "parents": []
+        },
+        {
+            "name": "req-6701-255595921_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_13",
+            "parents": []
+        },
+        {
+            "name": "req-6701-2569086944_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_7",
+            "parents": []
+        },
+        {
+            "name": "req-6701-255596808_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_13",
+            "parents": []
+        },
+        {
+            "name": "req-6701-1432574946_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_0",
+            "parents": []
+        },
+        {
+            "name": "req-6701-1432574832_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_13",
+            "parents": [
+                "req-6701-255596017_0",
+                "req-6701-2923178604_0",
+                "req-6701-10915667367_0"
+            ]
+        },
+        {
+            "name": "req-6701-12146782_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_13",
+            "parents": [
+                "req-6701-12146784_0",
+                "req-6701-255595921_0"
+            ]
+        },
+        {
+            "name": "req-6701-255595921_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_13",
+            "parents": [
+                "req-6701-2569086944_0",
+                "req-6701-10915667367_0"
+            ]
+        },
+        {
+            "name": "req-6701-255596789_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_12",
+            "parents": [
+                "req-6701-255596808_0"
+            ]
+        },
+        {
+            "name": "req-6701-2569086944_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_7",
+            "parents": [
+                "req-6701-255596808_0",
+                "req-6701-10915667367_0"
+            ]
+        },
+        {
+            "name": "req-6701-12146777_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_5",
+            "parents": [
+                "req-6701-255596808_0",
+                "req-6701-1432574946_0"
+            ]
+        },
+        {
+            "name": "req-6701-10915667367_2",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_1",
+            "parents": [
+                "req-6701-1432574832_1",
+                "req-6701-12146782_1",
+                "req-6701-255595921_1"
+            ]
+        },
+        {
+            "name": "req-6701-255596808_2",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_13",
+            "parents": [
+                "req-6701-12146777_1",
+                "req-6701-255596789_1",
+                "req-6701-2569086944_1"
+            ]
+        },
+        {
+            "name": "req-6701-2569086944_3",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_7",
+            "parents": [
+                "req-6701-10915667367_2",
+                "req-6701-255596808_2"
+            ]
+        }
+    ],
+    "path": [
+        255596017,
+        1432574832,
+        10915667367,
+        2569086944
+    ]
+}

@@ -1,8 +1,11 @@
 #include "PVPanel.hpp"
 
  PVPanel::PVPanel() = default;
- PVPanel::PVPanel(std::string fileName){		
-   
+ PVPanel::PVPanel(std::string fileName, double efficiency, double area)
+ {		
+    this->efficiency = efficiency;
+    this->area = area;
+
     inputFile = fileName;        
     time = 0;                  
     next_time=-1;  
@@ -12,7 +15,13 @@
 
 } 
 
+ 
 
+/*
+Loads the CSV file containing the solar irradiation data in the following format:
+instante_of_time,solar_irradiation
+The instante_of_time is in the unit of seconds, and solar_irradiation in Watt-hour.
+*/
 void PVPanel::load_CSV_file(){
     ifstream input = ifstream(inputFile);
     try {
@@ -20,7 +29,7 @@ void PVPanel::load_CSV_file(){
         while(getline(input,nextLine))
         {                                    
             std::vector<std::string> nextInput;				
-            boost::algorithm::split(nextInput, nextLine, boost::is_any_of(";"));
+            boost::algorithm::split(nextInput, nextLine, boost::is_any_of(","));
             green_power_production.push_back(make_pair(atof(nextInput[0].c_str()),atof(nextInput[1].c_str())));
         }
         input.close();
@@ -40,7 +49,7 @@ void PVPanel::advance_time(double simulation_time) {
         while(next_time<= simulation_time)
         {            
             if(green_power_production.empty()) break;
-            current_green_power_production = next_green_power_production;        
+            current_green_power_production = next_green_power_production * efficiency * area;        
             std::pair<double,double>  data = green_power_production[0];            
             time = next_time;
             next_time = data.first;
@@ -51,16 +60,11 @@ void PVPanel::advance_time(double simulation_time) {
     {            
         cout << "Error at PVPanel advance_time " << simgrid::s4u::this_actor::get_name()  << " " << e.what() << endl;
     }		
-      
+          
 }
 
-
 double PVPanel::get_current_green_power_production(double simulation_time){
-    if(((int)simulation_time ) % 300 != 0)
-    {
-        double newTime = (1 + ((int)simulation_time ) / 300) *300; 
-        simulation_time = newTime;
-    }
-    advance_time(simulation_time);
+ 
+    advance_time(int(simulation_time));
     return current_green_power_production;
 }

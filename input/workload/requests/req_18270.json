@@ -1,0 +1,142 @@
+{
+    "name": "req-18270",
+    "schemaVersion": "1.0",
+    "tasks": [
+        {
+            "name": "req-18270-12146777_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_5",
+            "parents": []
+        },
+        {
+            "name": "req-18270-1432574946_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_0",
+            "parents": []
+        },
+        {
+            "name": "req-18270-8255515229_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_2",
+            "parents": []
+        },
+        {
+            "name": "req-18270-1432574918_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_5",
+            "parents": []
+        },
+        {
+            "name": "req-18270-1432574941_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_0",
+            "parents": []
+        },
+        {
+            "name": "req-18270-10915667490_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_1",
+            "parents": []
+        },
+        {
+            "name": "req-18270-1371509882_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_5",
+            "parents": []
+        },
+        {
+            "name": "req-18270-1371510260_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_5",
+            "parents": []
+        },
+        {
+            "name": "req-18270-1371510304_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_5",
+            "parents": []
+        },
+        {
+            "name": "req-18270-10915667416_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_1",
+            "parents": [
+                "req-18270-12146777_0",
+                "req-18270-1432574946_0",
+                "req-18270-8255515229_0"
+            ]
+        },
+        {
+            "name": "req-18270-1432574919_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_0",
+            "parents": [
+                "req-18270-1432574918_0"
+            ]
+        },
+        {
+            "name": "req-18270-1432574901_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_5",
+            "parents": [
+                "req-18270-1432574918_0",
+                "req-18270-1432574941_0",
+                "req-18270-10915667490_0"
+            ]
+        },
+        {
+            "name": "req-18270-1371509865_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_5",
+            "parents": [
+                "req-18270-1371509882_0",
+                "req-18270-1371510260_0",
+                "req-18270-1371510304_0",
+                "req-18270-1432574918_0"
+            ]
+        },
+        {
+            "name": "req-18270-1432574941_2",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_0",
+            "parents": [
+                "req-18270-10915667416_1",
+                "req-18270-1432574901_1"
+            ]
+        },
+        {
+            "name": "req-18270-10915667490_2",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_1",
+            "parents": [
+                "req-18270-1432574901_1"
+            ]
+        },
+        {
+            "name": "req-18270-1432574918_2",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_5",
+            "parents": [
+                "req-18270-1371509865_1",
+                "req-18270-1432574901_1",
+                "req-18270-1432574919_1"
+            ]
+        },
+        {
+            "name": "req-18270-1432574901_3",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_5",
+            "parents": [
+                "req-18270-1432574941_2",
+                "req-18270-1432574918_2",
+                "req-18270-10915667490_2"
+            ]
+        }
+    ],
+    "path": [
+        12146777,
+        10915667416,
+        1432574941,
+        1432574901
+    ]
+}

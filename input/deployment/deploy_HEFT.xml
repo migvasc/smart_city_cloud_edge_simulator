@@ -1,0 +1,50 @@
+<?xml version='1.0'?>
+<!DOCTYPE platform SYSTEM "https://simgrid.org/simgrid.dtd">
+<platform version="4.1">
+  <actor host="bus_stop_0" function="dagmanager">  
+    <!-- Parameter to chose the scheduling strategy for the VMs.
+    0: Baseline
+    1: BestFit
+    2: Renewable Energy
+    3: HEFT
+    4: GEFT
+  -->
+  <argument value="3"/>	
+      <!-- Area of the solar panels (m²) -->
+    <argument value="0.05"/>
+    <!-- Efficiency of the solar panels-->
+    <argument value="0.15"/>
+
+    <!-- Capacity of the batteries (Wh)-->
+    <argument value="40"/>
+
+    <!-- Battery Depth of Discharge-->
+    <argument value="0.8"/>
+    <!-- Battery charge process efficiency-->
+    <argument value="0.85"/>
+    <!-- Battery discharge process efficiency-->
+    <argument value="0.85"/>
+
+    <!-- input files for the solar traces -->                
+    <argument value="input/photo-voltaic/x_0_y_0.csv"/>
+    <argument value="input/photo-voltaic/x_0_y_1.csv"/>
+    <argument value="input/photo-voltaic/x_0_y_2.csv"/>
+    <argument value="input/photo-voltaic/x_1_y_0.csv"/>
+    <argument value="input/photo-voltaic/x_2_y_0.csv"/>
+    <argument value="input/photo-voltaic/x_-1_y_0.csv"/>
+    <argument value="input/photo-voltaic/x_-2_y_0.csv"/>
+    <argument value="input/photo-voltaic/x_0_y_-1.csv"/>
+    <argument value="input/photo-voltaic/x_0_y_-2.csv"/>
+    <argument value="input/photo-voltaic/x_1_y_1.csv"/>
+    <argument value="input/photo-voltaic/x_2_y_2.csv"/>
+    <argument value="input/photo-voltaic/x_1_y_-1.csv"/>
+    <argument value="input/photo-voltaic/x_2_y_-2.csv"/>
+    <argument value="input/photo-voltaic/x_-1_y_1.csv"/>
+    <argument value="input/photo-voltaic/x_-2_y_2.csv"/>
+    <argument value="input/photo-voltaic/x_-1_y_-1.csv"/>
+    <argument value="input/photo-voltaic/x_-2_y_-2.csv"/>
+    <argument value="input/photo-voltaic/cloud_trace.csv"/>
+  </actor>
+  <!-- The master actor (with some arguments) -->
+  <actor host="bus_stop_0" function="dagdispatcher"/>
+</platform>

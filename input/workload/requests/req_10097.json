@@ -1,0 +1,74 @@
+{
+    "name": "req-10097",
+    "schemaVersion": "1.0",
+    "tasks": [
+        {
+            "name": "req-10097-12146782_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_13",
+            "parents": []
+        },
+        {
+            "name": "req-10097-255595921_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_13",
+            "parents": []
+        },
+        {
+            "name": "req-10097-1432574832_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_13",
+            "parents": []
+        },
+        {
+            "name": "req-10097-10915667367_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_1",
+            "parents": [
+                "req-10097-12146782_0",
+                "req-10097-255595921_0",
+                "req-10097-1432574832_0"
+            ]
+        },
+        {
+            "name": "req-10097-255596017_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_13",
+            "parents": [
+                "req-10097-1432574832_0"
+            ]
+        },
+        {
+            "name": "req-10097-2923178604_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_7",
+            "parents": [
+                "req-10097-1432574832_0"
+            ]
+        },
+        {
+            "name": "req-10097-1432574832_2",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_13",
+            "parents": [
+                "req-10097-10915667367_1",
+                "req-10097-255596017_1",
+                "req-10097-2923178604_1"
+            ]
+        },
+        {
+            "name": "req-10097-255596017_3",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_13",
+            "parents": [
+                "req-10097-1432574832_2"
+            ]
+        }
+    ],
+    "path": [
+        12146782,
+        10915667367,
+        1432574832,
+        255596017
+    ]
+}

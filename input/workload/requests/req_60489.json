@@ -1,0 +1,125 @@
+{
+    "name": "req-60489",
+    "schemaVersion": "1.0",
+    "tasks": [
+        {
+            "name": "req-60489-255191439_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_4",
+            "parents": []
+        },
+        {
+            "name": "req-60489-581942026_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_4",
+            "parents": []
+        },
+        {
+            "name": "req-60489-581942052_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_4",
+            "parents": []
+        },
+        {
+            "name": "req-60489-1451034425_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_14",
+            "parents": []
+        },
+        {
+            "name": "req-60489-255191448_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_14",
+            "parents": []
+        },
+        {
+            "name": "req-60489-255191459_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_14",
+            "parents": []
+        },
+        {
+            "name": "req-60489-255191427_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_4",
+            "parents": [
+                "req-60489-255191439_0",
+                "req-60489-581942026_0"
+            ]
+        },
+        {
+            "name": "req-60489-581942025_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_4",
+            "parents": [
+                "req-60489-581942026_0"
+            ]
+        },
+        {
+            "name": "req-60489-581942058_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_4",
+            "parents": [
+                "req-60489-581942026_0",
+                "req-60489-581942052_0",
+                "req-60489-1451034425_0"
+            ]
+        },
+        {
+            "name": "req-60489-1451034453_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_4",
+            "parents": [
+                "req-60489-1451034425_0"
+            ]
+        },
+        {
+            "name": "req-60489-255191437_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_14",
+            "parents": [
+                "req-60489-255191448_0",
+                "req-60489-255191459_0",
+                "req-60489-1451034425_0"
+            ]
+        },
+        {
+            "name": "req-60489-581942026_2",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_4",
+            "parents": [
+                "req-60489-255191427_1",
+                "req-60489-581942025_1",
+                "req-60489-581942058_1"
+            ]
+        },
+        {
+            "name": "req-60489-581942052_2",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_4",
+            "parents": [
+                "req-60489-581942058_1"
+            ]
+        },
+        {
+            "name": "req-60489-1451034425_2",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_14",
+            "parents": [
+                "req-60489-255191437_1",
+                "req-60489-581942058_1",
+                "req-60489-1451034453_1"
+            ]
+        },
+        {
+            "name": "req-60489-581942058_3",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_4",
+            "parents": [
+                "req-60489-581942026_2",
+                "req-60489-581942052_2",
+                "req-60489-1451034425_2"
+            ]
+        }
+    ]
+}

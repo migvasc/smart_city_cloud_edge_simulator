@@ -39,3 +39,17 @@ std::vector<simgrid::s4u::ExecPtr> SegmentTask::get_parents(){
 void SegmentTask::clear_parents(){
   this->parents.clear();
 }
+
+
+
+void SegmentTask::set_allocated_host(simgrid::s4u::Host* host)
+{
+  this->allocated_host = host;
+}
+
+simgrid::s4u::Host* SegmentTask::get_allocated_host()
+{
+  return this->allocated_host;
+}
+
+

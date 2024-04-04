@@ -1,0 +1,142 @@
+{
+    "name": "req-81317",
+    "schemaVersion": "1.0",
+    "tasks": [
+        {
+            "name": "req-81317-11378562276_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_1",
+            "parents": []
+        },
+        {
+            "name": "req-81317-255595787_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_8",
+            "parents": []
+        },
+        {
+            "name": "req-81317-2569086780_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_13",
+            "parents": []
+        },
+        {
+            "name": "req-81317-255596055_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_9",
+            "parents": []
+        },
+        {
+            "name": "req-81317-10915667342_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_15",
+            "parents": []
+        },
+        {
+            "name": "req-81317-10915667347_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_1",
+            "parents": []
+        },
+        {
+            "name": "req-81317-255191075_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_9",
+            "parents": []
+        },
+        {
+            "name": "req-81317-255596028_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_9",
+            "parents": []
+        },
+        {
+            "name": "req-81317-2569086736_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_13",
+            "parents": []
+        },
+        {
+            "name": "req-81317-12146784_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_9",
+            "parents": []
+        },
+        {
+            "name": "req-81317-255595599_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_9",
+            "parents": [
+                "req-81317-11378562276_0",
+                "req-81317-255595787_0",
+                "req-81317-2569086780_0"
+            ]
+        },
+        {
+            "name": "req-81317-255191075_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_9",
+            "parents": [
+                "req-81317-255596055_0",
+                "req-81317-10915667342_0",
+                "req-81317-10915667347_0"
+            ]
+        },
+        {
+            "name": "req-81317-10915667342_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_15",
+            "parents": [
+                "req-81317-255191075_0",
+                "req-81317-2569086780_0"
+            ]
+        },
+        {
+            "name": "req-81317-255596055_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_9",
+            "parents": [
+                "req-81317-255191075_0",
+                "req-81317-255596028_0",
+                "req-81317-2569086736_0"
+            ]
+        },
+        {
+            "name": "req-81317-10915667347_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_1",
+            "parents": [
+                "req-81317-12146784_0",
+                "req-81317-10915667342_0"
+            ]
+        },
+        {
+            "name": "req-81317-2569086780_2",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_13",
+            "parents": [
+                "req-81317-255595599_1",
+                "req-81317-255191075_1"
+            ]
+        },
+        {
+            "name": "req-81317-255191075_2",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_9",
+            "parents": [
+                "req-81317-255596055_1",
+                "req-81317-10915667342_1",
+                "req-81317-10915667347_1"
+            ]
+        },
+        {
+            "name": "req-81317-10915667342_3",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_15",
+            "parents": [
+                "req-81317-2569086780_2",
+                "req-81317-255191075_2"
+            ]
+        }
+    ]
+}

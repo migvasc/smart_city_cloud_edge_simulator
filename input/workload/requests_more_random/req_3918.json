@@ -1,0 +1,74 @@
+{
+    "name": "req-3918",
+    "schemaVersion": "1.0",
+    "tasks": [
+        {
+            "name": "req-3918-255191448_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_14",
+            "parents": []
+        },
+        {
+            "name": "req-3918-255191467_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_14",
+            "parents": []
+        },
+        {
+            "name": "req-3918-255191460_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_14",
+            "parents": []
+        },
+        {
+            "name": "req-3918-10915667312_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_15",
+            "parents": [
+                "req-3918-255191448_0",
+                "req-3918-255191467_0"
+            ]
+        },
+        {
+            "name": "req-3918-255191463_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_14",
+            "parents": [
+                "req-3918-255191460_0",
+                "req-3918-255191467_0"
+            ]
+        },
+        {
+            "name": "req-3918-255191467_2",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_14",
+            "parents": [
+                "req-3918-10915667312_1",
+                "req-3918-255191463_1"
+            ]
+        },
+        {
+            "name": "req-3918-255191460_2",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_14",
+            "parents": [
+                "req-3918-255191463_1"
+            ]
+        },
+        {
+            "name": "req-3918-255191463_3",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_14",
+            "parents": [
+                "req-3918-255191467_2",
+                "req-3918-255191460_2"
+            ]
+        }
+    ],
+    "path": [
+        255191448,
+        10915667312,
+        255191467,
+        255191463
+    ]
+}

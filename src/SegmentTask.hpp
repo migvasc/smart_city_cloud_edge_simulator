@@ -10,7 +10,9 @@ class SegmentTask
 
   private:
     simgrid::s4u::ExecPtr ptr;
-    simgrid::s4u::Host* pref_host=nullptr;
+    simgrid::s4u::Host* pref_host=nullptr;   
+    simgrid::s4u::Host* allocated_host=nullptr;
+
     std::vector<simgrid::s4u::ExecPtr> parents;
 
   public:
@@ -25,6 +27,9 @@ class SegmentTask
     std::vector<simgrid::s4u::ExecPtr> get_parents();
     void clear_parents();
     std::vector<simgrid::s4u::CommPtr> parent_coms;
+    void set_allocated_host(simgrid::s4u::Host* host);
+    simgrid::s4u::Host* get_allocated_host();
+
 
 };
 

@@ -1,0 +1,137 @@
+{
+    "name": "req-101188",
+    "schemaVersion": "1.0",
+    "tasks": [
+        {
+            "name": "req-101188-1451034444_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_12",
+            "parents": []
+        },
+        {
+            "name": "req-101188-255190984_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_2",
+            "parents": []
+        },
+        {
+            "name": "req-101188-255200263_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_2",
+            "parents": []
+        },
+        {
+            "name": "req-101188-255191060_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_12",
+            "parents": []
+        },
+        {
+            "name": "req-101188-2569087094_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_12",
+            "parents": []
+        },
+        {
+            "name": "req-101188-2569086820_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_15",
+            "parents": []
+        },
+        {
+            "name": "req-101188-4414627711_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_1",
+            "parents": []
+        },
+        {
+            "name": "req-101188-581942559_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_15",
+            "parents": []
+        },
+        {
+            "name": "req-101188-255200029_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_2",
+            "parents": [
+                "req-101188-1451034444_0",
+                "req-101188-255190984_0",
+                "req-101188-255200263_0"
+            ]
+        },
+        {
+            "name": "req-101188-255191048_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_2",
+            "parents": [
+                "req-101188-255190984_0",
+                "req-101188-255191060_0",
+                "req-101188-2569087094_0"
+            ]
+        },
+        {
+            "name": "req-101188-581942559_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_15",
+            "parents": [
+                "req-101188-255190984_0",
+                "req-101188-2569086820_0"
+            ]
+        },
+        {
+            "name": "req-101188-2569086698_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_1",
+            "parents": [
+                "req-101188-2569086820_0"
+            ]
+        },
+        {
+            "name": "req-101188-1469068918_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_15",
+            "parents": [
+                "req-101188-4414627711_0"
+            ]
+        },
+        {
+            "name": "req-101188-9143229517_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_15",
+            "parents": [
+                "req-101188-581942559_0",
+                "req-101188-2569086820_0"
+            ]
+        },
+        {
+            "name": "req-101188-255190984_2",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_2",
+            "parents": [
+                "req-101188-255200029_1",
+                "req-101188-255191048_1",
+                "req-101188-581942559_1"
+            ]
+        },
+        {
+            "name": "req-101188-2569086820_2",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_15",
+            "parents": [
+                "req-101188-1469068918_1",
+                "req-101188-2569086698_1",
+                "req-101188-9143229517_1"
+            ]
+        },
+        {
+            "name": "req-101188-581942559_3",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_15",
+            "parents": [
+                "req-101188-255190984_2",
+                "req-101188-2569086820_2"
+            ]
+        }
+    ]
+}

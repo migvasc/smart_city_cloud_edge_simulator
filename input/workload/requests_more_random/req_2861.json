@@ -1,0 +1,74 @@
+{
+    "name": "req-2861",
+    "schemaVersion": "1.0",
+    "tasks": [
+        {
+            "name": "req-2861-1371509882_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_5",
+            "parents": []
+        },
+        {
+            "name": "req-2861-1371510515_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_5",
+            "parents": []
+        },
+        {
+            "name": "req-2861-9983238121_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_2",
+            "parents": []
+        },
+        {
+            "name": "req-2861-1371510128_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_10",
+            "parents": [
+                "req-2861-1371510515_0"
+            ]
+        },
+        {
+            "name": "req-2861-1371510173_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_5",
+            "parents": [
+                "req-2861-1371510515_0"
+            ]
+        },
+        {
+            "name": "req-2861-12146767_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_10",
+            "parents": [
+                "req-2861-1371509882_0",
+                "req-2861-1371510515_0",
+                "req-2861-9983238121_0"
+            ]
+        },
+        {
+            "name": "req-2861-1371510515_2",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_5",
+            "parents": [
+                "req-2861-12146767_1",
+                "req-2861-1371510128_1",
+                "req-2861-1371510173_1"
+            ]
+        },
+        {
+            "name": "req-2861-1371510128_3",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_10",
+            "parents": [
+                "req-2861-1371510515_2"
+            ]
+        }
+    ],
+    "path": [
+        1371509882,
+        12146767,
+        1371510515,
+        1371510128
+    ]
+}

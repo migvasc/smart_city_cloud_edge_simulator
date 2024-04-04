@@ -1,0 +1,81 @@
+{
+    "name": "req-3571",
+    "schemaVersion": "1.0",
+    "tasks": [
+        {
+            "name": "req-3571-255595238_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_6",
+            "parents": []
+        },
+        {
+            "name": "req-3571-255595328_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_6",
+            "parents": []
+        },
+        {
+            "name": "req-3571-1480037132_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_11",
+            "parents": []
+        },
+        {
+            "name": "req-3571-1480037155_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_9",
+            "parents": []
+        },
+        {
+            "name": "req-3571-3574495212_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_12",
+            "parents": [
+                "req-3571-255595328_0"
+            ]
+        },
+        {
+            "name": "req-3571-12146792_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_6",
+            "parents": [
+                "req-3571-255595238_0",
+                "req-3571-255595328_0",
+                "req-3571-1480037132_0"
+            ]
+        },
+        {
+            "name": "req-3571-2569086678_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_13",
+            "parents": [
+                "req-3571-255595328_0",
+                "req-3571-1480037155_0"
+            ]
+        },
+        {
+            "name": "req-3571-255595328_2",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_6",
+            "parents": [
+                "req-3571-12146792_1",
+                "req-3571-2569086678_1",
+                "req-3571-3574495212_1"
+            ]
+        },
+        {
+            "name": "req-3571-3574495212_3",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_12",
+            "parents": [
+                "req-3571-255595328_2"
+            ]
+        }
+    ],
+    "path": [
+        255595238,
+        12146792,
+        255595328,
+        3574495212
+    ]
+}

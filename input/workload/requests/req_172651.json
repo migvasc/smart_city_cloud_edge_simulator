@@ -1,0 +1,108 @@
+{
+    "name": "req-172651",
+    "schemaVersion": "1.0",
+    "tasks": [
+        {
+            "name": "req-172651-1480037106_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_6",
+            "parents": []
+        },
+        {
+            "name": "req-172651-255595238_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_6",
+            "parents": []
+        },
+        {
+            "name": "req-172651-255595328_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_6",
+            "parents": []
+        },
+        {
+            "name": "req-172651-1480037132_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_11",
+            "parents": []
+        },
+        {
+            "name": "req-172651-1480037155_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_9",
+            "parents": []
+        },
+        {
+            "name": "req-172651-12146794_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_6",
+            "parents": [
+                "req-172651-1480037106_0"
+            ]
+        },
+        {
+            "name": "req-172651-3574495212_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_12",
+            "parents": [
+                "req-172651-255595328_0"
+            ]
+        },
+        {
+            "name": "req-172651-12146792_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_6",
+            "parents": [
+                "req-172651-255595238_0",
+                "req-172651-255595328_0",
+                "req-172651-1480037132_0"
+            ]
+        },
+        {
+            "name": "req-172651-2569086678_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_13",
+            "parents": [
+                "req-172651-255595328_0",
+                "req-172651-1480037155_0"
+            ]
+        },
+        {
+            "name": "req-172651-1480037132_2",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_11",
+            "parents": [
+                "req-172651-12146794_1",
+                "req-172651-12146792_1"
+            ]
+        },
+        {
+            "name": "req-172651-255595238_2",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_6",
+            "parents": [
+                "req-172651-12146792_1"
+            ]
+        },
+        {
+            "name": "req-172651-255595328_2",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_6",
+            "parents": [
+                "req-172651-12146792_1",
+                "req-172651-2569086678_1",
+                "req-172651-3574495212_1"
+            ]
+        },
+        {
+            "name": "req-172651-12146792_3",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_6",
+            "parents": [
+                "req-172651-1480037132_2",
+                "req-172651-255595238_2",
+                "req-172651-255595328_2"
+            ]
+        }
+    ]
+}

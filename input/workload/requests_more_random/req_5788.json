@@ -1,0 +1,159 @@
+{
+    "name": "req-5788",
+    "schemaVersion": "1.0",
+    "tasks": [
+        {
+            "name": "req-5788-12146782_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_13",
+            "parents": []
+        },
+        {
+            "name": "req-5788-255595834_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_9",
+            "parents": []
+        },
+        {
+            "name": "req-5788-10915667347_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_1",
+            "parents": []
+        },
+        {
+            "name": "req-5788-255191075_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_9",
+            "parents": []
+        },
+        {
+            "name": "req-5788-2569086780_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_13",
+            "parents": []
+        },
+        {
+            "name": "req-5788-255596055_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_9",
+            "parents": []
+        },
+        {
+            "name": "req-5788-10915667342_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_15",
+            "parents": []
+        },
+        {
+            "name": "req-5788-2569086797_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_0",
+            "parents": []
+        },
+        {
+            "name": "req-5788-255595599_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_9",
+            "parents": []
+        },
+        {
+            "name": "req-5788-12146784_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_9",
+            "parents": [
+                "req-5788-12146782_0",
+                "req-5788-255595834_0",
+                "req-5788-10915667347_0"
+            ]
+        },
+        {
+            "name": "req-5788-10915667342_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_15",
+            "parents": [
+                "req-5788-255191075_0",
+                "req-5788-2569086780_0"
+            ]
+        },
+        {
+            "name": "req-5788-2569086736_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_13",
+            "parents": [
+                "req-5788-255596055_0"
+            ]
+        },
+        {
+            "name": "req-5788-255191075_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_9",
+            "parents": [
+                "req-5788-255596055_0",
+                "req-5788-10915667342_0",
+                "req-5788-10915667347_0"
+            ]
+        },
+        {
+            "name": "req-5788-255596028_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_9",
+            "parents": [
+                "req-5788-255596055_0",
+                "req-5788-2569086797_0"
+            ]
+        },
+        {
+            "name": "req-5788-2569086780_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_13",
+            "parents": [
+                "req-5788-255191075_0",
+                "req-5788-255595599_0"
+            ]
+        },
+        {
+            "name": "req-5788-10915667347_2",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_1",
+            "parents": [
+                "req-5788-12146784_1",
+                "req-5788-10915667342_1"
+            ]
+        },
+        {
+            "name": "req-5788-255596055_2",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_9",
+            "parents": [
+                "req-5788-255191075_1",
+                "req-5788-255596028_1",
+                "req-5788-2569086736_1"
+            ]
+        },
+        {
+            "name": "req-5788-10915667342_2",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_15",
+            "parents": [
+                "req-5788-255191075_1",
+                "req-5788-2569086780_1"
+            ]
+        },
+        {
+            "name": "req-5788-255191075_3",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_9",
+            "parents": [
+                "req-5788-10915667347_2",
+                "req-5788-255596055_2",
+                "req-5788-10915667342_2"
+            ]
+        }
+    ],
+    "path": [
+        12146782,
+        12146784,
+        10915667347,
+        255191075
+    ]
+}

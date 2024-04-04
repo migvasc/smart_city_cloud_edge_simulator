@@ -1,0 +1,141 @@
+{
+    "name": "req-11437",
+    "schemaVersion": "1.0",
+    "tasks": [
+        {
+            "name": "req-11437-8255515226_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_2",
+            "parents": []
+        },
+        {
+            "name": "req-11437-10915667416_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_1",
+            "parents": []
+        },
+        {
+            "name": "req-11437-255596808_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_13",
+            "parents": []
+        },
+        {
+            "name": "req-11437-1432574946_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_0",
+            "parents": []
+        },
+        {
+            "name": "req-11437-1432574941_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_0",
+            "parents": []
+        },
+        {
+            "name": "req-11437-1432574918_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_5",
+            "parents": []
+        },
+        {
+            "name": "req-11437-10915667490_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_1",
+            "parents": []
+        },
+        {
+            "name": "req-11437-12146777_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_5",
+            "parents": []
+        },
+        {
+            "name": "req-11437-8255515229_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_2",
+            "parents": []
+        },
+        {
+            "name": "req-11437-8255515229_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_2",
+            "parents": [
+                "req-11437-8255515226_0",
+                "req-11437-10915667416_0"
+            ]
+        },
+        {
+            "name": "req-11437-12146777_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_5",
+            "parents": [
+                "req-11437-255596808_0",
+                "req-11437-1432574946_0"
+            ]
+        },
+        {
+            "name": "req-11437-1432574946_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_0",
+            "parents": [
+                "req-11437-1432574941_0",
+                "req-11437-10915667416_0"
+            ]
+        },
+        {
+            "name": "req-11437-1432574901_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_5",
+            "parents": [
+                "req-11437-1432574918_0",
+                "req-11437-1432574941_0",
+                "req-11437-10915667490_0"
+            ]
+        },
+        {
+            "name": "req-11437-10915667416_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_1",
+            "parents": [
+                "req-11437-12146777_0",
+                "req-11437-1432574946_0",
+                "req-11437-8255515229_0"
+            ]
+        },
+        {
+            "name": "req-11437-10915667416_2",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_1",
+            "parents": [
+                "req-11437-8255515229_1",
+                "req-11437-12146777_1",
+                "req-11437-1432574946_1"
+            ]
+        },
+        {
+            "name": "req-11437-1432574941_2",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_0",
+            "parents": [
+                "req-11437-1432574901_1",
+                "req-11437-10915667416_1"
+            ]
+        },
+        {
+            "name": "req-11437-1432574946_3",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_0",
+            "parents": [
+                "req-11437-10915667416_2",
+                "req-11437-1432574941_2"
+            ]
+        }
+    ],
+    "path": [
+        8255515226,
+        8255515229,
+        10915667416,
+        1432574946
+    ]
+}

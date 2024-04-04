@@ -1,25 +1,25 @@
 {
-  "name": "req1",
+  "name": "req-1",
   "schemaVersion": "1.0",
   "tasks": [
       {
-      "name": "ac15",
+      "name": "req-1-a1",
       "parents": [],
-      "flopsAmount": 13.5e9,
-      "machine":"bus_stop_10"
+      "flopsAmount": 13.5e8,
+      "machine":"bus_stop_0"
 
     },      
     {
-      "name": "ac1",
-      "parents": ["ac15"],
-      "flopsAmount": 13.5e9,
-      "machine":"bus_stop_5"
+      "name": "req-1-a2",
+      "parents": ["req-1-a1"],
+      "flopsAmount": 13.5e8,
+      "machine":"bus_stop_1"
 
     } ,
     {
-      "name": "ac2",
-      "parents": ["ac1"],
-      "flopsAmount": 13.5e9,
+      "name": "req-1-a3",
+      "parents": ["req-1-a2"],
+      "flopsAmount": 13.5e8,
       "machine":"bus_stop_1"
 
     }      

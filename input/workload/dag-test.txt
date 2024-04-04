@@ -1,0 +1,2 @@
+dagdispatcher send_DAG 0 input/workload/requests/req_4111.json
+dagdispatcher stop 200

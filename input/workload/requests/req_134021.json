@@ -1,0 +1,75 @@
+{
+    "name": "req-134021",
+    "schemaVersion": "1.0",
+    "tasks": [
+        {
+            "name": "req-134021-3574495212_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_12",
+            "parents": []
+        },
+        {
+            "name": "req-134021-12146792_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_6",
+            "parents": []
+        },
+        {
+            "name": "req-134021-2569086678_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_13",
+            "parents": []
+        },
+        {
+            "name": "req-134021-12146794_0",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_6",
+            "parents": []
+        },
+        {
+            "name": "req-134021-255595238_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_6",
+            "parents": [
+                "req-134021-12146792_0"
+            ]
+        },
+        {
+            "name": "req-134021-255595328_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_6",
+            "parents": [
+                "req-134021-3574495212_0",
+                "req-134021-12146792_0",
+                "req-134021-2569086678_0"
+            ]
+        },
+        {
+            "name": "req-134021-1480037132_1",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_11",
+            "parents": [
+                "req-134021-12146792_0",
+                "req-134021-12146794_0"
+            ]
+        },
+        {
+            "name": "req-134021-12146792_2",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_6",
+            "parents": [
+                "req-134021-255595328_1",
+                "req-134021-255595238_1",
+                "req-134021-1480037132_1"
+            ]
+        },
+        {
+            "name": "req-134021-255595238_3",
+            "flopsAmount": 1350000000.0,
+            "machine": "bus_stop_6",
+            "parents": [
+                "req-134021-12146792_2"
+            ]
+        }
+    ]
+}
