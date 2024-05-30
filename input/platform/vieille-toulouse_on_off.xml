@@ -1,0 +1,925 @@
+
+<?xml version='1.0'?>
+<!DOCTYPE platform SYSTEM "https://simgrid.org/simgrid.dtd">
+<platform version="4.1">
+  <zone id="zone0" routing="Full">
+    <host core="4" id="bus_stop_0" speed="0Gf,13.5Gf" pstate="1">  <prop id="wattage_per_state" value="1.5:1.5,2.5:7.3" /> <prop id="wattage_off" value="1.5" /></host> 
+    <host core="4" id="bus_stop_1" speed="0Gf,13.5Gf" pstate="1">  <prop id="wattage_per_state" value="1.5:1.5,2.5:7.3" /> <prop id="wattage_off" value="1.5" /></host> 
+    <host core="4" id="bus_stop_2" speed="0Gf,13.5Gf" pstate="1">  <prop id="wattage_per_state" value="1.5:1.5,2.5:7.3" /> <prop id="wattage_off" value="1.5" /></host> 
+    <host core="4" id="bus_stop_3" speed="0Gf,13.5Gf" pstate="1">  <prop id="wattage_per_state" value="1.5:1.5,2.5:7.3" /> <prop id="wattage_off" value="1.5" /></host> 
+    <host core="4" id="bus_stop_4" speed="0Gf,13.5Gf" pstate="1">  <prop id="wattage_per_state" value="1.5:1.5,2.5:7.3" /> <prop id="wattage_off" value="1.5" /></host> 
+    <host core="4" id="bus_stop_5" speed="0Gf,13.5Gf" pstate="1">  <prop id="wattage_per_state" value="1.5:1.5,2.5:7.3" /> <prop id="wattage_off" value="1.5" /></host> 
+    <host core="4" id="bus_stop_6" speed="0Gf,13.5Gf" pstate="1">  <prop id="wattage_per_state" value="1.5:1.5,2.5:7.3" /> <prop id="wattage_off" value="1.5" /></host> 
+    <host core="4" id="bus_stop_7" speed="0Gf,13.5Gf" pstate="1">  <prop id="wattage_per_state" value="1.5:1.5,2.5:7.3" /> <prop id="wattage_off" value="1.5" /></host> 
+    <host core="4" id="bus_stop_8" speed="0Gf,13.5Gf" pstate="1">  <prop id="wattage_per_state" value="1.5:1.5,2.5:7.3" /> <prop id="wattage_off" value="1.5" /></host> 
+    <host core="4" id="bus_stop_9" speed="0Gf,13.5Gf" pstate="1">  <prop id="wattage_per_state" value="1.5:1.5,2.5:7.3" /> <prop id="wattage_off" value="1.5" /></host> 
+    <host core="4" id="bus_stop_10" speed="0Gf,13.5Gf" pstate="1">  <prop id="wattage_per_state" value="1.5:1.5,2.5:7.3" /> <prop id="wattage_off" value="1.5" /></host> 
+    <host core="4" id="bus_stop_11" speed="0Gf,13.5Gf" pstate="1">  <prop id="wattage_per_state" value="1.5:1.5,2.5:7.3" /> <prop id="wattage_off" value="1.5" /></host> 
+    <host core="4" id="bus_stop_12" speed="0Gf,13.5Gf" pstate="1">  <prop id="wattage_per_state" value="1.5:1.5,2.5:7.3" /> <prop id="wattage_off" value="1.5" /></host> 
+    <host core="4" id="bus_stop_13" speed="0Gf,13.5Gf" pstate="1">  <prop id="wattage_per_state" value="1.5:1.5,2.5:7.3" /> <prop id="wattage_off" value="1.5" /></host> 
+    <host core="4" id="bus_stop_14" speed="0Gf,13.5Gf" pstate="1">  <prop id="wattage_per_state" value="1.5:1.5,2.5:7.3" /> <prop id="wattage_off" value="1.5" /></host> 
+    <host core="4" id="bus_stop_15" speed="0Gf,13.5Gf" pstate="1">  <prop id="wattage_per_state" value="1.5:1.5,2.5:7.3" /> <prop id="wattage_off" value="1.5" /></host> 
+    <host core="4" id="bus_stop_16" speed="0Gf,13.5Gf" pstate="1">  <prop id="wattage_per_state" value="1.5:1.5,2.5:7.3" /> <prop id="wattage_off" value="1.5" /></host> 
+    <link id="link_0" bandwidth="100Gbps" latency="0.01s"/>
+    <link id="link_1" bandwidth="100Gbps" latency="0.01s"/>
+    <link id="link_2" bandwidth="100Gbps" latency="0.01s"/>
+    <link id="link_3" bandwidth="100Gbps" latency="0.01s"/>
+    <link id="link_4" bandwidth="100Gbps" latency="0.01s"/>
+    <link id="link_5" bandwidth="100Gbps" latency="0.01s"/>
+    <link id="link_6" bandwidth="100Gbps" latency="0.01s"/>
+    <link id="link_7" bandwidth="100Gbps" latency="0.01s"/>
+    <link id="link_8" bandwidth="100Gbps" latency="0.01s"/>
+    <link id="link_9" bandwidth="100Gbps" latency="0.01s"/>
+    <link id="link_10" bandwidth="100Gbps" latency="0.01s"/>
+    <link id="link_11" bandwidth="100Gbps" latency="0.01s"/>
+    <link id="link_12" bandwidth="100Gbps" latency="0.01s"/>
+    <link id="link_13" bandwidth="100Gbps" latency="0.01s"/>
+    <link id="link_14" bandwidth="100Gbps" latency="0.01s"/>
+    <link id="link_15" bandwidth="100Gbps" latency="0.01s"/>
+    <route src="bus_stop_0" dst="bus_stop_1">
+      <link_ctn id="link_3"/>
+      <link_ctn id="link_5"/>
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_9"/>
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_12"/>
+      <link_ctn id="link_13"/>
+    </route>
+    <route src="bus_stop_0" dst="bus_stop_2">
+      <link_ctn id="link_3"/>
+      <link_ctn id="link_5"/>
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_9"/>
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_11"/>
+    </route>
+    <route src="bus_stop_0" dst="bus_stop_3">
+      <link_ctn id="link_3"/>
+      <link_ctn id="link_5"/>
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_9"/>
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_12"/>
+      <link_ctn id="link_13"/>
+      <link_ctn id="link_15"/>
+    </route>
+    <route src="bus_stop_0" dst="bus_stop_4">
+      <link_ctn id="link_3"/>
+      <link_ctn id="link_5"/>
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_9"/>
+      <link_ctn id="link_10"/>
+    </route>
+    <route src="bus_stop_0" dst="bus_stop_5">
+      <link_ctn id="link_0"/>
+      <link_ctn id="link_1"/>
+    </route>
+    <route src="bus_stop_0" dst="bus_stop_6">
+      <link_ctn id="link_3"/>
+      <link_ctn id="link_5"/>
+      <link_ctn id="link_7"/>
+    </route>
+    <route src="bus_stop_0" dst="bus_stop_7">
+      <link_ctn id="link_3"/>
+      <link_ctn id="link_5"/>
+    </route>
+    <route src="bus_stop_0" dst="bus_stop_8">
+      <link_ctn id="link_3"/>
+      <link_ctn id="link_5"/>
+      <link_ctn id="link_6"/>
+    </route>
+    <route src="bus_stop_0" dst="bus_stop_9">
+      <link_ctn id="link_2"/>
+    </route>
+    <route src="bus_stop_0" dst="bus_stop_10">
+      <link_ctn id="link_0"/>
+      <link_ctn id="link_1"/>
+      <link_ctn id="link_4"/>
+    </route>
+    <route src="bus_stop_0" dst="bus_stop_11">
+      <link_ctn id="link_3"/>
+      <link_ctn id="link_5"/>
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_8"/>
+    </route>
+    <route src="bus_stop_0" dst="bus_stop_12">
+      <link_ctn id="link_0"/>
+    </route>
+    <route src="bus_stop_0" dst="bus_stop_13">
+      <link_ctn id="link_3"/>
+    </route>
+    <route src="bus_stop_0" dst="bus_stop_14">
+      <link_ctn id="link_3"/>
+      <link_ctn id="link_5"/>
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_9"/>
+    </route>
+    <route src="bus_stop_0" dst="bus_stop_15">
+      <link_ctn id="link_3"/>
+      <link_ctn id="link_5"/>
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_9"/>
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_12"/>
+    </route>
+    <route src="bus_stop_0" dst="bus_stop_16">
+      <link_ctn id="link_3"/>
+      <link_ctn id="link_5"/>
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_9"/>
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_12"/>
+      <link_ctn id="link_13"/>
+      <link_ctn id="link_14"/>
+    </route>
+    <route src="bus_stop_1" dst="bus_stop_2">
+      <link_ctn id="link_13"/>
+      <link_ctn id="link_12"/>
+      <link_ctn id="link_11"/>
+    </route>
+    <route src="bus_stop_1" dst="bus_stop_3">
+      <link_ctn id="link_15"/>
+    </route>
+    <route src="bus_stop_1" dst="bus_stop_4">
+      <link_ctn id="link_13"/>
+      <link_ctn id="link_12"/>
+    </route>
+    <route src="bus_stop_1" dst="bus_stop_5">
+      <link_ctn id="link_13"/>
+      <link_ctn id="link_12"/>
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_9"/>
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_5"/>
+      <link_ctn id="link_3"/>
+      <link_ctn id="link_0"/>
+      <link_ctn id="link_1"/>
+    </route>
+    <route src="bus_stop_1" dst="bus_stop_6">
+      <link_ctn id="link_13"/>
+      <link_ctn id="link_12"/>
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_9"/>
+    </route>
+    <route src="bus_stop_1" dst="bus_stop_7">
+      <link_ctn id="link_13"/>
+      <link_ctn id="link_12"/>
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_9"/>
+      <link_ctn id="link_7"/>
+    </route>
+    <route src="bus_stop_1" dst="bus_stop_8">
+      <link_ctn id="link_13"/>
+      <link_ctn id="link_12"/>
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_9"/>
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_6"/>
+    </route>
+    <route src="bus_stop_1" dst="bus_stop_9">
+      <link_ctn id="link_13"/>
+      <link_ctn id="link_12"/>
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_9"/>
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_5"/>
+      <link_ctn id="link_3"/>
+      <link_ctn id="link_2"/>
+    </route>
+    <route src="bus_stop_1" dst="bus_stop_10">
+      <link_ctn id="link_13"/>
+      <link_ctn id="link_12"/>
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_9"/>
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_5"/>
+      <link_ctn id="link_3"/>
+      <link_ctn id="link_0"/>
+      <link_ctn id="link_1"/>
+      <link_ctn id="link_4"/>
+    </route>
+    <route src="bus_stop_1" dst="bus_stop_11">
+      <link_ctn id="link_13"/>
+      <link_ctn id="link_12"/>
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_9"/>
+      <link_ctn id="link_8"/>
+    </route>
+    <route src="bus_stop_1" dst="bus_stop_12">
+      <link_ctn id="link_13"/>
+      <link_ctn id="link_12"/>
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_9"/>
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_5"/>
+      <link_ctn id="link_3"/>
+      <link_ctn id="link_0"/>
+    </route>
+    <route src="bus_stop_1" dst="bus_stop_13">
+      <link_ctn id="link_13"/>
+      <link_ctn id="link_12"/>
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_9"/>
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_5"/>
+    </route>
+    <route src="bus_stop_1" dst="bus_stop_14">
+      <link_ctn id="link_13"/>
+      <link_ctn id="link_12"/>
+      <link_ctn id="link_10"/>
+    </route>
+    <route src="bus_stop_1" dst="bus_stop_15">
+      <link_ctn id="link_13"/>
+    </route>
+    <route src="bus_stop_1" dst="bus_stop_16">
+      <link_ctn id="link_14"/>
+    </route>
+    <route src="bus_stop_2" dst="bus_stop_3">
+      <link_ctn id="link_11"/>
+      <link_ctn id="link_12"/>
+      <link_ctn id="link_13"/>
+      <link_ctn id="link_15"/>
+    </route>
+    <route src="bus_stop_2" dst="bus_stop_4">
+      <link_ctn id="link_11"/>
+    </route>
+    <route src="bus_stop_2" dst="bus_stop_5">
+      <link_ctn id="link_11"/>
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_9"/>
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_5"/>
+      <link_ctn id="link_3"/>
+      <link_ctn id="link_0"/>
+      <link_ctn id="link_1"/>
+    </route>
+    <route src="bus_stop_2" dst="bus_stop_6">
+      <link_ctn id="link_11"/>
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_9"/>
+    </route>
+    <route src="bus_stop_2" dst="bus_stop_7">
+      <link_ctn id="link_11"/>
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_9"/>
+      <link_ctn id="link_7"/>
+    </route>
+    <route src="bus_stop_2" dst="bus_stop_8">
+      <link_ctn id="link_11"/>
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_9"/>
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_6"/>
+    </route>
+    <route src="bus_stop_2" dst="bus_stop_9">
+      <link_ctn id="link_11"/>
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_9"/>
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_5"/>
+      <link_ctn id="link_3"/>
+      <link_ctn id="link_2"/>
+    </route>
+    <route src="bus_stop_2" dst="bus_stop_10">
+      <link_ctn id="link_11"/>
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_9"/>
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_5"/>
+      <link_ctn id="link_3"/>
+      <link_ctn id="link_0"/>
+      <link_ctn id="link_1"/>
+      <link_ctn id="link_4"/>
+    </route>
+    <route src="bus_stop_2" dst="bus_stop_11">
+      <link_ctn id="link_11"/>
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_9"/>
+      <link_ctn id="link_8"/>
+    </route>
+    <route src="bus_stop_2" dst="bus_stop_12">
+      <link_ctn id="link_11"/>
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_9"/>
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_5"/>
+      <link_ctn id="link_3"/>
+      <link_ctn id="link_0"/>
+    </route>
+    <route src="bus_stop_2" dst="bus_stop_13">
+      <link_ctn id="link_11"/>
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_9"/>
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_5"/>
+    </route>
+    <route src="bus_stop_2" dst="bus_stop_14">
+      <link_ctn id="link_11"/>
+      <link_ctn id="link_10"/>
+    </route>
+    <route src="bus_stop_2" dst="bus_stop_15">
+      <link_ctn id="link_11"/>
+      <link_ctn id="link_12"/>
+    </route>
+    <route src="bus_stop_2" dst="bus_stop_16">
+      <link_ctn id="link_11"/>
+      <link_ctn id="link_12"/>
+      <link_ctn id="link_13"/>
+      <link_ctn id="link_14"/>
+    </route>
+    <route src="bus_stop_3" dst="bus_stop_4">
+      <link_ctn id="link_15"/>
+      <link_ctn id="link_13"/>
+      <link_ctn id="link_12"/>
+    </route>
+    <route src="bus_stop_3" dst="bus_stop_5">
+      <link_ctn id="link_15"/>
+      <link_ctn id="link_13"/>
+      <link_ctn id="link_12"/>
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_9"/>
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_5"/>
+      <link_ctn id="link_3"/>
+      <link_ctn id="link_0"/>
+      <link_ctn id="link_1"/>
+    </route>
+    <route src="bus_stop_3" dst="bus_stop_6">
+      <link_ctn id="link_15"/>
+      <link_ctn id="link_13"/>
+      <link_ctn id="link_12"/>
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_9"/>
+    </route>
+    <route src="bus_stop_3" dst="bus_stop_7">
+      <link_ctn id="link_15"/>
+      <link_ctn id="link_13"/>
+      <link_ctn id="link_12"/>
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_9"/>
+      <link_ctn id="link_7"/>
+    </route>
+    <route src="bus_stop_3" dst="bus_stop_8">
+      <link_ctn id="link_15"/>
+      <link_ctn id="link_13"/>
+      <link_ctn id="link_12"/>
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_9"/>
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_6"/>
+    </route>
+    <route src="bus_stop_3" dst="bus_stop_9">
+      <link_ctn id="link_15"/>
+      <link_ctn id="link_13"/>
+      <link_ctn id="link_12"/>
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_9"/>
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_5"/>
+      <link_ctn id="link_3"/>
+      <link_ctn id="link_2"/>
+    </route>
+    <route src="bus_stop_3" dst="bus_stop_10">
+      <link_ctn id="link_15"/>
+      <link_ctn id="link_13"/>
+      <link_ctn id="link_12"/>
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_9"/>
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_5"/>
+      <link_ctn id="link_3"/>
+      <link_ctn id="link_0"/>
+      <link_ctn id="link_1"/>
+      <link_ctn id="link_4"/>
+    </route>
+    <route src="bus_stop_3" dst="bus_stop_11">
+      <link_ctn id="link_15"/>
+      <link_ctn id="link_13"/>
+      <link_ctn id="link_12"/>
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_9"/>
+      <link_ctn id="link_8"/>
+    </route>
+    <route src="bus_stop_3" dst="bus_stop_12">
+      <link_ctn id="link_15"/>
+      <link_ctn id="link_13"/>
+      <link_ctn id="link_12"/>
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_9"/>
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_5"/>
+      <link_ctn id="link_3"/>
+      <link_ctn id="link_0"/>
+    </route>
+    <route src="bus_stop_3" dst="bus_stop_13">
+      <link_ctn id="link_15"/>
+      <link_ctn id="link_13"/>
+      <link_ctn id="link_12"/>
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_9"/>
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_5"/>
+    </route>
+    <route src="bus_stop_3" dst="bus_stop_14">
+      <link_ctn id="link_15"/>
+      <link_ctn id="link_13"/>
+      <link_ctn id="link_12"/>
+      <link_ctn id="link_10"/>
+    </route>
+    <route src="bus_stop_3" dst="bus_stop_15">
+      <link_ctn id="link_15"/>
+      <link_ctn id="link_13"/>
+    </route>
+    <route src="bus_stop_3" dst="bus_stop_16">
+      <link_ctn id="link_15"/>
+      <link_ctn id="link_14"/>
+    </route>
+    <route src="bus_stop_4" dst="bus_stop_5">
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_9"/>
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_5"/>
+      <link_ctn id="link_3"/>
+      <link_ctn id="link_0"/>
+      <link_ctn id="link_1"/>
+    </route>
+    <route src="bus_stop_4" dst="bus_stop_6">
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_9"/>
+    </route>
+    <route src="bus_stop_4" dst="bus_stop_7">
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_9"/>
+      <link_ctn id="link_7"/>
+    </route>
+    <route src="bus_stop_4" dst="bus_stop_8">
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_9"/>
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_6"/>
+    </route>
+    <route src="bus_stop_4" dst="bus_stop_9">
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_9"/>
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_5"/>
+      <link_ctn id="link_3"/>
+      <link_ctn id="link_2"/>
+    </route>
+    <route src="bus_stop_4" dst="bus_stop_10">
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_9"/>
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_5"/>
+      <link_ctn id="link_3"/>
+      <link_ctn id="link_0"/>
+      <link_ctn id="link_1"/>
+      <link_ctn id="link_4"/>
+    </route>
+    <route src="bus_stop_4" dst="bus_stop_11">
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_9"/>
+      <link_ctn id="link_8"/>
+    </route>
+    <route src="bus_stop_4" dst="bus_stop_12">
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_9"/>
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_5"/>
+      <link_ctn id="link_3"/>
+      <link_ctn id="link_0"/>
+    </route>
+    <route src="bus_stop_4" dst="bus_stop_13">
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_9"/>
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_5"/>
+    </route>
+    <route src="bus_stop_4" dst="bus_stop_14">
+      <link_ctn id="link_10"/>
+    </route>
+    <route src="bus_stop_4" dst="bus_stop_15">
+      <link_ctn id="link_12"/>
+    </route>
+    <route src="bus_stop_4" dst="bus_stop_16">
+      <link_ctn id="link_12"/>
+      <link_ctn id="link_13"/>
+      <link_ctn id="link_14"/>
+    </route>
+    <route src="bus_stop_5" dst="bus_stop_6">
+      <link_ctn id="link_1"/>
+      <link_ctn id="link_0"/>
+      <link_ctn id="link_3"/>
+      <link_ctn id="link_5"/>
+      <link_ctn id="link_7"/>
+    </route>
+    <route src="bus_stop_5" dst="bus_stop_7">
+      <link_ctn id="link_1"/>
+      <link_ctn id="link_0"/>
+      <link_ctn id="link_3"/>
+      <link_ctn id="link_5"/>
+    </route>
+    <route src="bus_stop_5" dst="bus_stop_8">
+      <link_ctn id="link_1"/>
+      <link_ctn id="link_0"/>
+      <link_ctn id="link_3"/>
+      <link_ctn id="link_5"/>
+      <link_ctn id="link_6"/>
+    </route>
+    <route src="bus_stop_5" dst="bus_stop_9">
+      <link_ctn id="link_1"/>
+      <link_ctn id="link_0"/>
+      <link_ctn id="link_2"/>
+    </route>
+    <route src="bus_stop_5" dst="bus_stop_10">
+      <link_ctn id="link_4"/>
+    </route>
+    <route src="bus_stop_5" dst="bus_stop_11">
+      <link_ctn id="link_1"/>
+      <link_ctn id="link_0"/>
+      <link_ctn id="link_3"/>
+      <link_ctn id="link_5"/>
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_8"/>
+    </route>
+    <route src="bus_stop_5" dst="bus_stop_12">
+      <link_ctn id="link_1"/>
+    </route>
+    <route src="bus_stop_5" dst="bus_stop_13">
+      <link_ctn id="link_1"/>
+      <link_ctn id="link_0"/>
+      <link_ctn id="link_3"/>
+    </route>
+    <route src="bus_stop_5" dst="bus_stop_14">
+      <link_ctn id="link_1"/>
+      <link_ctn id="link_0"/>
+      <link_ctn id="link_3"/>
+      <link_ctn id="link_5"/>
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_9"/>
+    </route>
+    <route src="bus_stop_5" dst="bus_stop_15">
+      <link_ctn id="link_1"/>
+      <link_ctn id="link_0"/>
+      <link_ctn id="link_3"/>
+      <link_ctn id="link_5"/>
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_9"/>
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_12"/>
+    </route>
+    <route src="bus_stop_5" dst="bus_stop_16">
+      <link_ctn id="link_1"/>
+      <link_ctn id="link_0"/>
+      <link_ctn id="link_3"/>
+      <link_ctn id="link_5"/>
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_9"/>
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_12"/>
+      <link_ctn id="link_13"/>
+      <link_ctn id="link_14"/>
+    </route>
+    <route src="bus_stop_6" dst="bus_stop_7">
+      <link_ctn id="link_7"/>
+    </route>
+    <route src="bus_stop_6" dst="bus_stop_8">
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_6"/>
+    </route>
+    <route src="bus_stop_6" dst="bus_stop_9">
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_5"/>
+      <link_ctn id="link_3"/>
+      <link_ctn id="link_2"/>
+    </route>
+    <route src="bus_stop_6" dst="bus_stop_10">
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_5"/>
+      <link_ctn id="link_3"/>
+      <link_ctn id="link_0"/>
+      <link_ctn id="link_1"/>
+      <link_ctn id="link_4"/>
+    </route>
+    <route src="bus_stop_6" dst="bus_stop_11">
+      <link_ctn id="link_8"/>
+    </route>
+    <route src="bus_stop_6" dst="bus_stop_12">
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_5"/>
+      <link_ctn id="link_3"/>
+      <link_ctn id="link_0"/>
+    </route>
+    <route src="bus_stop_6" dst="bus_stop_13">
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_5"/>
+    </route>
+    <route src="bus_stop_6" dst="bus_stop_14">
+      <link_ctn id="link_9"/>
+    </route>
+    <route src="bus_stop_6" dst="bus_stop_15">
+      <link_ctn id="link_9"/>
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_12"/>
+    </route>
+    <route src="bus_stop_6" dst="bus_stop_16">
+      <link_ctn id="link_9"/>
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_12"/>
+      <link_ctn id="link_13"/>
+      <link_ctn id="link_14"/>
+    </route>
+    <route src="bus_stop_7" dst="bus_stop_8">
+      <link_ctn id="link_6"/>
+    </route>
+    <route src="bus_stop_7" dst="bus_stop_9">
+      <link_ctn id="link_5"/>
+      <link_ctn id="link_3"/>
+      <link_ctn id="link_2"/>
+    </route>
+    <route src="bus_stop_7" dst="bus_stop_10">
+      <link_ctn id="link_5"/>
+      <link_ctn id="link_3"/>
+      <link_ctn id="link_0"/>
+      <link_ctn id="link_1"/>
+      <link_ctn id="link_4"/>
+    </route>
+    <route src="bus_stop_7" dst="bus_stop_11">
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_8"/>
+    </route>
+    <route src="bus_stop_7" dst="bus_stop_12">
+      <link_ctn id="link_5"/>
+      <link_ctn id="link_3"/>
+      <link_ctn id="link_0"/>
+    </route>
+    <route src="bus_stop_7" dst="bus_stop_13">
+      <link_ctn id="link_5"/>
+    </route>
+    <route src="bus_stop_7" dst="bus_stop_14">
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_9"/>
+    </route>
+    <route src="bus_stop_7" dst="bus_stop_15">
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_9"/>
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_12"/>
+    </route>
+    <route src="bus_stop_7" dst="bus_stop_16">
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_9"/>
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_12"/>
+      <link_ctn id="link_13"/>
+      <link_ctn id="link_14"/>
+    </route>
+    <route src="bus_stop_8" dst="bus_stop_9">
+      <link_ctn id="link_6"/>
+      <link_ctn id="link_5"/>
+      <link_ctn id="link_3"/>
+      <link_ctn id="link_2"/>
+    </route>
+    <route src="bus_stop_8" dst="bus_stop_10">
+      <link_ctn id="link_6"/>
+      <link_ctn id="link_5"/>
+      <link_ctn id="link_3"/>
+      <link_ctn id="link_0"/>
+      <link_ctn id="link_1"/>
+      <link_ctn id="link_4"/>
+    </route>
+    <route src="bus_stop_8" dst="bus_stop_11">
+      <link_ctn id="link_6"/>
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_8"/>
+    </route>
+    <route src="bus_stop_8" dst="bus_stop_12">
+      <link_ctn id="link_6"/>
+      <link_ctn id="link_5"/>
+      <link_ctn id="link_3"/>
+      <link_ctn id="link_0"/>
+    </route>
+    <route src="bus_stop_8" dst="bus_stop_13">
+      <link_ctn id="link_6"/>
+      <link_ctn id="link_5"/>
+    </route>
+    <route src="bus_stop_8" dst="bus_stop_14">
+      <link_ctn id="link_6"/>
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_9"/>
+    </route>
+    <route src="bus_stop_8" dst="bus_stop_15">
+      <link_ctn id="link_6"/>
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_9"/>
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_12"/>
+    </route>
+    <route src="bus_stop_8" dst="bus_stop_16">
+      <link_ctn id="link_6"/>
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_9"/>
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_12"/>
+      <link_ctn id="link_13"/>
+      <link_ctn id="link_14"/>
+    </route>
+    <route src="bus_stop_9" dst="bus_stop_10">
+      <link_ctn id="link_2"/>
+      <link_ctn id="link_0"/>
+      <link_ctn id="link_1"/>
+      <link_ctn id="link_4"/>
+    </route>
+    <route src="bus_stop_9" dst="bus_stop_11">
+      <link_ctn id="link_2"/>
+      <link_ctn id="link_3"/>
+      <link_ctn id="link_5"/>
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_8"/>
+    </route>
+    <route src="bus_stop_9" dst="bus_stop_12">
+      <link_ctn id="link_2"/>
+      <link_ctn id="link_0"/>
+    </route>
+    <route src="bus_stop_9" dst="bus_stop_13">
+      <link_ctn id="link_2"/>
+      <link_ctn id="link_3"/>
+    </route>
+    <route src="bus_stop_9" dst="bus_stop_14">
+      <link_ctn id="link_2"/>
+      <link_ctn id="link_3"/>
+      <link_ctn id="link_5"/>
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_9"/>
+    </route>
+    <route src="bus_stop_9" dst="bus_stop_15">
+      <link_ctn id="link_2"/>
+      <link_ctn id="link_3"/>
+      <link_ctn id="link_5"/>
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_9"/>
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_12"/>
+    </route>
+    <route src="bus_stop_9" dst="bus_stop_16">
+      <link_ctn id="link_2"/>
+      <link_ctn id="link_3"/>
+      <link_ctn id="link_5"/>
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_9"/>
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_12"/>
+      <link_ctn id="link_13"/>
+      <link_ctn id="link_14"/>
+    </route>
+    <route src="bus_stop_10" dst="bus_stop_11">
+      <link_ctn id="link_4"/>
+      <link_ctn id="link_1"/>
+      <link_ctn id="link_0"/>
+      <link_ctn id="link_3"/>
+      <link_ctn id="link_5"/>
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_8"/>
+    </route>
+    <route src="bus_stop_10" dst="bus_stop_12">
+      <link_ctn id="link_4"/>
+      <link_ctn id="link_1"/>
+    </route>
+    <route src="bus_stop_10" dst="bus_stop_13">
+      <link_ctn id="link_4"/>
+      <link_ctn id="link_1"/>
+      <link_ctn id="link_0"/>
+      <link_ctn id="link_3"/>
+    </route>
+    <route src="bus_stop_10" dst="bus_stop_14">
+      <link_ctn id="link_4"/>
+      <link_ctn id="link_1"/>
+      <link_ctn id="link_0"/>
+      <link_ctn id="link_3"/>
+      <link_ctn id="link_5"/>
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_9"/>
+    </route>
+    <route src="bus_stop_10" dst="bus_stop_15">
+      <link_ctn id="link_4"/>
+      <link_ctn id="link_1"/>
+      <link_ctn id="link_0"/>
+      <link_ctn id="link_3"/>
+      <link_ctn id="link_5"/>
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_9"/>
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_12"/>
+    </route>
+    <route src="bus_stop_10" dst="bus_stop_16">
+      <link_ctn id="link_4"/>
+      <link_ctn id="link_1"/>
+      <link_ctn id="link_0"/>
+      <link_ctn id="link_3"/>
+      <link_ctn id="link_5"/>
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_9"/>
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_12"/>
+      <link_ctn id="link_13"/>
+      <link_ctn id="link_14"/>
+    </route>
+    <route src="bus_stop_11" dst="bus_stop_12">
+      <link_ctn id="link_8"/>
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_5"/>
+      <link_ctn id="link_3"/>
+      <link_ctn id="link_0"/>
+    </route>
+    <route src="bus_stop_11" dst="bus_stop_13">
+      <link_ctn id="link_8"/>
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_5"/>
+    </route>
+    <route src="bus_stop_11" dst="bus_stop_14">
+      <link_ctn id="link_8"/>
+      <link_ctn id="link_9"/>
+    </route>
+    <route src="bus_stop_11" dst="bus_stop_15">
+      <link_ctn id="link_8"/>
+      <link_ctn id="link_9"/>
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_12"/>
+    </route>
+    <route src="bus_stop_11" dst="bus_stop_16">
+      <link_ctn id="link_8"/>
+      <link_ctn id="link_9"/>
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_12"/>
+      <link_ctn id="link_13"/>
+      <link_ctn id="link_14"/>
+    </route>
+    <route src="bus_stop_12" dst="bus_stop_13">
+      <link_ctn id="link_0"/>
+      <link_ctn id="link_3"/>
+    </route>
+    <route src="bus_stop_12" dst="bus_stop_14">
+      <link_ctn id="link_0"/>
+      <link_ctn id="link_3"/>
+      <link_ctn id="link_5"/>
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_9"/>
+    </route>
+    <route src="bus_stop_12" dst="bus_stop_15">
+      <link_ctn id="link_0"/>
+      <link_ctn id="link_3"/>
+      <link_ctn id="link_5"/>
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_9"/>
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_12"/>
+    </route>
+    <route src="bus_stop_12" dst="bus_stop_16">
+      <link_ctn id="link_0"/>
+      <link_ctn id="link_3"/>
+      <link_ctn id="link_5"/>
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_9"/>
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_12"/>
+      <link_ctn id="link_13"/>
+      <link_ctn id="link_14"/>
+    </route>
+    <route src="bus_stop_13" dst="bus_stop_14">
+      <link_ctn id="link_5"/>
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_9"/>
+    </route>
+    <route src="bus_stop_13" dst="bus_stop_15">
+      <link_ctn id="link_5"/>
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_9"/>
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_12"/>
+    </route>
+    <route src="bus_stop_13" dst="bus_stop_16">
+      <link_ctn id="link_5"/>
+      <link_ctn id="link_7"/>
+      <link_ctn id="link_9"/>
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_12"/>
+      <link_ctn id="link_13"/>
+      <link_ctn id="link_14"/>
+    </route>
+    <route src="bus_stop_14" dst="bus_stop_15">
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_12"/>
+    </route>
+    <route src="bus_stop_14" dst="bus_stop_16">
+      <link_ctn id="link_10"/>
+      <link_ctn id="link_12"/>
+      <link_ctn id="link_13"/>
+      <link_ctn id="link_14"/>
+    </route>
+    <route src="bus_stop_15" dst="bus_stop_16">
+      <link_ctn id="link_13"/>
+      <link_ctn id="link_14"/>
+    </route>
+
+  </zone>
+</platform>
