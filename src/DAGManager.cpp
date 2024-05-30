@@ -4,7 +4,6 @@
 #include "DAGManager.hpp"
 
 XBT_LOG_NEW_DEFAULT_CATEGORY(DAGManager, "DAGManager category");
-
 /**
  * Manages the distributed edge infrastructure with on-site green (e.g. solar) energy productions.
  * The edge infrastructure is composed of low capacity nodes (as bus stops equipped with Raspberry PI nodes).
@@ -13,6 +12,7 @@ XBT_LOG_NEW_DEFAULT_CATEGORY(DAGManager, "DAGManager category");
  * The workload is composed of requests represented by a DAG of tasks.
  *
  */
+
 DAGManager::DAGManager(std::vector<std::string> args)
 {      
     argsClass = args;    
@@ -30,18 +30,22 @@ static double convert_joules_to_wh(double energy_joules)
 
 void DAGManager::operator()()
 {
-    register_object("dagmanager",this);            
+    register_object("dagmanager",this);
     init();
     while(true)
     {
         if(int(simgrid::s4u::Engine::get_clock()) == next_time_to_update)
         {
             update_hosts_energy_information();
-        }    
+            if (SCHEDULING_ALGORITHM == SCHEDULING_BASELINE_ON_OFF)
+            {
+                evaluate_turn_on_or_off();
+            }
+        }
+
         perform_schedule(); 
         simgrid::s4u::this_actor::sleep_for(0.005);
-
-    }
+    }        
 }
 
 void DAGManager::handle_task_finished(simgrid::s4u::Exec const& exec)
@@ -72,9 +76,15 @@ void DAGManager::init()
     // When the simulation starts, all hosts are available to receive tasks
     for (auto& host : simgrid::s4u::Engine::get_instance()->get_all_hosts())
     {
+        // Initially, the host "is responsible for itself", that is, 
+        // since it is on, there is no need to redirect the workload to another host
+        hosts_manager_map[host->get_name()] = host->get_name();
+        // In the beginning of the simulations, all the cores are available, since it didnt started executing
         hosts_cpuavailability[host->get_name()] = host->get_core_count();
+        // We create the PV panels and batteries using information from the parameters
         hosts_pvpanels[host->get_name()] = new PVPanel(argsClass[++arg_index],solar_panels_efficiency,solar_panels_area);
         hosts_batteries[host->get_name()] = new LithiumIonBattery(battery_capacity, battery_dod,battery_charge_efficiency,battery_discharge_efficiency);        
+        // We init the auxilary map with the information of the energy consumption
         hosts_energy_consumption[host->get_name()] = 0.0;
     }
 
@@ -82,29 +92,27 @@ void DAGManager::init()
     {
         fixed_host = simgrid::s4u::Host::by_name(argsClass[++arg_index]);
     }
-    
-
     // Log when a tasks finishes
     simgrid::s4u::Exec::on_completion_cb([this](simgrid::s4u::Exec const& exec) 
     {
-
         XBT_INFO("#FE;%s;%f;%f;%s", exec.get_cname(), exec.get_start_time(), exec.get_finish_time(),exec.get_host()->get_cname());
         this->handle_task_finished(exec); 
     });    
     // Log when a communication finishes
     simgrid::s4u::Comm::on_completion_cb([this](simgrid::s4u::Comm const& comm) {
-        XBT_INFO("#FC;%s;%f;%f;%s;%s", comm.get_cname(), comm.get_start_time(), comm.get_finish_time(),comm.get_source()->get_cname(),comm.get_destination()->get_cname());
-        
+        XBT_INFO("#FC;%s;%f;%f;%s;%s", comm.get_cname(), comm.get_start_time(), comm.get_finish_time(),comm.get_source()->get_cname(),comm.get_destination()->get_cname());   
     });
 }
 
-void DAGManager::shut_down_host(simgrid::s4u::Host *host)
+void DAGManager::turn_host_off(simgrid::s4u::Host *host)
 {
-    if(host->get_name()!=simgrid::s4u::this_actor::get_host()->get_name())
-    {
-        host->set_pstate(1);
-        host->turn_off();
-    }
+    host->set_pstate(0);
+}
+
+
+void DAGManager::turn_host_on(simgrid::s4u::Host *host)
+{
+    host->set_pstate(1);
 }
 
 void DAGManager::handle_message(Message* message)
@@ -132,7 +140,7 @@ void DAGManager::handle_request_submission(DAGOfTasks* dag){
  */
 static void execute(simgrid::s4u::ExecPtr exec)
 {
-  XBT_INFO("STARTED TASK %s on host %s",exec->get_cname(),exec->get_host()->get_cname());
+  //XBT_INFO("STARTED TASK %s on host %s",exec->get_cname(),exec->get_host()->get_cname());
   exec-> init();
   exec-> wait(); 
   simgrid::s4u::this_actor::exit();
@@ -238,7 +246,7 @@ void DAGManager::perform_schedule()
         // Then, we check if the candidate host has all the necessary data for the task
         if(no_comm_needed && candidate_host!=segment->get_pref_host())
         {
-            XBT_INFO("hosts diffs %s vs %s",candidate_host->get_cname(),segment->get_pref_host()->get_cname());
+            //XBT_INFO("hosts diffs %s vs %s",candidate_host->get_cname(),segment->get_pref_host()->get_cname());
             if(segment->parent_coms.size()==0)
             {
                 no_comm_needed = false;
@@ -263,6 +271,7 @@ void DAGManager::perform_schedule()
         // or all the necessary communication has been completed. We can start executing it.
         if(no_comm_needed)
         {
+            segment->get_exec()->set_flops_amount(0);
             task->set_host(candidate_host);
             XBT_INFO("#START TASK;%s;%d;%s",task->get_cname(), hosts_cpuavailability[candidate_host->get_name()],candidate_host->get_cname());
             simgrid::s4u::Actor::create("worker", segment->get_pref_host(), execute,task);
@@ -293,7 +302,7 @@ simgrid::s4u::Host* DAGManager::find_host(SegmentTask *ready_task)
     // Validates if there is no host allocated yet to the task
     if (ready_task->get_allocated_host()==nullptr)
     {
-        if(SCHEDULING_ALGORITHM == SCHEDULING_BASELINE)
+        if(SCHEDULING_ALGORITHM == SCHEDULING_BASELINE || SCHEDULING_ALGORITHM == SCHEDULING_BASELINE_ON_OFF)
         {
             candidate_host =  find_host_baseline(ready_task);
         }
@@ -321,9 +330,8 @@ simgrid::s4u::Host* DAGManager::find_host(SegmentTask *ready_task)
             }
         }
 
-
         if (candidate_host == nullptr) return candidate_host;
-
+        
         XBT_INFO("#SCHEDULE;%s;%d;%s;%f",ready_task->get_exec()->get_cname(), hosts_cpuavailability[candidate_host->get_name()],candidate_host->get_cname(),simgrid::s4u::Engine::get_clock());
         ready_task->set_allocated_host(candidate_host);
         hosts_cpuavailability[candidate_host->get_name()] -=1;
@@ -336,12 +344,25 @@ simgrid::s4u::Host* DAGManager::find_host(SegmentTask *ready_task)
     return candidate_host;
 }
 
-
-
-
 simgrid::s4u::Host* DAGManager::find_host_baseline(SegmentTask *ready_task)
 {  
     simgrid::s4u::Host* host =   ready_task->get_pref_host();
+    
+    if (SCHEDULING_ALGORITHM == SCHEDULING_BASELINE_ON_OFF)
+    {
+        number_of_tasks_allocated[host->get_name()] +=1;
+        host = simgrid::s4u::Host::by_name(hosts_manager_map[host->get_name()]);                
+        // In the case the host is off, another host shoud be handling it
+        // so we schedule to this other host
+        while (host->get_pstate()==PSTATE_OFF)
+        {
+            host = simgrid::s4u::Host::by_name(hosts_manager_map[host->get_name()]);
+        }
+
+    
+
+    }
+    
     if(  hosts_cpuavailability[host->get_name()]>0)
     {
         return host;
@@ -550,4 +571,79 @@ void DAGManager::update_hosts_energy_information()
     }
 
     next_time_to_update += timeslot_duration;
+}
+
+
+void DAGManager::evaluate_turn_on_or_off()
+{
+
+
+    for (auto& host : simgrid::s4u::Engine::get_instance()->get_all_hosts())
+    {
+        if (host->get_pstate()==PSTATE_ON){
+            if(number_of_tasks_allocated[host->get_name()]==0)
+            {
+                XBT_INFO("DESLIGOU %s",host->get_cname());
+                
+                simgrid::s4u::Host* new_manager = get_nearest_neighbour_host(host);
+                if (new_manager!=nullptr)                                                                                                                                
+                {
+                    hosts_manager_map[host->get_name()] = new_manager->get_name();
+                    turn_host_off(host);
+                }
+                
+
+            }
+        }
+        else if (host->get_pstate()==PSTATE_OFF)
+        {
+            if(number_of_tasks_allocated[host->get_name()] >0 )
+            {
+                XBT_INFO("LIGOU %s",host->get_cname());
+                turn_host_on(host);
+                hosts_manager_map[host->get_name()] = host->get_name();
+            }
+    
+        }
+
+        // Reinitialize the variable that registers the amount of tasks 
+        // during the simulation
+        number_of_tasks_allocated[host->get_name()] = 0;
+    }
+
+
+}
+
+
+/**
+ * Returns the host that is closest to a given host in terms of network latency.
+*/
+simgrid::s4u::Host* DAGManager::get_nearest_neighbour_host(simgrid::s4u::Host* host)
+{
+ 
+    simgrid::s4u::Host* closest = nullptr;
+    double min_latency =  1000.0; 
+
+    for (auto& candidate_host : simgrid::s4u::Engine::get_instance()->get_all_hosts())
+    {        
+        if(candidate_host!=host && candidate_host->get_pstate() == PSTATE_ON)
+        {            
+            std::vector<simgrid::s4u::Link *> links;
+            double latency = 0.0;
+            host->route_to(candidate_host,links,nullptr);        
+            for(auto link : links)
+            {
+                latency += link->get_latency();
+            }
+            if (latency<min_latency)
+            {
+                closest = candidate_host;
+                min_latency = latency;
+            }
+            links.clear();
+        }
+    }
+
+   return closest;
+   
 }

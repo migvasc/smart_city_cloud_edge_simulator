@@ -9,11 +9,8 @@ from random import randint
 def distance(p1, p2):
   return math.sqrt((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2)
 
-
-
 def distance(p1, p2):
   return math.sqrt((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2)
-
 
 def create_clusters_df(street_graph, computing_infra_csv_path):
     col_names = names=["id", "long", "lat"]

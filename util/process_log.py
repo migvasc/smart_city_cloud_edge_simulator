@@ -58,7 +58,6 @@ def process_requests(tasks_request_dict,log_file_path,output_folder,request_subm
             data_array = str(line[1]).split('#')
             if (len(data_array)>1):
                     data_to_process = data_array[1].split(';')
-                    
 
                     ## Here we have information of the energy consumption and production of the hosts
                     if(data_to_process[0]=='ENERGY'):                        
@@ -68,8 +67,8 @@ def process_requests(tasks_request_dict,log_file_path,output_folder,request_subm
                         energy_consumed = float(data_to_process[3])
                         solar_energy = float(data_to_process[4])
                         brown_energy = float(data_to_process[5])
-                        if brown_energy > 0:
-                            print(data_to_process)
+                        #if brown_energy > 0:
+                            #print(data_to_process)
                         battery_LOE = float(data_to_process[6].replace('\n',''))
                         timeslot_energy_file.write(f'{time},{host},{energy_consumed},{solar_energy},{brown_energy},{battery_LOE}\n')                                                
 
@@ -86,6 +85,8 @@ def process_requests(tasks_request_dict,log_file_path,output_folder,request_subm
                         if bus_stop_id not in hosts_free_cores:
                             if bus_stop_id == 'cloud_cluster':
                                 hosts_free_cores[bus_stop_id] = [ j for j in range(1,257)]   
+                            elif bus_stop_id == 'edge_cluster':
+                                hosts_free_cores[bus_stop_id] = [ j for j in range(1,129)]   
                             else:
                                 hosts_free_cores[bus_stop_id] = [1,2,3,4]  
                         task_schedule[task_id] = hosts_free_cores[bus_stop_id][0]
@@ -140,6 +141,9 @@ def process_requests(tasks_request_dict,log_file_path,output_folder,request_subm
                         req_exec_time[request_id] += duration                        
                         if host == 'cloud_cluster':
                             allocated_core = 69 + task_schedule[task_id]
+                        elif host == 'edge_cluster':
+                            allocated_core = 500 + task_schedule[task_id]
+
                         else: 
                             bus_stop_number = int(host.replace('bus_stop_',''))
                             allocated_core =  (bus_stop_number * 4) + task_schedule[task_id]
@@ -171,6 +175,72 @@ def process_requests(tasks_request_dict,log_file_path,output_folder,request_subm
     timeslot_energy_file.close()
     energy_file.close()
 
+
+# Create a hashmap/dictionary with information of renewable energy availability for each host over time
+# Key : Host, time = value
+def create_hosts_green_energy_ratio_dict(time_slot_energy_file_path):
+    hosts_green_dict = {}
+
+    
+    with open(time_slot_energy_file_path) as time_slot_energy_file:
+        for index,line in enumerate(time_slot_energy_file):
+            if index == 0:
+                continue
+            cols = line.split(',')
+            time = round(float(cols[0]),1)
+            host = cols[1]
+            energy = float(cols[2])
+            brown_energy = float(cols[4])
+            
+            if host not in hosts_green_dict:
+                hosts_green_dict[host] = {}
+            
+            if energy > 0:
+                hosts_green_dict[host][time] = 1 - (brown_energy/energy)
+            else:
+                hosts_green_dict[host][time] = 0
+    return hosts_green_dict
+
+# Extracts information about requests energy and brown energy consumption
+def process_req_energy(output_folder): 
+    
+    time_slot_energy_file_path = f'{output_folder}/timeslot_energy.csv'
+    tasks_input_file_path = f'{output_folder}/tasks.csv'
+    req_energy = {}
+    req_green_energy = {}
+
+    hosts_green_ratio = create_hosts_green_energy_ratio_dict(time_slot_energy_file_path)
+    
+    with open(tasks_input_file_path) as tasks_input_file:
+        for index,line in enumerate(tasks_input_file):
+            if index == 0:
+                continue
+            cols = line.split(';')
+            req_id = cols[0].split('-')[1]
+            completion_timeslot =   float(int ( float(cols[2])/60)*60)
+            host = cols[4].replace('\n','')
+            if req_id not in req_energy:
+                req_energy[req_id] = 0.0
+                req_green_energy[req_id] = 0.0
+
+            if host == 'cloud_cluster':
+                energy = 0.05  * 2.21875
+                req_energy[req_id] +=energy
+                req_green_energy[req_id] +=energy
+            else:
+                energy = 0.1 * 1.2
+                req_energy[req_id] +=energy
+                req_green_energy[req_id] +=energy * hosts_green_ratio[host][completion_timeslot]
+
+    result_file = open(f'{output_folder}/req_energy.csv','w')
+    
+    result_file.write('req_id,total_energy,green_energy\n')
+    for req in req_energy:
+        result_file.write(f'req_{req_id},{round(req_energy[req],4)},{round(req_green_energy[req],4)}\n')
+    result_file.close()
+    
+
+# Main method for processing the data
 def process_data(input_file_path,log_file,output_folder):
     tasks_request_dict = {}
     request_submission_time_dict = {}
@@ -188,8 +258,7 @@ def process_data(input_file_path,log_file,output_folder):
                 create_requests_dict(json_data,tasks_request_dict)
 
     process_requests(tasks_request_dict,log_file_path,output_folder,request_submission_time_dict)
-
-
+    process_req_energy(output_folder)
 
 input_file_path = sys.argv[1]
 log_file_path =  sys.argv[2]
