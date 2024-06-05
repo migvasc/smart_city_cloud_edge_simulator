@@ -27,6 +27,7 @@ public:
     explicit DAGOfTasks(std::string& input_file);
     std::vector<SegmentTask> get_DAG();
     std::vector<SegmentTask*>   get_ready_tasks();
+    SegmentTask*   get_one_ready_task();
     simgrid::s4u::ExecPtr get_last_exec();
     std::string get_name();
 };

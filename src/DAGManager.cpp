@@ -207,6 +207,44 @@ vector<SegmentTask*> DAGManager::get_ready_tasks_from_requests()
     return ready_tasks;
 }
 
+
+/**
+ * Returns the list of tasks from all the requests that have their dependencies solved and can be executed.
+ */
+vector<SegmentTask*> DAGManager::get_one_ready_task_per_request()
+{
+    vector<vector<SegmentTask*>> all_ready_tasks; 
+    int max_size = 0;
+    for(auto& request : requests)
+    {        
+        vector<SegmentTask*> ready_tasks; 
+
+        for(auto& task : request->get_ready_tasks())
+        {
+            ready_tasks.push_back(task);
+        }
+        all_ready_tasks.push_back(ready_tasks);
+        if (ready_tasks.size() > max_size)
+        {
+            max_size = ready_tasks.size();
+        }
+    }
+
+    vector<SegmentTask*> ready_tasks; 
+
+    for (int task_index = 0 ; task_index < max_size; task_index++)
+    {
+        for (int req_index = 0; req_index< all_ready_tasks.size();req_index++)
+        {
+            if(task_index < all_ready_tasks[req_index].size()){
+                ready_tasks.push_back( all_ready_tasks[req_index][task_index] );
+            }
+        }
+    }
+
+    return ready_tasks;
+}
+
 /**
  * Allocates the tasks to the hosts, respecting the servers computational capacity and the selected scheduling policy.
  */
@@ -214,7 +252,6 @@ void DAGManager::perform_schedule()
 {   
     //Lists of tasks that are ready to be scheduled in the current instant of time
     vector<SegmentTask*> ready_tasks = get_ready_tasks_from_requests(); 
-
     for(auto& segment : ready_tasks)
     {
         // Flag used to validate if there is need to perform communications to get its required data,
@@ -271,7 +308,6 @@ void DAGManager::perform_schedule()
         // or all the necessary communication has been completed. We can start executing it.
         if(no_comm_needed)
         {
-            segment->get_exec()->set_flops_amount(0);
             task->set_host(candidate_host);
             XBT_INFO("#START TASK;%s;%d;%s",task->get_cname(), hosts_cpuavailability[candidate_host->get_name()],candidate_host->get_cname());
             simgrid::s4u::Actor::create("worker", segment->get_pref_host(), execute,task);

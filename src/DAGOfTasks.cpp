@@ -33,6 +33,23 @@ std::vector<SegmentTask*> DAGOfTasks::get_ready_tasks()
   return ready_tasks;
 }
 
+/*Get list of ready tasks*/
+SegmentTask* DAGOfTasks::get_one_ready_task()
+{
+
+  SegmentTask* ready_task = nullptr;
+
+  for (SegmentTask& a : dag) {
+    // Only look at activity that have their dependencies solved but are not assigned
+    if (a.get_exec()->dependencies_solved() && !a.get_exec()->is_assigned() ) {
+      // if it is an exec, it's ready
+      if (auto* exec = dynamic_cast<simgrid::s4u::Exec*>(a.get_exec().get()))
+        ready_task = &a;
+    }
+  }
+  return ready_task;
+}
+
 
 
 /** @brief loads a JSON file describing a DAG

@@ -79,6 +79,7 @@ private:
   std::vector<std::string> argsClass;
   void perform_schedule();
   vector<SegmentTask*> get_ready_tasks_from_requests();
+  vector<SegmentTask*> get_one_ready_task_per_request();
   double get_host_available_renewable_energy(simgrid::s4u::Host* host);
   void update_hosts_energy_information();
   void update_battery_state(simgrid::s4u::Host* host);
