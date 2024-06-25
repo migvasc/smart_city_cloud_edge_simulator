@@ -11,6 +11,8 @@
 #include "DAGManager.hpp"
 #include "simgrid/plugins/live_migration.h"
 #include <chrono>
+#include <memory>
+
 
 XBT_LOG_NEW_DEFAULT_CATEGORY(simulationMain, "Main Logger");
 

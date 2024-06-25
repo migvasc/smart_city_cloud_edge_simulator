@@ -9,7 +9,8 @@
 #include "PVPanel.hpp"
 #include "simgrid/plugins/energy.h"
 #include "LithiumIonBattery.hpp"
-
+#include "EdgeHost.hpp"
+#include <memory>
 using namespace std::chrono; 
 
 
@@ -24,6 +25,7 @@ private:
   int SCHEDULING_GEFT = 4;
   int SCHEDULING_FIXED_HOST = 5;
   int SCHEDULING_BASELINE_ON_OFF = 6;
+  int SCHEDULING_BASELINE_CACHE = 7;
 
 
   // Host for the algorithm where all the tasks are scheduled to it (for example, offloading everything to the cloud)
@@ -37,13 +39,27 @@ private:
   double time_to_turn_on = 0.0;
   // List with the current requests being processed
   std::vector<DAGOfTasks*> requests;
+  
+  // Map used to store the CPU cores availability of the hosts being used
+  std::map<std::string, DAGOfTasks*> requests_map;
+
+
   // Map used to store the CPU cores availability of the hosts being used
   std::map<std::string, int> hosts_cpuavailability;
 
 
+  // Map used to store the Hosts info, for example caching info
+  std::map<std::string, EdgeHost*> hosts_info;
 
 
-  // Turn off or on variables
+  // Used to store where the cache is (which host)
+  std::unordered_map<std::string, string> task_cache;
+
+
+  // Used to store when the cache was stored (for expiration)
+  std::unordered_map<std::string, int> task_time_cache;
+
+
 
   // Map used to store the information of the host that will manages the load,
   // for example, in the case that the host A is turned off, host B will 
@@ -78,8 +94,8 @@ private:
   void handle_request_submission(DAGOfTasks* dag);
   std::vector<std::string> argsClass;
   void perform_schedule();
-  vector<SegmentTask*> get_ready_tasks_from_requests();
-  vector<SegmentTask*> get_one_ready_task_per_request();
+  vector<shared_ptr<SegmentTask>> get_ready_tasks_from_requests();
+  vector<shared_ptr<SegmentTask>> get_ready_tasks_cache();
   double get_host_available_renewable_energy(simgrid::s4u::Host* host);
   void update_hosts_energy_information();
   void update_battery_state(simgrid::s4u::Host* host);
@@ -91,11 +107,11 @@ public:
   void operator()();
   void handle_task_finished(simgrid::s4u::Exec const& exec);
   void finish_request(const std::string last_task_id);  
-  simgrid::s4u::Host* find_host(SegmentTask *ready_task);
-  simgrid::s4u::Host* find_host_bestfit(SegmentTask *ready_task);
-  simgrid::s4u::Host* find_host_HEFT(SegmentTask *ready_task, bool renewable_energy_required);
-  simgrid::s4u::Host* find_host_baseline(SegmentTask *ready_task);
-  simgrid::s4u::Host* find_host_renewable_energy(SegmentTask *ready_task);
+  simgrid::s4u::Host* find_host(shared_ptr<SegmentTask> ready_task);
+  simgrid::s4u::Host* find_host_bestfit(shared_ptr<SegmentTask> ready_task);
+  simgrid::s4u::Host* find_host_HEFT(shared_ptr<SegmentTask> ready_task, bool renewable_energy_required);
+  simgrid::s4u::Host* find_host_baseline(shared_ptr<SegmentTask> ready_task);
+  simgrid::s4u::Host* find_host_renewable_energy(shared_ptr<SegmentTask> ready_task);
 
 };
 #endif

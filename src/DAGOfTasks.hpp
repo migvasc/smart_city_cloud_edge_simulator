@@ -20,15 +20,21 @@ class DAGOfTasks {
 private:
     std::string name;
     simgrid::s4u::ExecPtr last_exec;
-    std::vector<SegmentTask> dag;
+    std::vector<shared_ptr<SegmentTask>> dag;
     void create_DAG_from_JSON(const std::string& filename);
+    // To control whether or not we can start the computations of the request
+    // that is the path of the route
+    bool ini_task_finished = false;
 
 public:
     explicit DAGOfTasks(std::string& input_file);
-    std::vector<SegmentTask> get_DAG();
-    std::vector<SegmentTask*>   get_ready_tasks();
-    SegmentTask*   get_one_ready_task();
+    std::vector<shared_ptr<SegmentTask>> get_DAG();
+    std::vector<shared_ptr<SegmentTask>>   get_ready_tasks();
+    std::vector<shared_ptr<SegmentTask>>   get_ready_tasks_cache( unordered_map<string,string>& cache,unordered_map<string,int>& time_cache);
+    
     simgrid::s4u::ExecPtr get_last_exec();
     std::string get_name();
+    void request_received();
+    bool can_start_computations();
 };
 #endif
