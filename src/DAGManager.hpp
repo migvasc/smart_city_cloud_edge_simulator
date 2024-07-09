@@ -37,6 +37,9 @@ private:
   // renewable energy information
   double next_time_to_update = 0.0;
   double time_to_turn_on = 0.0;
+
+  double cache_duration = 0;
+
   // List with the current requests being processed
   std::vector<DAGOfTasks*> requests;
   

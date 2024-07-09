@@ -30,7 +30,7 @@ public:
     explicit DAGOfTasks(std::string& input_file);
     std::vector<shared_ptr<SegmentTask>> get_DAG();
     std::vector<shared_ptr<SegmentTask>>   get_ready_tasks();
-    std::vector<shared_ptr<SegmentTask>>   get_ready_tasks_cache( unordered_map<string,string>& cache,unordered_map<string,int>& time_cache);
+    std::vector<shared_ptr<SegmentTask>>   get_ready_tasks_cache( unordered_map<string,string>& cache,unordered_map<string,int>& time_cache, int cache_duration);
     
     simgrid::s4u::ExecPtr get_last_exec();
     std::string get_name();

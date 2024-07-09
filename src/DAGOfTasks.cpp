@@ -32,12 +32,12 @@ std::vector<shared_ptr<SegmentTask>> DAGOfTasks::get_ready_tasks()
   return ready_tasks;
 }
 
-std::vector<shared_ptr<SegmentTask>>  DAGOfTasks::get_ready_tasks_cache(unordered_map<string,string>& cache,unordered_map<string,int>& time_cache )
+std::vector<shared_ptr<SegmentTask>>  DAGOfTasks::get_ready_tasks_cache(unordered_map<string,string>& cache,unordered_map<string,int>& time_cache, int cache_duration )
 {
   std::vector<shared_ptr<SegmentTask>> ready_tasks;
   std::map<simgrid::s4u::Exec*, unsigned int> candidate_execs;
   // Used to see if the cache is still valid
-  int current_time_for_cache = int(simgrid::s4u::Engine::get_clock()/5);
+  int current_time_for_cache = int(simgrid::s4u::Engine::get_clock()/cache_duration);
   
   for (auto& task : dag) 
   {
@@ -49,11 +49,10 @@ std::vector<shared_ptr<SegmentTask>>  DAGOfTasks::get_ready_tasks_cache(unordere
     // sending the request and receiving the result
     if (task_name.compare("ini")!=0 )
     {
-
       // If the ini task has not been completed, it is not possible to execute the other tasks
       if(!can_start_computations()) break;
-
-
+      // Task already completed, we do not need to process it again...
+      if ( task->get_exec()->get_state() == simgrid::s4u::Activity::State::FINISHED) continue;
       // If it has not been allocated yet, we can validate if there is cache for it
       // because if it has been alocated, it is already execution/in execution and therefore we
       // cannot kill it
@@ -63,49 +62,40 @@ std::vector<shared_ptr<SegmentTask>>  DAGOfTasks::get_ready_tasks_cache(unordere
         // for this street and if it is in cache
         auto it_cache = cache.find(task_name);    
         bool hasCache = it_cache != cache.end();    
-
         if (hasCache)
         {
           // If it is in cache, we need to validate if the data is still up to date
           // (if the information has not expired)
           bool cache_expired = false;      
           auto it_time = time_cache.find(task_name);    
-
           if(it_time!= time_cache.end())
           {
             cache_expired = it_time->second != current_time_for_cache;
           }
-
           // If it has expired, we remove the data of the task from the cache
-          if(cache_expired)
-          {
-            cache.erase(it_cache);
-            time_cache.erase(it_time);
-      //      XBT_INFO("task %s is in cache but it is not valid anymore, so the task will be executed",task->get_exec()->get_cname());
-
-          }
-          else // otherwise, we do not need to add it to the list of ready tasks
+          if(!cache_expired)
           {
             simgrid::s4u::Host* host = simgrid::s4u::Host::by_name(cache.at(task_name));
             task->set_pref_host(host);
             task->set_cache();
-        //    XBT_INFO("task %s is in cache and it  is still valid, so the task will NOOTTT be executed",task->get_exec()->get_cname());
+           // XBT_INFO("task %s is in cache and it  is still valid, so the task will NOOTTT be executed",task->get_exec()->get_cname());
             continue;
           }
 
         }
- 
+
+        task->clear_parents_in_cache();
         // Now we evaluate for the dependencies (parents) of the task if they are in cache
         for (auto& parent : task->get_parents())
         {
           
           // If it has been allocated, we do not need to validate
-          if (parent->get_allocated_host()!=nullptr) 
+          if (parent.second->get_allocated_host()!=nullptr) 
           {
             continue;
           }
 
-          boost::split(result, parent->get_exec()->get_name(), boost::is_any_of("-"));
+          boost::split(result, parent.second->get_exec()->get_name(), boost::is_any_of("-"));
           std::string parent_name = result[2];
           it_cache = cache.find(parent_name);
           bool hasCache = it_cache != cache.end();
@@ -119,39 +109,26 @@ std::vector<shared_ptr<SegmentTask>>  DAGOfTasks::get_ready_tasks_cache(unordere
             {
               cache_expired = it_time->second != current_time_for_cache;
             }
-            if(cache_expired)
-            {
-              cache.erase(it_cache);
-              time_cache.erase(it_time);
-            }
-            else
+            if(!cache_expired)
             {
               // If the cache is still valid, we mark the parent as completed, in order
               // to be able to execute the tasks (finish all its dependencies)
-              if( parent->get_allocated_host()==nullptr && (parent->get_exec()->get_state() == simgrid::s4u::Activity::State::INITED ||parent->get_exec()->get_state() == simgrid::s4u::Activity::State::STARTING ))
-
+              if( parent.second->get_allocated_host()==nullptr && (parent.second->get_exec()->get_state() == simgrid::s4u::Activity::State::INITED ||parent.second->get_exec()->get_state() == simgrid::s4u::Activity::State::STARTING ))        
               {
-                if(!parent->get_exec()->is_assigned() )
-                {
-                  parent->get_exec()->set_host(simgrid::s4u::Host::by_name(it_cache->second));
-                }
-           //     XBT_INFO("parent %s of task task %s is in cache and will not be executed",parent->get_exec()->get_cname(), task->get_exec()->get_cname());
-
+               // XBT_INFO("parent %s of task task %s is in cache and will not be executed",parent.second->get_exec()->get_cname(), task->get_exec()->get_cname());
                 // Validates if the parent is already in the execution list,
                 // if so, we need to remove it from the list
                 std::vector<std::shared_ptr<SegmentTask>>::iterator it = ready_tasks.begin();
-
                 while(it != ready_tasks.end()) {
-                    if( parent->get_exec()->get_name().compare((*it)->get_exec()->get_name())==0 )
-                    {
+                  if( parent.second->get_exec()->get_name().compare((*it)->get_exec()->get_name())==0 )
+                  {
+                    it = ready_tasks.erase(it);
+                    break;
+                  }
+                  else ++it;
+                }                                
+                task->add_parent_in_cache(parent.second);
 
-                        it = ready_tasks.erase(it);
-                        break;
-                    }
-                    else ++it;
-                }
-
-                parent->get_exec()->complete(simgrid::s4u::Activity::State::FINISHED);
               }
             }          
           }
@@ -160,13 +137,13 @@ std::vector<shared_ptr<SegmentTask>>  DAGOfTasks::get_ready_tasks_cache(unordere
     }
 
     // Only look at activity that have their dependencies solved but are not assigned    
-    if ( ( task->is_ready_for_execution(cache,time_cache) ) && !task->get_exec()->is_assigned() ) 
+    if ( ( task->is_ready_for_execution()) && !task->get_exec()->is_assigned() ) 
     {
       // if it is an exec, it's ready
       if (auto* exec = dynamic_cast<simgrid::s4u::Exec*>(task->get_exec().get()))
       {
         ready_tasks.push_back(task);
-      //  XBT_INFO("TASK %s foi adicionada na lista pra ser executada",task->get_exec()->get_cname());
+        //XBT_INFO("TASK %s foi adicionada na lista pra ser executada",task->get_exec()->get_cname());
         if (task_name.compare("ini")==0 ) break;
 
       }

@@ -1,7 +1,24 @@
 #include "SegmentTask.hpp"
 
-bool SegmentTask::is_ready_for_execution(std::unordered_map<std::string,std::string>& cache,std::unordered_map<std::string,int>& time_cache )
+void SegmentTask::clear_parents_in_cache()
 {
+  /*for (auto& task : this->parents_in_cache)
+  {
+      if (auto ptr =  (task.second).lock())  
+      {  
+        if(ptr->get_exec()->is_assigned()){
+          ptr->get_exec()->unset_host();
+        }
+          
+      }
+  }*/
+
+  this->parents_in_cache.clear();
+}
+
+bool SegmentTask::is_ready_for_execution()
+{
+
   bool dependencies_solved = this->ptr->dependencies_solved();
 
   if(dependencies_solved)
@@ -10,64 +27,100 @@ bool SegmentTask::is_ready_for_execution(std::unordered_map<std::string,std::str
   }
   
   int number_of_dependencies = ptr->get_dependencies().size();
-  
-  // If not, we validate the parents/dependencies that are not complete yet !
-  for(auto dep : ptr->get_dependencies())
+
+  for(auto & dep : ptr->get_dependencies() )
   {
-    std::string dep_name = dep->get_name();
-
+    if(is_parent_in_cache(dep->get_name()))
+    {
+      number_of_dependencies-=1;
+    }
   }
+  
 
-  return false;
+  return number_of_dependencies == 0 ;
+
 }
-bool SegmentTask::is_assigned(){
+
+bool SegmentTask::is_assigned()
+{
   return this->ptr->is_assigned();
 }
 
-simgrid::s4u::Host* SegmentTask::get_pref_host(){
+simgrid::s4u::Host* SegmentTask::get_pref_host()
+{
   return this->pref_host;
 }
-
-void SegmentTask::start(){
+  
+void SegmentTask::start()
+{
   this->ptr->start();
 }
 
-simgrid::s4u::ExecPtr SegmentTask::get_exec(){
+simgrid::s4u::ExecPtr SegmentTask::get_exec()
+{
   return  this->ptr;
 }
 
-void SegmentTask::set_exec(simgrid::s4u::ExecPtr exec){
+void SegmentTask::set_exec(simgrid::s4u::ExecPtr exec)
+{
   this->ptr =exec;
 }
 
-void SegmentTask::set_pref_host(simgrid::s4u::Host* host){
+void SegmentTask::set_pref_host(simgrid::s4u::Host* host)
+{
   this->pref_host = host;
 }
 
-void SegmentTask::add_parent(std::shared_ptr<SegmentTask> parent){
-  //auto ptr = make_shared<SegmentTask>((*parent));
-  this->parents.push_back((parent));
+void SegmentTask::add_parent(const std::shared_ptr<SegmentTask> parent)
+{
+  this->parents[parent->get_exec()->get_name()] = parent;
+}
+
+void SegmentTask::add_parent_in_cache(const std::shared_ptr<SegmentTask> parent)
+{
+  this->parents_in_cache[parent->get_exec()->get_name()] = parent;
 }
 
 //std::vector<weak_ptr<SegmentTask>> SegmentTask::get_parents(){
-std::vector<std::shared_ptr<SegmentTask>> SegmentTask::get_parents() const{
+std::map<std::string,std::shared_ptr<SegmentTask>> SegmentTask::get_parents() const
+{
 
-  std::vector<std::shared_ptr<SegmentTask>> valid_parents;
+  std::map<std::string,std::shared_ptr<SegmentTask>> valid_parents;
 
-  for (const auto p : this->parents) 
+  for (const auto & p : this->parents) 
   {
+      if (auto ptr =  (p.second).lock())  
+      {  
+          valid_parents[p.first] = ptr;
+      }
+  }
+  return valid_parents;
+}
 
-      std::shared_ptr<SegmentTask> s;
-      s = p.lock();
-      if (auto ptr = p.lock()) {  // Verifica se o ponteiro ainda é válido
-          valid_parents.push_back(ptr);
+std::map<std::string,std::shared_ptr<SegmentTask>>  SegmentTask::get_parents_in_cache() const
+{
+
+  std::map<std::string,std::shared_ptr<SegmentTask>>  valid_parents;
+
+  for (const auto & p : this->parents_in_cache) 
+  {
+      if (auto ptr =  (p.second).lock())  
+      {  
+          valid_parents[p.first] = ptr;
       }
   }
   return valid_parents;
 }
 
 
-void SegmentTask::clear_parents(){
+bool SegmentTask::is_parent_in_cache(std::string parent_id)
+{
+  auto it_cache = this->parents_in_cache.find(parent_id);    
+  return it_cache != this->parents_in_cache.end();    
+}
+
+void SegmentTask::clear_parents()
+{
   this->parents.clear();
 }
 
@@ -89,7 +142,6 @@ bool SegmentTask::has_cache()
 {
   return data_in_cache;
 }
-
 
 void SegmentTask::set_cache()
 {

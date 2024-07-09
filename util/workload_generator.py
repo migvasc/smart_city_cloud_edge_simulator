@@ -3,14 +3,18 @@ import pandas as pd
 import networkx as nx
 import math
 import json
+import sys
 from random import randint
+
 
 ### Compute the distance between two nodes
 def distance(p1, p2):
   return math.sqrt((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2)
 
+
 def distance(p1, p2):
   return math.sqrt((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2)
+
 
 def create_clusters_df(street_graph, computing_infra_csv_path):
     col_names = names=["id", "long", "lat"]
@@ -35,35 +39,8 @@ def create_clusters_df(street_graph, computing_infra_csv_path):
                 current_best_cluster = i
         clusters[current_best_cluster].append(node)
         streets_nearest_busstop_map[node] = f'bus_stop_{current_best_cluster}'
-
+        
     return (streets_nearest_busstop_map)
-
-### Create dictionary of streets and its responsible bus stop
-def create_clusters(computing_infra_graph, street_graph):
-    dict_street_cluster = {}
-    max = int(len(street_graph.nodes)/len(computing_infra_graph.nodes))+1
-    print(f'MAX {max}')
-    clusters = {}
-
-    for i in range(len(computing_infra_graph.nodes)):
-        clusters[i] = []
-
-    for i in range(len(street_graph)):
-        x = street_graph.nodes[f'street_{i}']['longitude']
-        y = street_graph.nodes[f'street_{i}']['latitude']
-        min_dist = 99999999.0
-        current_best_cluster = 0
-        coord_street = [x,y]
-        for j in range(len(computing_infra_graph.nodes)):
-            x = computing_infra_graph.nodes[j]['x']
-            y = computing_infra_graph.nodes[j]['y']
-            coord_infra = [x,y] 
-            dist = distance(coord_street, coord_infra) 
-            if dist < min_dist and len(clusters[j]) < max:
-                min_dist = dist
-                current_best_cluster = j
-        dict_street_cluster['street_{i}'] = f'bus_stop_{current_best_cluster}'
-    return(dict_street_cluster)
 
 # Build the graph of streets
 def build_street_graph(place): 
@@ -71,52 +48,64 @@ def build_street_graph(place):
     graph_streets = ox.graph_from_place(place, network_type='drive')
     return(graph_streets)
 
-
 def build_computing_infra_df(place):
     graph_bus_stops = ox.geometries_from_place(place, tags={'highway':'bus_stop'})
     return 0
 
 
-def generate_path(street_graph,offset):
+def generate_path(street_graph,offset,n_hops):
     path = []
     cont = 0
     for node in street_graph.nodes:
         if cont < offset:
             cont= cont+1
             continue
-        candidatos_dist =  nx.descendants_at_distance(street_graph, node, 3)
+        candidatos_dist =  nx.descendants_at_distance(street_graph, node, n_hops)
         if (len(candidatos_dist))>1:
-            edges_in = street_graph.in_edges(node)
+            dest_offset = randint(1, len(candidatos_dist))
+            count_dest = 1
             for dest in candidatos_dist:  
+                if count_dest < dest_offset:
+                    count_dest+=1
+                    continue
                 path = nx.shortest_path(street_graph, source=node, target=dest)
+                break
             break
     return(path)
     
-def create_parent_graph(graph,node, time, previous,parent_graph):
-    if node == previous:
+def create_parent_graph(graph,src, dest,time,parent_graph,street):
+    if dest == src:
         return
-    if node not in parent_graph:
-        parent_graph[f'{node}'] = []
+    if street not in parent_graph:
+        parent_graph[street] = []
     if time == 0 : 
         return
-    key = int(node.split('_')[0])
+    key = int(src.split('_')[0])
     edges =  graph.in_edges(key)
     for edge in edges:
         adj_node = f'{edge[0]}_{time-1}'
-        if adj_node != previous and adj_node not in parent_graph[node]:
-            parent_graph[node].append(adj_node)
-            create_parent_graph(graph,adj_node, time-1,previous,parent_graph)
+        depedent_street = f'{adj_node}_{src}'
+        if  depedent_street not in parent_graph[street]:
+            parent_graph[street].append(depedent_street)
+            create_parent_graph(graph,adj_node, src,time-1,parent_graph, depedent_street)
 
 def build_parent_graph(graph,path):
     parent_graph = {}
     visited = {}
-    for i in range(len(path)):
-        parent_graph[f'{path[i]}_{i}']=[]
-    for i in range(1,len(path)):
-        node = f'{path[i]}_{i}'
-        previous = f'{path[i-1]}_{i-1}'
-        parent_graph[node].append(previous)
-        create_parent_graph(graph,node, i,previous,parent_graph)
+    # First we init the dependencies with the nodes in the path
+    for i in range(1, len(path)):
+        parent_graph[f'{path[i-1]}_{i-1}_{path[i]}_{i}']=[]
+
+    # Then we add the dependencies of the other streets
+    for i in range(2,len(path)):
+        dest = f'{path[i]}_{i}'
+        src = f'{path[i-1]}_{i-1}'
+        previous = f'{path[i-2]}_{i-2}'
+        parent_graph[f'{src}_{dest}'].append(f'{previous}_{src}')
+        street =f'{src}_{dest}'
+        create_parent_graph(graph,src, dest,i-1, parent_graph,street)
+       # break
+        
     return(parent_graph)
 
 
@@ -141,24 +130,25 @@ def build_networkx_from_dag(dag):
             digraph.add_edge(parent,son)
     return(digraph)
 
-def generate_workload(place,amount_requests):
-    index =0
-
-    while (index < amount_requests):
+def generate_workload(place,index,amount_requests,n_hops) :    
+    total_tasks = 0.0
+    total_requests = index + amount_requests
+    while (index < total_requests):
     
         street_graph = build_street_graph(place)
         
         offset = randint(0, len(street_graph.nodes))
        # print('vai ter offset de',offset)
-        path_ex = generate_path(street_graph,offset)
+        path_ex = generate_path(street_graph,offset,n_hops)
       #  print('no inicio', path_ex[0],'no fim',path_ex[len(path_ex)-1])
-      #  print('caminho',path_ex)
+#        print('caminho',path_ex)
+ 
         dag = build_parent_graph(street_graph,path_ex)
 
         if len(dag) == 0: continue
         #print_parent_graph(dag)
        # print_path(path_ex,street_graph)
-        path_computing_infra = '/home/msilvava/postdoc/SmartCityFogComputing-main/projet/vieille-toulouse-computing-nodes.csv'
+        path_computing_infra = '/home/msilvava/input/toulouse-computing-nodes.csv'
         dict_busstops = create_clusters_df(street_graph,path_computing_infra)
         digraph = nx.DiGraph()
         for son in dag:
@@ -193,16 +183,24 @@ def generate_workload(place,amount_requests):
         dictionary = {
             "name": req_name,
             "schemaVersion": "1.0",
-            "tasks": tasks_list   
+            "tasks": tasks_list,
+            "path": path_ex
         }     
         # Serializing json
         json_object = json.dumps(dictionary, indent=4)
          
         # Writing to sample.json
-        with open(f"/home/msilvava/postdoc/smartcity_edge_simulator/input/workload/req_{index}.json", "w") as outfile:
+        with open(f"/home/msilvava/input/requests/req_{index}.json", "w") as outfile:
             outfile.write(json_object)
         index+=1
         print('request',index)
-        
-place = 'Vieille-Toulouse, France'
-generate_workload(place,30000)
+        #if len(topological_sorted_dag) > 20: 
+          #  print(topological_sorted_dag, 'len', len(topological_sorted_dag))
+        #break
+
+place = 'Toulouse, France'
+
+
+index = int(sys.argv[1])
+generate_workload(place,index,25000,5)
+

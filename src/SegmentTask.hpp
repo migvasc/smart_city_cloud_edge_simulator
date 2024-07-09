@@ -14,8 +14,8 @@ class SegmentTask
     simgrid::s4u::Host* pref_host=nullptr;   
     simgrid::s4u::Host* allocated_host=nullptr;
     bool data_in_cache = false;
-    std::vector<std::weak_ptr < SegmentTask>> parents;
-    std::vector<std::weak_ptr < SegmentTask>> parents_with_cache;
+    std::map<std::string,std::weak_ptr<SegmentTask>> parents;
+    std::map<std::string,std::weak_ptr<SegmentTask>> parents_in_cache;
 
 
   public:
@@ -25,15 +25,19 @@ class SegmentTask
     simgrid::s4u::ExecPtr get_exec();
     void set_exec(simgrid::s4u::ExecPtr exec);
     void set_pref_host(simgrid::s4u::Host* host);
-    void add_parent(std::shared_ptr<SegmentTask> parent);
-    std::vector<std::shared_ptr<SegmentTask>> get_parents() const;
+    void add_parent(const std::shared_ptr<SegmentTask> parent);
+    void add_parent_in_cache(const std::shared_ptr<SegmentTask> parent);
+    std::map<std::string,std::shared_ptr<SegmentTask>> get_parents() const;
+    std::map<std::string,std::shared_ptr<SegmentTask>> get_parents_in_cache() const;
+    void clear_parents_in_cache();
     void clear_parents();
     std::vector<simgrid::s4u::CommPtr> parent_coms;
     void set_allocated_host(simgrid::s4u::Host* host);
     simgrid::s4u::Host* get_allocated_host();
     bool has_cache();
     void set_cache();
-    bool is_ready_for_execution(std::unordered_map<std::string,std::string>& cache,std::unordered_map<std::string,int>& time_cache );
+    bool is_ready_for_execution( );
+    bool is_parent_in_cache(std::string parent_id);
 
 };
 

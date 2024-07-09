@@ -4,8 +4,12 @@ import sys
 # Auxiliary function to create a dictionary from the json input file
 # the key is the task name, and the value is the request name
 def create_requests_dict(json_data,tasks_dict):
+    tasks_dict[f"{json_data['name']}-ini"] = json_data['name']   
+    tasks_dict[f"{json_data['name']}-end"] = json_data['name']   
     for task in json_data['tasks']:
         tasks_dict[task['name']] =  json_data['name']    
+    
+dict_task_finished_count = {}
 
 def process_requests(tasks_request_dict,log_file_path,output_folder,request_submission_time_dict): 
     tasks_dict = tasks_request_dict
@@ -58,7 +62,7 @@ def process_requests(tasks_request_dict,log_file_path,output_folder,request_subm
             data_array = str(line[1]).split('#')
             if (len(data_array)>1):
                     data_to_process = data_array[1].split(';')
-
+                    
                     ## Here we have information of the energy consumption and production of the hosts
                     if(data_to_process[0]=='ENERGY'):                        
                         #timeslot_energy_file.write('time,host,energy_consumed,solar_energy_produced,brown_energy_consumed,battery_LOE\n')         
@@ -77,20 +81,26 @@ def process_requests(tasks_request_dict,log_file_path,output_folder,request_subm
                         total_brown_energy+=brown_energy
                     
                     ## Here we have information of where the tasks were scheduled
-                    if(data_to_process[0]=='SCHEDULE'):                                                                        
+                    if(data_to_process[0]=='SCHEDULE'):      
                         task_id = data_to_process[1]
-                        core_alocated = int(data_to_process[2])
-                        bus_stop_id = data_to_process[3].replace('\n','')
+                        task_type = task_id.split('-')
+                        if ( task_type[2]!='ini' and task_type[2]!='end') :
+                            core_alocated = int(data_to_process[2])
+                            bus_stop_id = data_to_process[3].replace('\n','')
 
-                        if bus_stop_id not in hosts_free_cores:
-                            if bus_stop_id == 'cloud_cluster':
-                                hosts_free_cores[bus_stop_id] = [ j for j in range(1,257)]   
-                            elif bus_stop_id == 'edge_cluster':
-                                hosts_free_cores[bus_stop_id] = [ j for j in range(1,129)]   
-                            else:
-                                hosts_free_cores[bus_stop_id] = [1,2,3,4]  
-                        task_schedule[task_id] = hosts_free_cores[bus_stop_id][0]
-                        del hosts_free_cores[bus_stop_id][0]  
+                            if bus_stop_id not in hosts_free_cores:
+                                if bus_stop_id == 'cloud_cluster':
+                                    hosts_free_cores[bus_stop_id] = [ j for j in range(1,257)]   
+                                elif bus_stop_id == 'edge_cluster':
+                                    hosts_free_cores[bus_stop_id] = [ j for j in range(1,129)]   
+                                else:
+                                    hosts_free_cores[bus_stop_id] = [1,2,3,4]  
+                            #print('#ANTES NO SCHEDULE',task_id,bus_stop_id,hosts_free_cores[bus_stop_id])
+                            task_schedule[task_id] = hosts_free_cores[bus_stop_id][0]                            
+                            del hosts_free_cores[bus_stop_id][0]  
+                           # print('#DPS NO SCHEDULE',task_id,bus_stop_id,hosts_free_cores[bus_stop_id])
+                            if(bus_stop_id == 'bus_stop_15'):
+                                dict_task_finished_count[task_id] = 1
                     
                     ## Here we have information of the communications performed during the simulation
                     if(data_to_process[0]=='FC'):                        
@@ -110,10 +120,10 @@ def process_requests(tasks_request_dict,log_file_path,output_folder,request_subm
                             comm_dest_host = data_to_process[5]
                             comms_file.write(f'{comm_id};{comm_start_time};{comm_completion_time};{comm_duration};{comm_src_host};{comm_dest_host}')                                                        
                             request_id = tasks_dict[task_related_to_comm]                        
+
                             if request_id not in req_comm_time:                        
                                 req_comm_time[request_id] = 0.0    
                                 req_comm_amount[request_id] = 0.0
-
                             
                             req_comm_amount[request_id] = req_comm_amount[request_id] +1 
                             req_comm_time[request_id] = req_comm_time[request_id] + comm_duration
@@ -123,40 +133,61 @@ def process_requests(tasks_request_dict,log_file_path,output_folder,request_subm
 
                     ## Here we have information of the tasks executed during the simulation
                     if(data_to_process[0]=='FE'):                    
+                        #print(data_to_process)
                         task_id = data_to_process[1]
-                        task_start_time = float(data_to_process[2])
-                        task_completion_time = float(data_to_process[3])
-                        duration = round(task_completion_time - task_start_time,6)
-                        host = data_to_process[4].replace('\n','')
-                        tasks_file.write(f'{task_id};{task_start_time};{task_completion_time};{duration};{host}\n')                                        
-                        request_id = tasks_dict[task_id]
-                        req_id = task_id.split('-')[0]+'-'+task_id.split('-')[1]
-                        if req_id not in first_task_req:
-                            first_task_req[req_id] = task_id
-                            req_start_time[req_id]  = task_start_time
+                        task_type = task_id.split('-')
+                        #print(task_type)
+                        if ( task_type[2]!='ini' and task_type[2]!='end') :
+                            task_start_time = float(data_to_process[2])
+                            task_completion_time = float(data_to_process[3])
+                            if task_completion_time == -1: 
+                                continue
+                            duration = round(task_completion_time - task_start_time,6)
+
+                            host = data_to_process[4].replace('\n','')
+                            tasks_file.write(f'{task_id};{task_start_time};{task_completion_time};{duration};{host}\n')                                        
+                            request_id = tasks_dict[task_id]
+                            req_id = task_id.split('-')[0]+'-'+task_id.split('-')[1]
+                            if req_id not in first_task_req:
+                                first_task_req[req_id] = task_id
+                                req_start_time[req_id]  = task_start_time
+                                
+                            if request_id not in req_exec_time:
+                                req_exec_time[request_id] = 0.0
+
+                            req_exec_time[request_id] += duration                        
+                            if host == 'cloud_cluster':
+                                allocated_core = 69 + task_schedule[task_id]
+                            elif host == 'edge_cluster':
+                                allocated_core = 500 + task_schedule[task_id]
+
+                            else: 
+                                bus_stop_number = int(host.replace('bus_stop_',''))
+                                allocated_core =  (bus_stop_number * 4) + task_schedule[task_id]
                             
-                        if request_id not in req_exec_time:
-                            req_exec_time[request_id] = 0.0
-
-                        req_exec_time[request_id] += duration                        
-                        if host == 'cloud_cluster':
-                            allocated_core = 69 + task_schedule[task_id]
-                        elif host == 'edge_cluster':
-                            allocated_core = 500 + task_schedule[task_id]
-
-                        else: 
-                            bus_stop_number = int(host.replace('bus_stop_',''))
-                            allocated_core =  (bus_stop_number * 4) + task_schedule[task_id]
-                        hosts_free_cores[host].append(task_schedule[task_id])
-                        jobs_file.write(f',{request_id},{task_start_time},1,{task_start_time},1,{task_start_time},{duration},{task_completion_time},{0},{0},{0},-1,{allocated_core}\n')
-                   
+                            #print('#ANTES NO FE',task_id,host,hosts_free_cores[host])
+                            hosts_free_cores[host].append(task_schedule[task_id])
+                           # print('#DPS NO FE',task_id,host,hosts_free_cores[host])
+                            if (host == 'bus_stop_15'):
+                                dict_task_finished_count[task_id]= 0
+                                #for key in dict_task_finished_count:
+                                    #if (dict_task_finished_count[key]==1):
+                                    #    print('OPAA',key,'bus_stop_15',data_to_process)
+                            jobs_file.write(f',{request_id},{task_start_time},1,{task_start_time},1,{task_start_time},{duration},{task_completion_time},{0},{0},{0},-1,{allocated_core}\n')
+                    
                     ## Here we have information of the requests executed during the simulation
                     if(data_to_process[0]=='FR'):                                        
                         req_id = data_to_process[1]
                         completion_time = float(data_to_process[2])
-                        start_time = req_start_time[req_id]
+                        start_time = 0.0
+                        if req_id in req_start_time:
+                            start_time = req_start_time[req_id]
+                        else :
+                            start_time = float(request_submission_time_dict[req_id])
                         duration = round(completion_time-start_time,6)
-                        total_time_execs = round(req_exec_time[req_id],4)
+                        total_time_execs = 0
+                        if req_id in req_exec_time:
+                            total_time_execs = round(req_exec_time[req_id],4)
                         total_time_comms = 0
                         amount_comms = 0
 
@@ -258,7 +289,7 @@ def process_data(input_file_path,log_file,output_folder):
                 create_requests_dict(json_data,tasks_request_dict)
 
     process_requests(tasks_request_dict,log_file_path,output_folder,request_submission_time_dict)
-    process_req_energy(output_folder)
+   # process_req_energy(output_folder)
 
 input_file_path = sys.argv[1]
 log_file_path =  sys.argv[2]

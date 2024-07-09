@@ -71,7 +71,7 @@ void DAGManager::handle_task_finished(simgrid::s4u::Exec const& exec)
     if(! (task_name.compare("ini")==0 || task_name.compare("end")==0))
     {
         task_cache[task_name] = exec.get_host()->get_name();
-        task_time_cache[task_name] = int (simgrid::s4u::Engine::get_clock()/5);
+        task_time_cache[task_name] = int (simgrid::s4u::Engine::get_clock()/cache_duration);
     }
 
     if( task_name.compare("ini")==0 )
@@ -110,17 +110,24 @@ void DAGManager::init()
         // We init the auxilary map with the information of the energy consumption
         hosts_energy_consumption[host->get_name()] = 0.0;
 
-
         // We init the host info for caching
         //hosts_info[host->get_name()] = new EdgeHost();
 
     }
 
+    // If fixed host, we get the selected host from the parameter
     if (SCHEDULING_ALGORITHM == SCHEDULING_FIXED_HOST)
     {
         fixed_host = simgrid::s4u::Host::by_name(argsClass[++arg_index]);
     }
-    // Log when a tasks finishes
+
+    // If baseline with cache, we get the selected cache duration from the parameter
+    if (SCHEDULING_ALGORITHM == SCHEDULING_BASELINE_CACHE)
+    {
+        cache_duration = std::stoi(argsClass[++arg_index]);
+    }
+
+    // Log when a tasks starts
     simgrid::s4u::Exec::on_start_cb([this](simgrid::s4u::Exec const& exec) 
     {
         XBT_INFO("#COMECOU EXEC DA TASK;%s;%f;%f;%s", exec.get_cname(), exec.get_start_time(), exec.get_finish_time(),exec.get_host()->get_cname());
@@ -136,10 +143,11 @@ void DAGManager::init()
         }
         
     });    
+
     // Log when a communication finishes
     simgrid::s4u::Comm::on_completion_cb([this](simgrid::s4u::Comm const& comm) {
         XBT_INFO("#FC;%s;%f;%f;%s;%s", comm.get_cname(), comm.get_start_time(), comm.get_finish_time(),comm.get_source()->get_cname(),comm.get_destination()->get_cname());   
-    });
+    });    
 }
 
 void DAGManager::turn_host_off(simgrid::s4u::Host *host)
@@ -256,7 +264,7 @@ vector<shared_ptr<SegmentTask>> DAGManager::get_ready_tasks_cache()
     vector<shared_ptr<SegmentTask>> ready_tasks; 
     for(auto& request : requests)
     {
-        vector<shared_ptr<SegmentTask>> request_ready_tasks = request->get_ready_tasks_cache(task_cache,task_time_cache);
+        vector<shared_ptr<SegmentTask>> request_ready_tasks = request->get_ready_tasks_cache(task_cache,task_time_cache,cache_duration);
 
         for(auto& task : request_ready_tasks)
         {
@@ -291,11 +299,11 @@ void DAGManager::perform_schedule()
         bool no_comm_needed = true;
 
         auto task = segment->get_exec();
-   //     XBT_INFO("processing task %s",task->get_cname());
+        //XBT_INFO("processing task %s",task->get_cname());
         simgrid::s4u::Host* candidate_host = find_host(segment);
         if (candidate_host == nullptr)
         {
-         //   XBT_INFO("no host found for task %s",task->get_cname());
+            //XBT_INFO("no host found for task %s q queria o bus stop %s",task->get_cname(),segment->get_pref_host()->get_cname());
             continue;
         }
         double host_renewable_power = get_host_available_renewable_energy(candidate_host);
@@ -303,11 +311,32 @@ void DAGManager::perform_schedule()
         // First we validate if all the parent tasks (if any) have been executed in different hosts than the canidate host
         if (no_comm_needed)
         {            
+            //XBT_INFO("VALIDATING IF NEED TO SEND DATA FROM 1 COMM FROM PARENTS");
             for(auto& parent :segment->get_parents() )
             {
-                simgrid::s4u::Host* src_host = parent->get_exec()->get_host();
+                simgrid::s4u::Host* src_host;
+                
+                if (parent.second->get_exec()->is_assigned()) 
+                {
+                    src_host = parent.second->get_exec()->get_host();
+                }
+                else
+                {
+                    vector<string> result;
+                    boost::split(result, parent.first, boost::is_any_of("-"));
+                    std::string parent_name = result[2];
+
+
+                    if ( segment->is_parent_in_cache(parent.first))
+                    {
+                        src_host = simgrid::s4u::Host::by_name(task_cache[parent_name]);
+                    }
+
+                }
+
                 if(src_host!=candidate_host)
                 {
+                    //XBT_INFO("Task %s Needs to communicate from this parent %s",task->get_cname(),parent.first.c_str());
                     no_comm_needed = false;
                     simgrid::s4u::Actor::create("comm_worker", src_host, communicate,task,src_host,candidate_host);
                 }
@@ -349,7 +378,28 @@ void DAGManager::perform_schedule()
                 task->set_flops_amount(0.0);
             }*/
             XBT_INFO("#START TASK;%s;%d;%s",task->get_cname(), hosts_cpuavailability[candidate_host->get_name()],candidate_host->get_cname());
+            for(auto& parent: segment->get_parents_in_cache())
+            {
+                //XBT_INFO("TAREFA PAI %s ta em cache, entao vamos completar ela pq vai ser usada pra tarefa %s",parent.first.c_str(),task->get_cname());
+                if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::FINISHED)
+                {
+                   // XBT_INFO("OPA A TAREFA JA TA COMPLETADA  %s ta em cache, entao vamos completar ela pq vai ser usada pra tarefa %s",parent.first.c_str(),task->get_cname());
+                    continue;
+                }
+                if(!parent.second->get_exec()->is_assigned() )
+                {
+                    vector<string> result;
+                    boost::split(result, parent.first, boost::is_any_of("-"));
+                    std::string parent_name = result[2];
+                   parent.second->get_exec()->set_host(simgrid::s4u::Host::by_name(task_cache[parent_name]));
+                }
+                
+                parent.second->get_exec()->complete(simgrid::s4u::Activity::State::FINISHED);                
+
+            }                                    
+            
             simgrid::s4u::Actor::create("worker", segment->get_pref_host(), execute,task);        
+
         }
         
     }
@@ -360,6 +410,21 @@ void DAGManager::finish_request(const std::string last_task_id)
 {    
     for(auto& request : requests)
     {
+     /*   for (auto& task : request->get_DAG())
+        {
+            if(task->get_exec()->get_state()!=simgrid::s4u::Activity::State::FINISHED)
+            {
+                if (!task->get_exec()->is_assigned())
+                {
+                    task->get_exec()->set_host(task->get_pref_host());
+                }
+                XBT_INFO("OPAAAA a tarefa %s nao ta acabada",task->get_exec()->get_cname());
+
+                task->get_exec()->complete(simgrid::s4u::Activity::State::FINISHED);
+                XBT_INFO("CHAMEI O COMPLETEDE PRA TAREFA  tarefa %s q nao tava acabada",task->get_exec()->get_cname());
+
+            }
+        }*/
         if (request->get_last_exec()->get_name().compare(last_task_id)==0)
         {        
             XBT_INFO("#FR;%s;%f", request->get_name().c_str(), simgrid::s4u::Engine::get_clock());
@@ -491,7 +556,7 @@ simgrid::s4u::Host* DAGManager::find_host_HEFT(shared_ptr<SegmentTask> ready_tas
         double max_parent_comms =0;
         for(auto& parent :ready_task->get_parents() )
         {
-            simgrid::s4u::Host* src_host = parent->get_exec()->get_host();
+            simgrid::s4u::Host* src_host = parent.second->get_exec()->get_host();
             std::vector<simgrid::s4u::Link *> links;                            
             src_host->route_to(candidate_host,links,nullptr);    
             double parent_latency = 0.0;    
@@ -509,7 +574,6 @@ simgrid::s4u::Host* DAGManager::find_host_HEFT(shared_ptr<SegmentTask> ready_tas
         // Since the communications occurs in parallel, it will use the value from the parent that has
         // the longest communication delay
         comm_time += max_parent_comms;
-
 
         // Now, we validate if the host does not has the local data
         if(candidate_host != ready_task->get_pref_host())
@@ -659,25 +723,21 @@ void DAGManager::update_hosts_energy_information()
 
 void DAGManager::evaluate_turn_on_or_off()
 {
-
-
     for (auto& host : simgrid::s4u::Engine::get_instance()->get_all_hosts())
     {
         if (host->get_pstate()==PSTATE_ON){
             if(number_of_tasks_allocated[host->get_name()]==0)
             {
-                XBT_INFO("DESLIGOU %s",host->get_cname());
-                
+                XBT_INFO("DESLIGOU %s",host->get_cname());               
                 simgrid::s4u::Host* new_manager = get_nearest_neighbour_host(host);
                 if (new_manager!=nullptr)                                                                                                                                
                 {
                     hosts_manager_map[host->get_name()] = new_manager->get_name();
                     turn_host_off(host);
-                }
-                
-
+                }                
             }
         }
+
         else if (host->get_pstate()==PSTATE_OFF)
         {
             if(number_of_tasks_allocated[host->get_name()] >0 )
@@ -687,7 +747,6 @@ void DAGManager::evaluate_turn_on_or_off()
                 hosts_manager_map[host->get_name()] = host->get_name();
             }   
         }
-
         // Reinitialize the variable that registers the amount of tasks 
         // during the simulation
         number_of_tasks_allocated[host->get_name()] = 0;
@@ -700,10 +759,8 @@ void DAGManager::evaluate_turn_on_or_off()
 */
 simgrid::s4u::Host* DAGManager::get_nearest_neighbour_host(simgrid::s4u::Host* host)
 {
- 
     simgrid::s4u::Host* closest = nullptr;
     double min_latency =  1000.0; 
-
     for (auto& candidate_host : simgrid::s4u::Engine::get_instance()->get_all_hosts())
     {        
         if(candidate_host!=host && candidate_host->get_pstate() == PSTATE_ON)
@@ -723,7 +780,5 @@ simgrid::s4u::Host* DAGManager::get_nearest_neighbour_host(simgrid::s4u::Host* h
             links.clear();
         }
     }
-
    return closest;
-   
 }
