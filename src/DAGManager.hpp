@@ -25,7 +25,6 @@ private:
   int SCHEDULING_GEFT = 4;
   int SCHEDULING_FIXED_HOST = 5;
   int SCHEDULING_BASELINE_ON_OFF = 6;
-  int SCHEDULING_BASELINE_CACHE = 7;
 
 
   // Host for the algorithm where all the tasks are scheduled to it (for example, offloading everything to the cloud)
@@ -38,7 +37,9 @@ private:
   double next_time_to_update = 0.0;
   double time_to_turn_on = 0.0;
 
-  double cache_duration = 0;
+  double cache_duration = -1;
+
+  bool use_cache = false;
 
   // List with the current requests being processed
   std::vector<DAGOfTasks*> requests;
@@ -105,6 +106,9 @@ private:
 
   void evaluate_turn_on_or_off();
   simgrid::s4u::Host* get_nearest_neighbour_host(simgrid::s4u::Host* host);
+  // Get the network latency using Simgrid's Vivaldi network topology. More info: https://simgrid.org/doc/latest/Platform_routing.html#vivaldi
+  double getNetworkLatencyVivaldi(double x1, double y1, double z1, double x2, double y2, double z2);
+
 public:
   explicit DAGManager(std::vector<std::string> args);
   void operator()();

@@ -16,7 +16,7 @@ class SegmentTask
     bool data_in_cache = false;
     std::map<std::string,std::weak_ptr<SegmentTask>> parents;
     std::map<std::string,std::weak_ptr<SegmentTask>> parents_in_cache;
-
+    bool task_completed = false;
 
   public:
     bool is_assigned();
@@ -38,6 +38,8 @@ class SegmentTask
     void set_cache();
     bool is_ready_for_execution( );
     bool is_parent_in_cache(std::string parent_id);
+    bool completed();
+    void complete();
 
 };
 

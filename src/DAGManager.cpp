@@ -38,7 +38,7 @@ void DAGManager::operator()()
     {
         if(int(simgrid::s4u::Engine::get_clock()) == next_time_to_update)
         {
-            update_hosts_energy_information();
+           // update_hosts_energy_information();
             if (SCHEDULING_ALGORITHM == SCHEDULING_BASELINE_ON_OFF)
             {
                 evaluate_turn_on_or_off();
@@ -70,6 +70,7 @@ void DAGManager::handle_task_finished(simgrid::s4u::Exec const& exec)
     std::string request_name = result[0]+"-"+ result[1];
     if(! (task_name.compare("ini")==0 || task_name.compare("end")==0))
     {
+        XBT_INFO("COLOCOU A TAREFA %s da request %s em cache na maquina %s",task_name.c_str(),exec.get_cname(),exec.get_host()->get_cname());
         task_cache[task_name] = exec.get_host()->get_name();
         task_time_cache[task_name] = int (simgrid::s4u::Engine::get_clock()/cache_duration);
     }
@@ -122,23 +123,47 @@ void DAGManager::init()
     }
 
     // If baseline with cache, we get the selected cache duration from the parameter
-    if (SCHEDULING_ALGORITHM == SCHEDULING_BASELINE_CACHE)
+    cache_duration = std::stoi(argsClass[++arg_index]);
+
+    if(cache_duration>-1)
     {
-        cache_duration = std::stoi(argsClass[++arg_index]);
+        use_cache = true;
     }
 
     // Log when a tasks starts
     simgrid::s4u::Exec::on_start_cb([this](simgrid::s4u::Exec const& exec) 
     {
-        XBT_INFO("#COMECOU EXEC DA TASK;%s;%f;%f;%s", exec.get_cname(), exec.get_start_time(), exec.get_finish_time(),exec.get_host()->get_cname());
+        std::string state = "";
+
+        if (exec.get_state()== simgrid::s4u::Activity::State::INITED) state = "INITED";
+        if (exec.get_state()== simgrid::s4u::Activity::State::STARTING) state = "STARTING";
+        if (exec.get_state()== simgrid::s4u::Activity::State::STARTED) state = "STARTED";
+        if (exec.get_state()== simgrid::s4u::Activity::State::FAILED) state = "FAILED";
+        if (exec.get_state()== simgrid::s4u::Activity::State::CANCELED) state = "CANCELED";
+        if (exec.get_state()== simgrid::s4u::Activity::State::FINISHED) state = "FINISHED";
+
+
+        XBT_INFO("#COMECOU EXEC DA TASK;%s;%f;%f;%s;%s", exec.get_cname(), exec.get_start_time(), exec.get_finish_time(),exec.get_host()->get_cname(),state.c_str());
+        
     });    
 
     // Log when a tasks finishes
     simgrid::s4u::Exec::on_completion_cb([this](simgrid::s4u::Exec const& exec) 
     {
-        XBT_INFO("#FE;%s;%f;%f;%s", exec.get_cname(), exec.get_start_time(), exec.get_finish_time(),exec.get_host()->get_cname());
+        std::string state = "";
+
+        if (exec.get_state()== simgrid::s4u::Activity::State::INITED) state = "INITED";
+        if (exec.get_state()== simgrid::s4u::Activity::State::STARTING) state = "STARTING";
+        if (exec.get_state()== simgrid::s4u::Activity::State::STARTED) state = "STARTED";
+        if (exec.get_state()== simgrid::s4u::Activity::State::FAILED) state = "FAILED";
+        if (exec.get_state()== simgrid::s4u::Activity::State::CANCELED) state = "CANCELED";
+        if (exec.get_state()== simgrid::s4u::Activity::State::FINISHED) state = "FINISHED";
+
+        XBT_INFO("#FE;%s;%f;%f;%s;%s", exec.get_cname(), exec.get_start_time(), exec.get_finish_time(),exec.get_host()->get_cname(),state.c_str());
         if(exec.get_finish_time()!= -1.0)
         {
+            XBT_INFO("HANDLE TASK FINISHED;%s;%f;%f;%s;%s", exec.get_cname(), exec.get_start_time(), exec.get_finish_time(),exec.get_host()->get_cname(),state.c_str());
+
             this->handle_task_finished(exec); 
         }
         
@@ -167,7 +192,7 @@ void DAGManager::handle_message(Message* message)
     {            
         switch (message->type)
         {
-            case MESSAGE_VM_SUBMISSION:
+            case MESSAGE_DAG_SUBMISSION:
                 handle_request_submission(static_cast<DAGOfTasks*>(message->data));        
                 break;      
             default:
@@ -283,9 +308,10 @@ void DAGManager::perform_schedule()
 {   
     //Lists of tasks that are ready to be scheduled in the current instant of time
     vector<shared_ptr<SegmentTask>> ready_tasks;
-    if (SCHEDULING_ALGORITHM == SCHEDULING_BASELINE_CACHE)
+    if (use_cache)
     {
         ready_tasks = get_ready_tasks_cache(); 
+
     }    
     else
     {
@@ -325,12 +351,8 @@ void DAGManager::perform_schedule()
                     vector<string> result;
                     boost::split(result, parent.first, boost::is_any_of("-"));
                     std::string parent_name = result[2];
-
-
-                    if ( segment->is_parent_in_cache(parent.first))
-                    {
-                        src_host = simgrid::s4u::Host::by_name(task_cache[parent_name]);
-                    }
+                    src_host = simgrid::s4u::Host::by_name(task_cache[parent_name]);
+                    
 
                 }
 
@@ -371,19 +393,26 @@ void DAGManager::perform_schedule()
         // or all the necessary communication has been completed. We can start executing it.
         if(no_comm_needed)
         {
-            task->set_host(candidate_host);   
            /* auto it = hosts_info[candidate_host->get_name()]->cache.find(task->get_name());
             if (it != hosts_info[candidate_host->get_name()]->cache.end() && task->get_state() != simgrid::s4u::Activity::State::STARTED )
             {
                 task->set_flops_amount(0.0);
             }*/
-            XBT_INFO("#START TASK;%s;%d;%s",task->get_cname(), hosts_cpuavailability[candidate_host->get_name()],candidate_host->get_cname());
             for(auto& parent: segment->get_parents_in_cache())
             {
-                //XBT_INFO("TAREFA PAI %s ta em cache, entao vamos completar ela pq vai ser usada pra tarefa %s",parent.first.c_str(),task->get_cname());
-                if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::FINISHED)
+
+                std::string parent_state = "";
+                if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::INITED) parent_state = "INITED";
+                if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::STARTING) parent_state = "STARTING";
+                if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::STARTED) parent_state = "STARTED";
+                if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::FAILED) parent_state = "FAILED";
+                if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::CANCELED) parent_state = "CANCELED";
+                if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::FINISHED) parent_state = "FINISHED";
+                XBT_INFO("TAREFA PAI %s ta em cache e tem o state %s, entao vamos completar ela pq vai ser usada pra tarefa %s ",parent.first.c_str(),parent_state.c_str(),task->get_cname());
+                
+                if (parent.second->get_exec()->get_state()==simgrid::s4u::Activity::State::FINISHED || parent.second->completed())
                 {
-                   // XBT_INFO("OPA A TAREFA JA TA COMPLETADA  %s ta em cache, entao vamos completar ela pq vai ser usada pra tarefa %s",parent.first.c_str(),task->get_cname());
+                    XBT_INFO("OPA A TAREFA JA TA COMPLETADA  %s ta em cache, entao vamos ignonrar ela pq vai ser usada pra tarefa %s",parent.first.c_str(),task->get_cname());
                     continue;
                 }
                 if(!parent.second->get_exec()->is_assigned() )
@@ -392,16 +421,17 @@ void DAGManager::perform_schedule()
                     boost::split(result, parent.first, boost::is_any_of("-"));
                     std::string parent_name = result[2];
                    parent.second->get_exec()->set_host(simgrid::s4u::Host::by_name(task_cache[parent_name]));
-                }
-                
-                parent.second->get_exec()->complete(simgrid::s4u::Activity::State::FINISHED);                
+                }                
 
-            }                                    
-            
+                parent.second->complete();      
+                parent.second->get_exec()->unset_host();
+            }     
+
+            XBT_INFO("#START TASK;%s;%d;%s",task->get_cname(), hosts_cpuavailability[candidate_host->get_name()],candidate_host->get_cname());
+            task->set_host(candidate_host);   
             simgrid::s4u::Actor::create("worker", segment->get_pref_host(), execute,task);        
 
-        }
-        
+        }   
     }
     ready_tasks.clear();
 }
@@ -410,21 +440,7 @@ void DAGManager::finish_request(const std::string last_task_id)
 {    
     for(auto& request : requests)
     {
-     /*   for (auto& task : request->get_DAG())
-        {
-            if(task->get_exec()->get_state()!=simgrid::s4u::Activity::State::FINISHED)
-            {
-                if (!task->get_exec()->is_assigned())
-                {
-                    task->get_exec()->set_host(task->get_pref_host());
-                }
-                XBT_INFO("OPAAAA a tarefa %s nao ta acabada",task->get_exec()->get_cname());
 
-                task->get_exec()->complete(simgrid::s4u::Activity::State::FINISHED);
-                XBT_INFO("CHAMEI O COMPLETEDE PRA TAREFA  tarefa %s q nao tava acabada",task->get_exec()->get_cname());
-
-            }
-        }*/
         if (request->get_last_exec()->get_name().compare(last_task_id)==0)
         {        
             XBT_INFO("#FR;%s;%f", request->get_name().c_str(), simgrid::s4u::Engine::get_clock());
@@ -443,7 +459,7 @@ simgrid::s4u::Host* DAGManager::find_host(shared_ptr<SegmentTask> ready_task)
     // Validates if there is no host allocated yet to the task
     if (ready_task->get_allocated_host()==nullptr)
     {
-        if(SCHEDULING_ALGORITHM == SCHEDULING_BASELINE || SCHEDULING_ALGORITHM == SCHEDULING_BASELINE_ON_OFF || SCHEDULING_ALGORITHM == SCHEDULING_BASELINE_CACHE)
+        if(SCHEDULING_ALGORITHM == SCHEDULING_BASELINE || SCHEDULING_ALGORITHM == SCHEDULING_BASELINE_ON_OFF)
         {
             candidate_host =  find_host_baseline(ready_task);
         }
@@ -529,6 +545,13 @@ simgrid::s4u::Host* DAGManager::find_host_renewable_energy(shared_ptr<SegmentTas
     return nullptr;
 }
 
+
+double DAGManager::getNetworkLatencyVivaldi(double x1, double y1, double z1, double x2, double y2, double z2)
+{
+    return sqrt( pow(x1-x2,2) + pow( y1-y2,2))  + z1 + z2;
+    
+}
+
 /**
  * Scheduling policy inspired by the EARLIEST FINISH TIME algorithm.
  * The finish times considers both the computation time and the communication time.
@@ -556,20 +579,76 @@ simgrid::s4u::Host* DAGManager::find_host_HEFT(shared_ptr<SegmentTask> ready_tas
         double max_parent_comms =0;
         for(auto& parent :ready_task->get_parents() )
         {
-            simgrid::s4u::Host* src_host = parent.second->get_exec()->get_host();
-            std::vector<simgrid::s4u::Link *> links;                            
-            src_host->route_to(candidate_host,links,nullptr);    
+            simgrid::s4u::Host* src_host = nullptr;;
+            if (parent.second->get_exec()->is_assigned()) 
+            {
+                src_host = parent.second->get_exec()->get_host();
+            }
+            else
+            {
+                vector<string> result;
+                boost::split(result, parent.first, boost::is_any_of("-"));
+                std::string parent_name = result[2];
+
+                src_host = simgrid::s4u::Host::by_name(task_cache[parent_name]);
+               
+            }
+
+
+            std::string task_state = "";
+
+            if (ready_task->get_exec()->get_state()== simgrid::s4u::Activity::State::INITED) task_state = "INITED";
+            if (ready_task->get_exec()->get_state()== simgrid::s4u::Activity::State::STARTING) task_state = "STARTING";
+            if (ready_task->get_exec()->get_state()== simgrid::s4u::Activity::State::STARTED) task_state = "STARTED";
+            if (ready_task->get_exec()->get_state()== simgrid::s4u::Activity::State::FAILED) task_state = "FAILED";
+            if (ready_task->get_exec()->get_state()== simgrid::s4u::Activity::State::CANCELED) task_state = "CANCELED";
+            if (ready_task->get_exec()->get_state()== simgrid::s4u::Activity::State::FINISHED) task_state = "FINISHED";
+
+            std::string parent_task_state = "";
+            if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::INITED) parent_task_state = "INITED";
+            if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::STARTING) parent_task_state = "STARTING";
+            if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::STARTED) parent_task_state = "STARTED";
+            if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::FAILED) parent_task_state = "FAILED";
+            if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::CANCELED) parent_task_state = "CANCELED";
+            if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::FINISHED) parent_task_state = "FINISHED";
+
+            //XBT_INFO("trying to find host for task %s c state %s do parent %s c state %s", ready_task->get_exec()->get_cname(),task_state.c_str(),parent.first.c_str(),parent_task_state.c_str());
+         
+
+                        
             double parent_latency = 0.0;    
 
-            for(auto link : links)
-            {
-                parent_latency+=link->get_latency();
-            }                 
-            if (parent_latency > max_parent_comms)
-            {
-                max_parent_comms = parent_latency;
+            const std::unordered_map<std::string, std::string> * host_properties = src_host-> get_properties();
+
+            if(host_properties->find("lat")!=host_properties->end())
+            {       
+                double parent_lat =  std::stod(src_host->get_property("lat"));
+                double parent_long = std::stod(src_host->get_property("long"));
+                double parent_z_coord = std::stod(src_host->get_property("z_coord"));
+                                
+                double cand_host_lat = std::stod(candidate_host->get_property("lat"));
+                double cand_host_long = std::stod(candidate_host ->get_property("long"));
+                double cand_host_z_coord = std::stod(candidate_host->get_property("z_coord"));
+
+                max_parent_comms = getNetworkLatencyVivaldi(parent_long,parent_lat,parent_z_coord,cand_host_long,cand_host_lat,cand_host_z_coord);
+
             }
-         
+            else
+            {
+                std::vector<simgrid::s4u::Link *> links;                            
+                src_host->route_to(candidate_host,links,nullptr);    
+
+                for(auto link : links)
+                {
+                    parent_latency+=link->get_latency();
+                }                 
+
+                if (parent_latency > max_parent_comms)
+                {
+                    max_parent_comms = parent_latency;
+                }                
+            }
+
         }
         // Since the communications occurs in parallel, it will use the value from the parent that has
         // the longest communication delay

@@ -35,6 +35,7 @@ public:
     simgrid::s4u::ExecPtr get_last_exec();
     std::string get_name();
     void request_received();
+    void test_cache();
     bool can_start_computations();
 };
 #endif

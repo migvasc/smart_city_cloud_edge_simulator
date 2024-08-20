@@ -49,6 +49,7 @@ std::vector<shared_ptr<SegmentTask>>  DAGOfTasks::get_ready_tasks_cache(unordere
     // sending the request and receiving the result
     if (task_name.compare("ini")!=0 )
     {
+
       // If the ini task has not been completed, it is not possible to execute the other tasks
       if(!can_start_computations()) break;
       // Task already completed, we do not need to process it again...
@@ -78,8 +79,34 @@ std::vector<shared_ptr<SegmentTask>>  DAGOfTasks::get_ready_tasks_cache(unordere
             simgrid::s4u::Host* host = simgrid::s4u::Host::by_name(cache.at(task_name));
             task->set_pref_host(host);
             task->set_cache();
-           // XBT_INFO("task %s is in cache and it  is still valid, so the task will NOOTTT be executed",task->get_exec()->get_cname());
+
+            std::string state = "";
+
+            if (task->get_exec()->get_state()== simgrid::s4u::Activity::State::INITED) state = "INITED";
+            if (task->get_exec()->get_state()== simgrid::s4u::Activity::State::STARTING) state = "STARTING";
+            if (task->get_exec()->get_state()== simgrid::s4u::Activity::State::STARTED) state = "STARTED";
+            if (task->get_exec()->get_state()== simgrid::s4u::Activity::State::FAILED) state = "FAILED";
+            if (task->get_exec()->get_state()== simgrid::s4u::Activity::State::CANCELED) state = "CANCELED";
+            if (task->get_exec()->get_state()== simgrid::s4u::Activity::State::FINISHED) state = "FINISHED";
+
+
+            XBT_INFO("task %s is in cache and it  is still valid, so the task will NOOTTT be added to the list e  tem o estado %s ",task->get_exec()->get_cname(),state.c_str());
             continue;
+          }
+          else
+          {
+
+            std::string state = "";
+
+            if (task->get_exec()->get_state()== simgrid::s4u::Activity::State::INITED) state = "INITED";
+            if (task->get_exec()->get_state()== simgrid::s4u::Activity::State::STARTING) state = "STARTING";
+            if (task->get_exec()->get_state()== simgrid::s4u::Activity::State::STARTED) state = "STARTED";
+            if (task->get_exec()->get_state()== simgrid::s4u::Activity::State::FAILED) state = "FAILED";
+            if (task->get_exec()->get_state()== simgrid::s4u::Activity::State::CANCELED) state = "CANCELED";
+            if (task->get_exec()->get_state()== simgrid::s4u::Activity::State::FINISHED) state = "FINISHED";
+
+            XBT_INFO("task %s ta expiradaaaaa c state %s ",task->get_exec()->get_cname(),state.c_str());
+
           }
 
         }
@@ -115,7 +142,17 @@ std::vector<shared_ptr<SegmentTask>>  DAGOfTasks::get_ready_tasks_cache(unordere
               // to be able to execute the tasks (finish all its dependencies)
               if( parent.second->get_allocated_host()==nullptr && (parent.second->get_exec()->get_state() == simgrid::s4u::Activity::State::INITED ||parent.second->get_exec()->get_state() == simgrid::s4u::Activity::State::STARTING ))        
               {
-               // XBT_INFO("parent %s of task task %s is in cache and will not be executed",parent.second->get_exec()->get_cname(), task->get_exec()->get_cname());
+
+                std::string state = "";
+
+                if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::INITED) state = "INITED";
+                if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::STARTING) state = "STARTING";
+                if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::STARTED) state = "STARTED";
+                if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::FAILED) state = "FAILED";
+                if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::CANCELED) state = "CANCELED";
+                if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::FINISHED) state = "FINISHED";
+
+                XBT_INFO("parent %s of task task %s is in cache and will not be executed state %s ",parent.second->get_exec()->get_cname(), task->get_exec()->get_cname(),state.c_str());
                 // Validates if the parent is already in the execution list,
                 // if so, we need to remove it from the list
                 std::vector<std::shared_ptr<SegmentTask>>::iterator it = ready_tasks.begin();
@@ -143,7 +180,7 @@ std::vector<shared_ptr<SegmentTask>>  DAGOfTasks::get_ready_tasks_cache(unordere
       if (auto* exec = dynamic_cast<simgrid::s4u::Exec*>(task->get_exec().get()))
       {
         ready_tasks.push_back(task);
-        //XBT_INFO("TASK %s foi adicionada na lista pra ser executada",task->get_exec()->get_cname());
+        XBT_INFO("TASK %s foi adicionada na lista pra ser executada",task->get_exec()->get_cname());
         if (task_name.compare("ini")==0 ) break;
 
       }
@@ -243,12 +280,134 @@ void DAGOfTasks::create_DAG_from_JSON(const std::string& filename)
   end->add_parent(dag[dag.size()-1]);
   this->last_exec->add_successor(end->get_exec());
   this->last_exec = end->get_exec();
-
   dag.insert(dag.begin(),ini);
   dag.push_back(end);
-
   this->dag = dag;
+  //test_cache();
 
+}
+
+void DAGOfTasks::test_cache()
+{              
+  this->dag[1]->get_exec()->set_host(simgrid::s4u::Host::by_name("bus_stop_0"));
+  
+  int cont = 0 ;             
+  for (auto& task : dag) 
+  {
+    if (cont==2)
+    {
+      for (auto& parent : task->get_parents())
+      {
+        task->add_parent_in_cache(parent.second);
+      }
+    }
+    cont++;
+  }
+
+  XBT_INFO("# ANTES DE DAR O COMPLETD;");
+  XBT_INFO("qtd de flops %f", this->dag[1]->get_exec()->get_remaining());
+  for (auto& task : dag) 
+  {
+
+    std::string state = "";
+
+    if (task->get_exec()->get_state()== simgrid::s4u::Activity::State::INITED) state = "INITED";
+    if (task->get_exec()->get_state()== simgrid::s4u::Activity::State::STARTING) state = "STARTING";
+    if (task->get_exec()->get_state()== simgrid::s4u::Activity::State::STARTED) state = "STARTED";
+    if (task->get_exec()->get_state()== simgrid::s4u::Activity::State::FAILED) state = "FAILED";
+    if (task->get_exec()->get_state()== simgrid::s4u::Activity::State::CANCELED) state = "CANCELED";
+    if (task->get_exec()->get_state()== simgrid::s4u::Activity::State::FINISHED) state = "FINISHED";
+
+
+    XBT_INFO("task %s tem o estado %s ",task->get_exec()->get_cname(),state.c_str());
+
+    for (auto& parent : task->get_parents())
+    {
+
+        std::string state = "";
+
+        if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::INITED) state = "INITED";
+        if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::STARTING) state = "STARTING";
+        if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::STARTED) state = "STARTED";
+        if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::FAILED) state = "FAILED";
+        if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::CANCELED) state = "CANCELED";
+        if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::FINISHED) state = "FINISHED";
+
+        XBT_INFO("parent %s tem state %s of task task %s",parent.second->get_exec()->get_cname(),state.c_str(),task->get_exec()->get_cname());
+
+    }
+
+    for (auto& parent : task->get_parents_in_cache())
+    {
+          std::string state = "";
+
+        if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::INITED) state = "INITED";
+        if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::STARTING) state = "STARTING";
+        if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::STARTED) state = "STARTED";
+        if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::FAILED) state = "FAILED";
+        if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::CANCELED) state = "CANCELED";
+        if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::FINISHED) state = "FINISHED";
+
+        XBT_INFO("parent %s tem state %s of task task %s",parent.second->get_exec()->get_cname(),state.c_str(),task->get_exec()->get_cname());
+
+    }
+
+
+  }
+
+  this->dag[1]->get_exec()->complete(simgrid::s4u::Activity::State::FINISHED);      
+  
+  this->dag[1]->get_exec()->unset_host();
+
+  XBT_INFO("# DPS DE DAR O COMPLETD;");
+  XBT_INFO("qtd de flops %f", this->dag[1]->get_exec()->get_remaining());
+  for (auto& task : dag) 
+  {
+
+    std::string state = "";
+
+    if (task->get_exec()->get_state()== simgrid::s4u::Activity::State::INITED) state = "INITED";
+    if (task->get_exec()->get_state()== simgrid::s4u::Activity::State::STARTING) state = "STARTING";
+    if (task->get_exec()->get_state()== simgrid::s4u::Activity::State::STARTED) state = "STARTED";
+    if (task->get_exec()->get_state()== simgrid::s4u::Activity::State::FAILED) state = "FAILED";
+    if (task->get_exec()->get_state()== simgrid::s4u::Activity::State::CANCELED) state = "CANCELED";
+    if (task->get_exec()->get_state()== simgrid::s4u::Activity::State::FINISHED) state = "FINISHED";
+
+
+    XBT_INFO("task %s tem o estado %s ",task->get_exec()->get_cname(),state.c_str());
+
+    for (auto& parent : task->get_parents())
+    {
+
+        std::string state = "";
+
+        if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::INITED) state = "INITED";
+        if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::STARTING) state = "STARTING";
+        if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::STARTED) state = "STARTED";
+        if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::FAILED) state = "FAILED";
+        if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::CANCELED) state = "CANCELED";
+        if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::FINISHED) state = "FINISHED";
+
+        XBT_INFO("parent %s tem state %s of task task %s",parent.second->get_exec()->get_cname(),state.c_str(),task->get_exec()->get_cname());
+
+    }
+
+    for (auto& parent : task->get_parents_in_cache())
+    {
+          std::string state = "";
+
+        if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::INITED) state = "INITED";
+        if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::STARTING) state = "STARTING";
+        if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::STARTED) state = "STARTED";
+        if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::FAILED) state = "FAILED";
+        if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::CANCELED) state = "CANCELED";
+        if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::FINISHED) state = "FINISHED";
+
+        XBT_INFO("parent %s tem state %s of task task %s",parent.second->get_exec()->get_cname(),state.c_str(),task->get_exec()->get_cname());
+
+    }
+  }
+  int x = 0;
 }
 
 simgrid::s4u::ExecPtr DAGOfTasks::get_last_exec()
