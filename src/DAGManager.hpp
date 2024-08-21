@@ -11,6 +11,12 @@
 #include "LithiumIonBattery.hpp"
 #include "EdgeHost.hpp"
 #include <memory>
+#include "SchedulingStrategy.hpp"
+#include "SchedulingBaseline.hpp"
+#include "SchedulingHEFT.hpp"
+#include "SchedulingGEFT.hpp"
+#include "SchedulingBestFit.hpp"
+
 using namespace std::chrono; 
 
 
@@ -27,6 +33,7 @@ private:
   int SCHEDULING_BASELINE_ON_OFF = 6;
 
 
+  SchedulingStrategy *schedulingstrategy;
   // Host for the algorithm where all the tasks are scheduled to it (for example, offloading everything to the cloud)
   simgrid::s4u::Host *fixed_host = nullptr;
 

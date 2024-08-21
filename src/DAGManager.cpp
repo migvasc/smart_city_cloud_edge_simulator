@@ -4,7 +4,7 @@
 #include "DAGManager.hpp"
 #include <bits/stdc++.h>
 #include <boost/algorithm/string.hpp>
-
+#include "Util.hpp"
 XBT_LOG_NEW_DEFAULT_CATEGORY(DAGManager, "DAGManager category");
 /**
  * Manages the distributed edge infrastructure with on-site green (e.g. solar) energy productions.
@@ -20,16 +20,6 @@ DAGManager::DAGManager(std::vector<std::string> args)
     argsClass = args;    
 }
 
-static double convert_wh_to_joules(double energy_wh)
-{
-    return energy_wh * 3600;
-}
-
-static double convert_joules_to_wh(double energy_joules)
-{
-    return energy_joules/ 3600;
-}
-
 void DAGManager::operator()()
 {
     register_object("dagmanager",this);
@@ -38,7 +28,7 @@ void DAGManager::operator()()
     {
         if(int(simgrid::s4u::Engine::get_clock()) == next_time_to_update)
         {
-           // update_hosts_energy_information();
+            update_hosts_energy_information();
             if (SCHEDULING_ALGORITHM == SCHEDULING_BASELINE_ON_OFF)
             {
                 evaluate_turn_on_or_off();
@@ -115,6 +105,24 @@ void DAGManager::init()
         //hosts_info[host->get_name()] = new EdgeHost();
 
     }
+
+    if (SCHEDULING_ALGORITHM == SCHEDULING_BASELINE)
+    {
+        schedulingstrategy = new SchedulingBaseline(&hosts_cpuavailability);
+    }
+    else if(  SCHEDULING_ALGORITHM == SCHEDULING_HEFT)
+    {
+        schedulingstrategy = new SchedulingHEFT(&hosts_cpuavailability,&task_cache);
+    }
+    else if(  SCHEDULING_ALGORITHM == SCHEDULING_GEFT)
+    {
+        schedulingstrategy = new SchedulingGEFT(&hosts_cpuavailability,&hosts_renewable_energy,&hosts_energy_consumption,&hosts_batteries,&task_cache);
+    }
+    else if(  SCHEDULING_ALGORITHM == SCHEDULING_BESTFIT)
+    {
+        schedulingstrategy = new SchedulingBestFit(&hosts_cpuavailability);
+    }
+
 
     // If fixed host, we get the selected host from the parameter
     if (SCHEDULING_ALGORITHM == SCHEDULING_FIXED_HOST)
@@ -228,12 +236,7 @@ static void communicate(simgrid::s4u::ExecPtr task, simgrid::s4u::Host* src_host
     std::string id = "p@"+task->get_name() + "@" + src_host->get_name()+ "@" + dest_host->get_name();
     std::vector<simgrid::s4u::Link *> links;                            
     src_host->route_to(dest_host,links,nullptr);        
-  /* XBT_INFO("CAMINHO ENTRE %s E %s",src_host->get_cname(),dest_host->get_cname());
-    for(auto link : links)
-    {
-        XBT_INFO("%s",link->get_cname());
-    }                 
-*/
+
     comm->set_name(id);
     comm->add_successor(task);
     comm->set_source(src_host);
@@ -293,7 +296,6 @@ vector<shared_ptr<SegmentTask>> DAGManager::get_ready_tasks_cache()
 
         for(auto& task : request_ready_tasks)
         {
-            //task->get_exec()->remove_successor();
             ready_tasks.push_back(task);
         }
     }
@@ -311,12 +313,13 @@ void DAGManager::perform_schedule()
     if (use_cache)
     {
         ready_tasks = get_ready_tasks_cache(); 
-
     }    
     else
     {
         ready_tasks = get_ready_tasks_from_requests(); 
     }
+
+
     for(auto& segment : ready_tasks)
     {
         // Flag used to validate if there is need to perform communications to get its required data,
@@ -332,7 +335,6 @@ void DAGManager::perform_schedule()
             //XBT_INFO("no host found for task %s q queria o bus stop %s",task->get_cname(),segment->get_pref_host()->get_cname());
             continue;
         }
-        double host_renewable_power = get_host_available_renewable_energy(candidate_host);
         
         // First we validate if all the parent tasks (if any) have been executed in different hosts than the canidate host
         if (no_comm_needed)
@@ -433,6 +435,7 @@ void DAGManager::perform_schedule()
 
         }   
     }
+    
     ready_tasks.clear();
 }
 
@@ -450,7 +453,7 @@ void DAGManager::finish_request(const std::string last_task_id)
     }
 }   
 
-/***
+/**
  * Finds the hosts for the task that has avaialble CPU capacity and given a scheduling policy.
 */
 simgrid::s4u::Host* DAGManager::find_host(shared_ptr<SegmentTask> ready_task)
@@ -458,41 +461,14 @@ simgrid::s4u::Host* DAGManager::find_host(shared_ptr<SegmentTask> ready_task)
     simgrid::s4u::Host*  candidate_host =   nullptr;
     // Validates if there is no host allocated yet to the task
     if (ready_task->get_allocated_host()==nullptr)
-    {
-        if(SCHEDULING_ALGORITHM == SCHEDULING_BASELINE || SCHEDULING_ALGORITHM == SCHEDULING_BASELINE_ON_OFF)
-        {
-            candidate_host =  find_host_baseline(ready_task);
-        }
-        else if (SCHEDULING_ALGORITHM == SCHEDULING_BESTFIT)
-        {
-            candidate_host =  find_host_bestfit(ready_task);
-        }    
-        else if (SCHEDULING_ALGORITHM == SCHEDULING_FIRSTFITSOLAR)
-        {
-            candidate_host = find_host_renewable_energy(ready_task);
-        }
-        else if (SCHEDULING_ALGORITHM == SCHEDULING_HEFT)
-        {
-            candidate_host = find_host_HEFT(ready_task,false);
-        }      
-        else if (SCHEDULING_ALGORITHM == SCHEDULING_GEFT)
-        {
-            candidate_host = find_host_HEFT(ready_task,true);
-        }
-        else if (SCHEDULING_ALGORITHM == SCHEDULING_FIXED_HOST)
-        {
-            if (hosts_cpuavailability[fixed_host->get_name()] >0 )
-            {
-                candidate_host = fixed_host;
-            }
-        }
+    {   
+        candidate_host =    schedulingstrategy->find_host(ready_task);
 
         if (candidate_host == nullptr) return candidate_host;
-        
+
         XBT_INFO("#SCHEDULE;%s;%d;%s;%f",ready_task->get_exec()->get_cname(), hosts_cpuavailability[candidate_host->get_name()],candidate_host->get_cname(),simgrid::s4u::Engine::get_clock());
         ready_task->set_allocated_host(candidate_host);
         
-
         vector<string> result;
         boost::split(result, ready_task->get_exec()->get_name(), boost::is_any_of("-"));
         std::string task_name = result[2];
@@ -511,240 +487,14 @@ simgrid::s4u::Host* DAGManager::find_host(shared_ptr<SegmentTask> ready_task)
     return candidate_host;
 }
 
-simgrid::s4u::Host* DAGManager::find_host_baseline(shared_ptr<SegmentTask> ready_task)
-{  
-    simgrid::s4u::Host* host =   ready_task->get_pref_host();
-    
-
-    if (SCHEDULING_ALGORITHM == SCHEDULING_BASELINE_ON_OFF)
-    {
-        number_of_tasks_allocated[host->get_name()] +=1;
-        host = simgrid::s4u::Host::by_name(hosts_manager_map[host->get_name()]);                
-        // In the case the host is off, another host shoud be handling it
-        // so we schedule to this other host
-        while (host->get_pstate()==PSTATE_OFF)
-        {
-            host = simgrid::s4u::Host::by_name(hosts_manager_map[host->get_name()]);
-        }
-    }
-    if(  hosts_cpuavailability[host->get_name()]>0)
-    {
-        return host;
-    }
-    return nullptr;
-}
-
-
-simgrid::s4u::Host* DAGManager::find_host_renewable_energy(shared_ptr<SegmentTask> ready_task)
-{
-    for(auto host : simgrid::s4u::Engine::get_instance()->get_all_hosts())
-    {
-        if(hosts_renewable_energy[host->get_name()] > 0  && hosts_cpuavailability[host->get_name()]>0)
-                return host;
-    }
-    return nullptr;
-}
-
-
-double DAGManager::getNetworkLatencyVivaldi(double x1, double y1, double z1, double x2, double y2, double z2)
-{
-    return sqrt( pow(x1-x2,2) + pow( y1-y2,2))  + z1 + z2;
-    
-}
-
-/**
- * Scheduling policy inspired by the EARLIEST FINISH TIME algorithm.
- * The finish times considers both the computation time and the communication time.
- * @param ready_task the task to be allocated
- * @param renewable_energy_required whether the host must have renewable energy to run the task
-*/
-simgrid::s4u::Host* DAGManager::find_host_HEFT(shared_ptr<SegmentTask> ready_task, bool renewable_energy_required)
-{
-    simgrid::s4u::Host* selected_host = nullptr;
-    double min_finish_time = 999999999.9;
-
-    for(auto candidate_host : simgrid::s4u::Engine::get_instance()->get_all_hosts())
-    {
-        if(hosts_cpuavailability[candidate_host->get_name()]==0) continue;
-
-        if(renewable_energy_required)
-        {
-            if( get_host_available_renewable_energy(candidate_host)==0) continue;
-        }
-
-        double compute_time = ready_task->get_exec()->get_remaining() / candidate_host->get_speed();
-        double comm_time = 0;
-
-        //First, the communication from the parents
-        double max_parent_comms =0;
-        for(auto& parent :ready_task->get_parents() )
-        {
-            simgrid::s4u::Host* src_host = nullptr;;
-            if (parent.second->get_exec()->is_assigned()) 
-            {
-                src_host = parent.second->get_exec()->get_host();
-            }
-            else
-            {
-                vector<string> result;
-                boost::split(result, parent.first, boost::is_any_of("-"));
-                std::string parent_name = result[2];
-
-                src_host = simgrid::s4u::Host::by_name(task_cache[parent_name]);
-               
-            }
-
-
-            std::string task_state = "";
-
-            if (ready_task->get_exec()->get_state()== simgrid::s4u::Activity::State::INITED) task_state = "INITED";
-            if (ready_task->get_exec()->get_state()== simgrid::s4u::Activity::State::STARTING) task_state = "STARTING";
-            if (ready_task->get_exec()->get_state()== simgrid::s4u::Activity::State::STARTED) task_state = "STARTED";
-            if (ready_task->get_exec()->get_state()== simgrid::s4u::Activity::State::FAILED) task_state = "FAILED";
-            if (ready_task->get_exec()->get_state()== simgrid::s4u::Activity::State::CANCELED) task_state = "CANCELED";
-            if (ready_task->get_exec()->get_state()== simgrid::s4u::Activity::State::FINISHED) task_state = "FINISHED";
-
-            std::string parent_task_state = "";
-            if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::INITED) parent_task_state = "INITED";
-            if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::STARTING) parent_task_state = "STARTING";
-            if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::STARTED) parent_task_state = "STARTED";
-            if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::FAILED) parent_task_state = "FAILED";
-            if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::CANCELED) parent_task_state = "CANCELED";
-            if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::FINISHED) parent_task_state = "FINISHED";
-
-            //XBT_INFO("trying to find host for task %s c state %s do parent %s c state %s", ready_task->get_exec()->get_cname(),task_state.c_str(),parent.first.c_str(),parent_task_state.c_str());
-         
-
-                        
-            double parent_latency = 0.0;    
-
-            const std::unordered_map<std::string, std::string> * host_properties = src_host-> get_properties();
-
-            if(host_properties->find("lat")!=host_properties->end())
-            {       
-                double parent_lat =  std::stod(src_host->get_property("lat"));
-                double parent_long = std::stod(src_host->get_property("long"));
-                double parent_z_coord = std::stod(src_host->get_property("z_coord"));
-                                
-                double cand_host_lat = std::stod(candidate_host->get_property("lat"));
-                double cand_host_long = std::stod(candidate_host ->get_property("long"));
-                double cand_host_z_coord = std::stod(candidate_host->get_property("z_coord"));
-
-                max_parent_comms = getNetworkLatencyVivaldi(parent_long,parent_lat,parent_z_coord,cand_host_long,cand_host_lat,cand_host_z_coord);
-
-            }
-            else
-            {
-                std::vector<simgrid::s4u::Link *> links;                            
-                src_host->route_to(candidate_host,links,nullptr);    
-
-                for(auto link : links)
-                {
-                    parent_latency+=link->get_latency();
-                }                 
-
-                if (parent_latency > max_parent_comms)
-                {
-                    max_parent_comms = parent_latency;
-                }                
-            }
-
-        }
-        // Since the communications occurs in parallel, it will use the value from the parent that has
-        // the longest communication delay
-        comm_time += max_parent_comms;
-
-        // Now, we validate if the host does not has the local data
-        if(candidate_host != ready_task->get_pref_host())
-        {
-            std::vector<simgrid::s4u::Link *> links;                            
-            ready_task->get_pref_host()->route_to(candidate_host,links,nullptr);
-
-            double latency = 0.0;    
-            for(auto link : links)
-            {
-                latency+=link->get_latency();
-            }                 
-            comm_time+=2*latency;
-
-        }
-        // Validates if the finish time (computation and communication) is the smallest 
-        // given all the hosts
-        if ( (comm_time + compute_time)  < min_finish_time)
-        {
-            selected_host = candidate_host;
-            min_finish_time = comm_time + compute_time;
-        }
-    }
-
-    return selected_host;
-}
-
-/**
- * Starts executing the computational task of the request.
- */
-simgrid::s4u::Host* DAGManager::find_host_bestfit(shared_ptr<SegmentTask> ready_task)
-{
-
-    int free_cores = 1;
-    simgrid::s4u::Host* selected_host = nullptr;
-    while(free_cores <5)
-    {
-        for (auto& host : simgrid::s4u::Engine::get_instance()->get_all_hosts())
-        {
-            if(hosts_cpuavailability[host->get_name()] == free_cores) 
-            {
-                selected_host = host;
-                return selected_host;
-            } 
-        }
-        free_cores++;
-    }
-
-    return selected_host;
-}
-
-/*  Returns the available renewable energy of the hosts during the time slot duration (for example, during 1 min).
- *  The renewable energy comes from the solar panels production and from the batteries.
- *  @param host the selected host
- *  @return the renewable energy (joules) that the host has during the current time slot
-*/
-double DAGManager::get_host_available_renewable_energy(simgrid::s4u::Host* host)
-{
-    // First the energy from the solar panels
-    double available_renewable_power = hosts_renewable_energy[host->get_name()];
-    // Then we add the energy from the batteries
-    available_renewable_power += convert_wh_to_joules( hosts_batteries[host->get_name()]->getUsableWattsHour());    
-    // We also need to remove the power consumed by the host, to update the available renewable energy info
-    double host_consumed_energy = sg_host_get_consumed_energy(host) - hosts_energy_consumption[host->get_name()];
-    double power_per_core = 1.2;
-    double idle_power = 2.5;
-    double run_time = 0.1;
-    if (host->get_name().compare("cloud_cluster")==0)
-    {
-        idle_power = 117.0;
-        power_per_core = 2.21875;
-        run_time = 0.05;
-    }
-    int cores_used =  host->get_core_count() - hosts_cpuavailability[host->get_name()] ;
-    cores_used += 1 ; // to represent that we will allocate a task to this host
-    double dynamic_energy = cores_used*power_per_core;
-    host_consumed_energy += ((dynamic_energy+idle_power)*run_time);
-    available_renewable_power-= host_consumed_energy;
-    if (available_renewable_power >= 0 )
-    {
-        return available_renewable_power;
-    }
-    return 0;
-}
 
 void DAGManager::update_battery_state(simgrid::s4u::Host* host)
 {
 
-    double host_energy_consumption =   convert_joules_to_wh(sg_host_get_consumed_energy(host) - hosts_energy_consumption[host->get_name()]);
+    double host_energy_consumption =   Util::convert_joules_to_wh(sg_host_get_consumed_energy(host) - hosts_energy_consumption[host->get_name()]);
     double brown_energy_wh   = 0.0; 
     double energy_discharged = 0.0; 
-    double renewable_power_prod = convert_joules_to_wh(hosts_renewable_energy[host->get_name()]);
+    double renewable_power_prod = Util::convert_joules_to_wh(hosts_renewable_energy[host->get_name()]);
 
     // Validate if there was a overproduction of solar power (more than consumption), in this case 
     // no energy was discharged from the battery and we can charge the excess PV energy in the battery    
@@ -790,7 +540,7 @@ void DAGManager::update_hosts_energy_information()
         update_battery_state(host);
 
         //Then, update the information about the solar panel energy production
-        hosts_renewable_energy[host->get_name()] =  convert_wh_to_joules(hosts_pvpanels[host->get_name()]->get_current_green_power_production(simgrid::s4u::Engine::get_clock()));
+        hosts_renewable_energy[host->get_name()] =  Util::convert_wh_to_joules(hosts_pvpanels[host->get_name()]->get_current_green_power_production(simgrid::s4u::Engine::get_clock()));
         
         // Finally, we update the information of the host energy consumed
         hosts_energy_consumption[host->get_name()] =  sg_host_get_consumed_energy(host);

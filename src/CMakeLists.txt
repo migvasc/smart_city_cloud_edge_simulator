@@ -11,7 +11,7 @@ find_package(SimGrid 3.23 REQUIRED)
 
 include_directories(${SimGrid_INCLUDE_DIR})
 
-add_executable(simulationmain main.cpp CommunicationInterface.hpp MailBoxSingleton.hpp MailBoxSingleton.cpp DAGOfTasks.hpp DAGOfTasks.cpp DAGDispatcher.hpp DAGDispatcher.cpp EnergyStorageDevice.hpp LithiumIonBattery.hpp LithiumIonBattery.cpp DAGManager.hpp DAGManager.cpp SegmentTask.hpp SegmentTask.cpp PVPanel.hpp PVPanel.cpp EdgeHost.hpp EdgeHost.cpp)
+add_executable(simulationmain main.cpp CommunicationInterface.hpp MailBoxSingleton.hpp MailBoxSingleton.cpp DAGOfTasks.hpp DAGOfTasks.cpp DAGDispatcher.hpp DAGDispatcher.cpp EnergyStorageDevice.hpp LithiumIonBattery.hpp LithiumIonBattery.cpp DAGManager.hpp DAGManager.cpp SegmentTask.hpp SegmentTask.cpp PVPanel.hpp PVPanel.cpp EdgeHost.hpp EdgeHost.cpp SchedulingStrategy.hpp SchedulingBaseline.hpp SchedulingBaseline.cpp SchedulingHEFT.hpp SchedulingHEFT.cpp  SchedulingGEFT.hpp SchedulingGEFT.cpp SchedulingBestFit.hpp SchedulingBestFit.cpp)
 
 target_link_libraries(simulationmain ${SimGrid_LIBRARY})
 
