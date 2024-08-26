@@ -42,8 +42,9 @@
     <argument value="input/photo-voltaic/x_-2_y_-2.csv"/>
     <argument value="input/photo-voltaic/cloud_trace.csv"/>
 
+    <!-- Cache duration in seconds -->                
+    <argument value="-1"/>
 
   </actor>
-  <!-- The master actor (with some arguments) -->
   <actor host="bus_stop_0" function="dagdispatcher"/>
 </platform>

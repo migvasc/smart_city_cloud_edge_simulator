@@ -294,4 +294,6 @@ def process_data(input_file_path,log_file,output_folder):
 input_file_path = sys.argv[1]
 log_file_path =  sys.argv[2]
 output_folder = sys.argv[3]
+print('PROCESSING LOG',input_file_path,log_file_path,output_folder)
 process_data(input_file_path,log_file_path,output_folder)
+

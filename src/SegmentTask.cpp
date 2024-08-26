@@ -148,7 +148,6 @@ void SegmentTask::set_cache()
   data_in_cache=true;
 }
 
-
 bool SegmentTask::completed()
 {
   return this->task_completed;
@@ -158,4 +157,14 @@ void SegmentTask::complete()
 {
   this->get_exec()->complete(simgrid::s4u::Activity::State::FINISHED);  
   this->task_completed = true;
+}
+
+void SegmentTask::set_priority(int value)
+{
+  this->priority = value;
+}
+
+int SegmentTask::get_priority()
+{
+  return this->priority;
 }

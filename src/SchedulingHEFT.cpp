@@ -141,5 +141,42 @@ simgrid::s4u::Host* SchedulingHEFT::find_host(shared_ptr<SegmentTask> ready_task
 {
     std::vector<simgrid::s4u::Host *> hosts = simgrid::s4u::Engine::get_instance()->get_all_hosts();
     return this->find_host(ready_task,hosts);
-
 }
+
+
+
+void SchedulingHEFT::create_task_ranking_recursive(simgrid::s4u::ActivityPtr task,std::map<std::string,int>& rank)
+{
+    
+    XBT_INFO("processing task %s",task->get_cname());
+
+    if (task->get_successors().empty()){
+        rank[task->get_name()] = 1;
+        return;
+    }
+
+    int max_rank = 0;
+    for (auto sucessor : task->get_successors())
+    {
+        int temp = 0;
+        create_task_ranking_recursive(sucessor,rank);
+        temp = 1 + rank[sucessor->get_name()];
+        if (temp > max_rank)
+        {
+            max_rank = temp;
+        }
+    }
+    rank[task->get_name()] = max_rank;
+}
+
+void SchedulingHEFT::create_tasks_ranking(std::vector<std::shared_ptr<SegmentTask>> &tasks)
+{
+    std::map<std::string,int> task_rank;
+    create_task_ranking_recursive( (*tasks.begin())->get_exec(),task_rank);
+    for (auto task: tasks)
+    {
+        task->set_priority(task_rank[task->get_exec()->get_name()]);
+    }    
+}
+
+

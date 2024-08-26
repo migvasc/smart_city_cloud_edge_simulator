@@ -213,6 +213,15 @@ void DAGManager::handle_message(Message* message)
 void DAGManager::handle_request_submission(DAGOfTasks* dag){
     requests.push_back(dag);
     requests_map[dag->get_name()] = dag;
+
+    if (SCHEDULING_ALGORITHM == SCHEDULING_HEFT || SCHEDULING_ALGORITHM == SCHEDULING_GEFT)
+    {
+        SchedulingHEFT *casted = dynamic_cast<SchedulingHEFT*>(schedulingstrategy);
+        std::vector<std::shared_ptr<SegmentTask>>  tasks = dag->get_DAG();    
+        casted->create_tasks_ranking(tasks);
+    }
+ 
+    
 }
 
 /**
@@ -293,16 +302,20 @@ vector<shared_ptr<SegmentTask>> DAGManager::get_ready_tasks_cache()
     for(auto& request : requests)
     {
         vector<shared_ptr<SegmentTask>> request_ready_tasks = request->get_ready_tasks_cache(task_cache,task_time_cache,cache_duration);
-
         for(auto& task : request_ready_tasks)
         {
             ready_tasks.push_back(task);
-        }
+        }        
     }
     return ready_tasks;
 
 }
 
+
+bool sort_by_priority(shared_ptr<SegmentTask> a, shared_ptr<SegmentTask> b)
+{
+    return a->get_priority() > b->get_priority();
+}
 /**
  * Allocates the tasks to the hosts, respecting the servers computational capacity and the selected scheduling policy.
  */
@@ -318,7 +331,10 @@ void DAGManager::perform_schedule()
     {
         ready_tasks = get_ready_tasks_from_requests(); 
     }
-
+    if(SCHEDULING_ALGORITHM == SCHEDULING_HEFT || SCHEDULING_ALGORITHM == SCHEDULING_GEFT)
+    {
+        std::stable_sort(ready_tasks.begin(),ready_tasks.end(),sort_by_priority);
+    }
 
     for(auto& segment : ready_tasks)
     {

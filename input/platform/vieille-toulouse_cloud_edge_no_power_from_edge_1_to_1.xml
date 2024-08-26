@@ -19,8 +19,8 @@
     <host core="4" id="bus_stop_14" speed="13.5Gf">  <prop id="wattage_per_state" value="0:0" /> <prop id="wattage_off" value="1.5" /></host> 
     <host core="4" id="bus_stop_15" speed="13.5Gf">  <prop id="wattage_per_state" value="0:0" /> <prop id="wattage_off" value="1.5" /></host> 
     <host core="4" id="bus_stop_16" speed="13.5Gf">  <prop id="wattage_per_state" value="0:0" /> <prop id="wattage_off" value="1.5" /></host> 
-    <host core="68" id="edge_cluster" speed="13.5Gf">  <prop id="wattage_per_state" value="66:240" /> <prop id="wattage_off" value="1" /></host> 
-    <host core="256" id="cloud_cluster" speed="27Gf">  <prop id="wattage_per_state" value="0:0" /> <prop id="wattage_off" value="1" /></host> 
+    <host core="64" id="edge_cluster" speed="13.5Gf">  <prop id="wattage_per_state" value="66:240" /> <prop id="wattage_off" value="1" /></host> 
+
     <link id="link_0" bandwidth="1000000000bps" latency="0.01s"/>
     <link id="link_1" bandwidth="1000000000bps" latency="0.01s"/>
     <link id="link_2" bandwidth="1000000000bps" latency="0.01s"/>
@@ -1079,60 +1079,6 @@
       <link_ctn id="link_1"/>
       <link_ctn id="link_5"/>
     </route>
-    <route src="bus_stop_0" dst="cloud_cluster">
-      <link_ctn id="link_to_cloud_0"/>
-    </route>
-    <route src="bus_stop_1" dst="cloud_cluster">
-      <link_ctn id="link_to_cloud_1"/>
-    </route>
-    <route src="bus_stop_2" dst="cloud_cluster">
-      <link_ctn id="link_to_cloud_2"/>
-    </route>
-    <route src="bus_stop_3" dst="cloud_cluster">
-      <link_ctn id="link_to_cloud_3"/>
-    </route>
-    <route src="bus_stop_4" dst="cloud_cluster">
-      <link_ctn id="link_to_cloud_4"/>
-    </route>
-    <route src="bus_stop_5" dst="cloud_cluster">
-      <link_ctn id="link_to_cloud_5"/>
-    </route>
-    <route src="bus_stop_6" dst="cloud_cluster">
-      <link_ctn id="link_to_cloud_6"/>
-    </route>
-    <route src="bus_stop_7" dst="cloud_cluster">
-      <link_ctn id="link_to_cloud_7"/>
-    </route>
-    <route src="bus_stop_8" dst="cloud_cluster">
-      <link_ctn id="link_to_cloud_8"/>
-    </route>
-    <route src="bus_stop_9" dst="cloud_cluster">
-      <link_ctn id="link_to_cloud_9"/>
-    </route>
-    <route src="bus_stop_10" dst="cloud_cluster">
-      <link_ctn id="link_to_cloud_10"/>
-    </route>
-    <route src="bus_stop_11" dst="cloud_cluster">
-      <link_ctn id="link_to_cloud_11"/>
-    </route>
-    <route src="bus_stop_12" dst="cloud_cluster">
-      <link_ctn id="link_to_cloud_12"/>
-    </route>
-    <route src="bus_stop_13" dst="cloud_cluster">
-      <link_ctn id="link_to_cloud_13"/>
-    </route>
-    <route src="bus_stop_14" dst="cloud_cluster">
-      <link_ctn id="link_to_cloud_14"/>
-    </route>
-    <route src="bus_stop_15" dst="cloud_cluster">
-      <link_ctn id="link_to_cloud_15"/>
-    </route>
-    <route src="bus_stop_16" dst="cloud_cluster">
-      <link_ctn id="link_to_cloud_16"/>
-    </route>
-    <route src="edge_cluster" dst="cloud_cluster">
-      <link_ctn id="link_to_cloud_17"/>
-    </route>
-
+ 
   </zone>
 </platform>

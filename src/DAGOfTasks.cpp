@@ -222,11 +222,9 @@ void DAGOfTasks::create_DAG_from_JSON(const std::string& filename)
     //Loads the task data from the json
     exec_task = simgrid::s4u::Exec::init()->set_name(task["name"].get<std::string>())->set_flops_amount(task["flopsAmount"].get<double>());
 
-    std::string key = exec_task->get_name();
-    
+    std::string key = exec_task->get_name();  
     seg_task->set_pref_host(pref_host);
-    seg_task->set_exec(exec_task);
-    
+    seg_task->set_exec(exec_task);    
     map_parents[key] = seg_task;
 
     for(std::string parent : task["parents"])
@@ -248,7 +246,7 @@ void DAGOfTasks::create_DAG_from_JSON(const std::string& filename)
     } 
   }  
 
-  std::shared_ptr<SegmentTask> ini = make_shared<SegmentTask>() ;
+  std::shared_ptr<SegmentTask> ini = make_shared<SegmentTask>();
   std::string req_ini_id = name + "-ini";
   simgrid::s4u::ExecPtr exec_task_ini =   simgrid::s4u::Exec::init()->set_name(req_ini_id)->set_flops_amount(0);
   ini->set_exec(exec_task_ini);

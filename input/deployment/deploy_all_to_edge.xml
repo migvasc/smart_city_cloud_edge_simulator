@@ -40,7 +40,7 @@
     <argument value="input/photo-voltaic/x_-2_y_-2.csv"/>
     <argument value="input/photo-voltaic/cloud_trace.csv"/>
      <!-- Same as bus stop 5 -->
-    <argument value="input/photo-voltaic/x_-1_y_0.csv"/>   
+   
 
     <!-- The host that will receive all the tasks -->
     <argument value="edge_cluster"/>

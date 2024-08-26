@@ -3,21 +3,25 @@
 <platform version="4.1">
   <actor host="bus_stop_0" function="dagmanager">  
     <!-- Parameter to chose the scheduling strategy for the VMs.
-    0: Baseline
-    1: BestFit
-    2: Renewable Energy
-    3: HEFT
-    4: GEFT
+    
+    BASELINE = 0;
+    BESTFIT = 1;  
+    FIRSTFITSOLAR = 2;
+    HEFT = 3;
+    GEFT = 4;
+    FIXED_HOST = 5;
+    BASELINE_ON_OFF = 6;
+    BASELINE_CACHE = 7;
+
+
     -->
     <argument value="4"/>	
-    <!-- Area of the solar panels (m²) -->
+      <!-- Area of the solar panels (m²) -->
     <argument value="0.05"/>
     <!-- Efficiency of the solar panels-->
     <argument value="0.15"/>
-
     <!-- Capacity of the batteries (Wh)-->
     <argument value="40"/>
-
     <!-- Battery Depth of Discharge-->
     <argument value="0.8"/>
     <!-- Battery charge process efficiency-->
@@ -44,9 +48,10 @@
     <argument value="input/photo-voltaic/x_-1_y_-1.csv"/>
     <argument value="input/photo-voltaic/x_-2_y_-2.csv"/>
     <argument value="input/photo-voltaic/cloud_trace.csv"/>
-    <!-- Cache duration in seconds -->                
-    <argument value="-1"/>
-  </actor>
 
+    <!-- Cache duration in seconds -->                
+    <argument value="05"/>
+
+  </actor>
   <actor host="bus_stop_0" function="dagdispatcher"/>
 </platform>
