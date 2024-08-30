@@ -7,6 +7,7 @@
 #include "SegmentTask.hpp"
 #include "CommunicationInterface.hpp"
 #include "PVPanel.hpp"
+#include "ElectricityCO2eq.hpp"
 #include "simgrid/plugins/energy.h"
 #include "LithiumIonBattery.hpp"
 #include "EdgeHost.hpp"
@@ -96,7 +97,15 @@ private:
 
   // Envelope with available renewable energy for 5 min 
   std::map<std::string, double> hosts_renewable_energy;
-  //void performSchedule();
+
+
+
+  // Power production CO2eq values
+  ElectricityCO2eq* local_grid_power_co2;
+  ElectricityCO2eq* cloud_dc_power_co2;
+  double pv_panel_power_co2; 
+  simgrid::s4u::Host* cloud_cluster;
+
 
   void handle_message(Message *message);
   void turn_host_off(simgrid::s4u::Host *host);

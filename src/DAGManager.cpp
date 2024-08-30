@@ -60,7 +60,7 @@ void DAGManager::handle_task_finished(simgrid::s4u::Exec const& exec)
     std::string request_name = result[0]+"-"+ result[1];
     if(! (task_name.compare("ini")==0 || task_name.compare("end")==0))
     {
-        XBT_INFO("COLOCOU A TAREFA %s da request %s em cache na maquina %s",task_name.c_str(),exec.get_cname(),exec.get_host()->get_cname());
+        //XBT_INFO("COLOCOU A TAREFA %s da request %s em cache na maquina %s",task_name.c_str(),exec.get_cname(),exec.get_host()->get_cname());
         task_cache[task_name] = exec.get_host()->get_name();
         task_time_cache[task_name] = int (simgrid::s4u::Engine::get_clock()/cache_duration);
     }
@@ -132,6 +132,15 @@ void DAGManager::init()
 
     // If baseline with cache, we get the selected cache duration from the parameter
     cache_duration = std::stoi(argsClass[++arg_index]);
+
+
+    if (argsClass.size() > 27)
+    {
+        pv_panel_power_co2 = std::stod(argsClass[++arg_index]);
+        local_grid_power_co2 = new ElectricityCO2eq(argsClass[++arg_index]);
+        cloud_dc_power_co2 = new ElectricityCO2eq(argsClass[++arg_index]);
+        cloud_cluster = simgrid::s4u::Host::by_name(argsClass[++arg_index]);
+    }
 
     if(cache_duration>-1)
     {
@@ -250,8 +259,18 @@ static void communicate(simgrid::s4u::ExecPtr task, simgrid::s4u::Host* src_host
     comm->add_successor(task);
     comm->set_source(src_host);
     comm->set_destination(dest_host);
+
+    // Create one additional task to simulate power consumption in the destination node 
+    // for communicating
+    simgrid::s4u::ExecPtr comm_load = simgrid::s4u::this_actor::exec_init(9999000000.0 * 100000); // huge flop amount to ensure that it will run during all the migration 
+    comm_load->set_host(dest_host);
+    comm_load->start();
+
     comm->wait();
-    
+    // Finishes the communication task
+    comm_load->cancel();
+
+
 }
 
 static void communicate_different_best_host(shared_ptr<SegmentTask>  segment, simgrid::s4u::Host* src_host,simgrid::s4u::Host* dest_host)
@@ -272,8 +291,19 @@ static void communicate_different_best_host(shared_ptr<SegmentTask>  segment, si
     segment->parent_coms.push_back(comm2);
     comm2->add_successor(segment->get_exec()); 
     comm1->add_successor(comm2);
+
+    // Create one additional task to simulate power consumption in the destination node 
+    // for communicating
+    simgrid::s4u::ExecPtr comm_load = simgrid::s4u::this_actor::exec_init(9999000000.0 * 100000); // huge flop amount to ensure that it will run during all the migration 
+    comm_load->set_host(dest_host);
+    comm_load->start();
+
     comm1->wait();
     comm2->wait();
+    // Create one additional task to simulate power consumption in the destination node 
+    // for communicating    
+    comm_load->cancel();
+
 }
 
 /**
@@ -370,8 +400,6 @@ void DAGManager::perform_schedule()
                     boost::split(result, parent.first, boost::is_any_of("-"));
                     std::string parent_name = result[2];
                     src_host = simgrid::s4u::Host::by_name(task_cache[parent_name]);
-                    
-
                 }
 
                 if(src_host!=candidate_host)
@@ -426,11 +454,11 @@ void DAGManager::perform_schedule()
                 if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::FAILED) parent_state = "FAILED";
                 if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::CANCELED) parent_state = "CANCELED";
                 if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::FINISHED) parent_state = "FINISHED";
-                XBT_INFO("TAREFA PAI %s ta em cache e tem o state %s, entao vamos completar ela pq vai ser usada pra tarefa %s ",parent.first.c_str(),parent_state.c_str(),task->get_cname());
+               // XBT_INFO("TAREFA PAI %s ta em cache e tem o state %s, entao vamos completar ela pq vai ser usada pra tarefa %s ",parent.first.c_str(),parent_state.c_str(),task->get_cname());
                 
                 if (parent.second->get_exec()->get_state()==simgrid::s4u::Activity::State::FINISHED || parent.second->completed())
                 {
-                    XBT_INFO("OPA A TAREFA JA TA COMPLETADA  %s ta em cache, entao vamos ignonrar ela pq vai ser usada pra tarefa %s",parent.first.c_str(),task->get_cname());
+                   // XBT_INFO("OPA A TAREFA JA TA COMPLETADA  %s ta em cache, entao vamos ignonrar ela pq vai ser usada pra tarefa %s",parent.first.c_str(),task->get_cname());
                     continue;
                 }
                 if(!parent.second->get_exec()->is_assigned() )
@@ -506,7 +534,6 @@ simgrid::s4u::Host* DAGManager::find_host(shared_ptr<SegmentTask> ready_task)
 
 void DAGManager::update_battery_state(simgrid::s4u::Host* host)
 {
-
     double host_energy_consumption =   Util::convert_joules_to_wh(sg_host_get_consumed_energy(host) - hosts_energy_consumption[host->get_name()]);
     double brown_energy_wh   = 0.0; 
     double energy_discharged = 0.0; 
@@ -541,7 +568,22 @@ void DAGManager::update_battery_state(simgrid::s4u::Host* host)
 
         }
     }
+
     XBT_INFO("#ENERGY;%f;%s;%f;%f;%f;%f",simgrid::s4u::Engine::get_clock(),host->get_cname(),host_energy_consumption,renewable_power_prod, brown_energy_wh,hosts_batteries[host->get_name()]->getUsableWattsHour());
+    
+    double grid_co2 = 0;
+    
+    if(host==cloud_cluster)
+    {
+        grid_co2 = brown_energy_wh * local_grid_power_co2->get_current_co2_eq(simgrid::s4u::Engine::get_clock());
+    } 
+    else
+    {
+        grid_co2 = brown_energy_wh * cloud_dc_power_co2->get_current_co2_eq(simgrid::s4u::Engine::get_clock());
+    }
+
+    XBT_INFO("#CO2;%f;%s;%f",simgrid::s4u::Engine::get_clock(),host->get_cname(),grid_co2);
+
 }
 
 /**
@@ -564,7 +606,6 @@ void DAGManager::update_hosts_energy_information()
 
     next_time_to_update += timeslot_duration;
 }
-
 
 void DAGManager::evaluate_turn_on_or_off()
 {

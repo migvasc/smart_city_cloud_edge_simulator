@@ -90,7 +90,7 @@ std::vector<shared_ptr<SegmentTask>>  DAGOfTasks::get_ready_tasks_cache(unordere
             if (task->get_exec()->get_state()== simgrid::s4u::Activity::State::FINISHED) state = "FINISHED";
 
 
-            XBT_INFO("task %s is in cache and it  is still valid, so the task will NOOTTT be added to the list e  tem o estado %s ",task->get_exec()->get_cname(),state.c_str());
+          //  XBT_INFO("task %s is in cache and it  is still valid, so the task will NOOTTT be added to the list e  tem o estado %s ",task->get_exec()->get_cname(),state.c_str());
             continue;
           }
           else
@@ -105,7 +105,7 @@ std::vector<shared_ptr<SegmentTask>>  DAGOfTasks::get_ready_tasks_cache(unordere
             if (task->get_exec()->get_state()== simgrid::s4u::Activity::State::CANCELED) state = "CANCELED";
             if (task->get_exec()->get_state()== simgrid::s4u::Activity::State::FINISHED) state = "FINISHED";
 
-            XBT_INFO("task %s ta expiradaaaaa c state %s ",task->get_exec()->get_cname(),state.c_str());
+        //    XBT_INFO("task %s ta expiradaaaaa c state %s ",task->get_exec()->get_cname(),state.c_str());
 
           }
 
@@ -152,7 +152,7 @@ std::vector<shared_ptr<SegmentTask>>  DAGOfTasks::get_ready_tasks_cache(unordere
                 if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::CANCELED) state = "CANCELED";
                 if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::FINISHED) state = "FINISHED";
 
-                XBT_INFO("parent %s of task task %s is in cache and will not be executed state %s ",parent.second->get_exec()->get_cname(), task->get_exec()->get_cname(),state.c_str());
+           //     XBT_INFO("parent %s of task task %s is in cache and will not be executed state %s ",parent.second->get_exec()->get_cname(), task->get_exec()->get_cname(),state.c_str());
                 // Validates if the parent is already in the execution list,
                 // if so, we need to remove it from the list
                 std::vector<std::shared_ptr<SegmentTask>>::iterator it = ready_tasks.begin();
@@ -180,7 +180,7 @@ std::vector<shared_ptr<SegmentTask>>  DAGOfTasks::get_ready_tasks_cache(unordere
       if (auto* exec = dynamic_cast<simgrid::s4u::Exec*>(task->get_exec().get()))
       {
         ready_tasks.push_back(task);
-        XBT_INFO("TASK %s foi adicionada na lista pra ser executada",task->get_exec()->get_cname());
+     //   XBT_INFO("TASK %s foi adicionada na lista pra ser executada",task->get_exec()->get_cname());
         if (task_name.compare("ini")==0 ) break;
 
       }
@@ -405,7 +405,7 @@ void DAGOfTasks::test_cache()
 
     }
   }
-  int x = 0;
+
 }
 
 simgrid::s4u::ExecPtr DAGOfTasks::get_last_exec()
