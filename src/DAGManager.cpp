@@ -537,7 +537,7 @@ void DAGManager::update_battery_state(simgrid::s4u::Host* host)
         else
         {
             energy_discharged = hosts_batteries[host->get_name()]->discharge( hosts_batteries[host->get_name()] ->getUsableWattsHour() );
-            brown_energy_wh-=hosts_batteries[host->get_name()] ->getUsableWattsHour();
+            brown_energy_wh-=energy_discharged;
 
         }
     }
