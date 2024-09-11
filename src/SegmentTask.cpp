@@ -2,16 +2,6 @@
 
 void SegmentTask::clear_parents_in_cache()
 {
-  /*for (auto& task : this->parents_in_cache)
-  {
-      if (auto ptr =  (task.second).lock())  
-      {  
-        if(ptr->get_exec()->is_assigned()){
-          ptr->get_exec()->unset_host();
-        }
-          
-      }
-  }*/
 
   this->parents_in_cache.clear();
 }
@@ -167,4 +157,14 @@ void SegmentTask::set_priority(int value)
 int SegmentTask::get_priority()
 {
   return this->priority;
+}
+
+const std::string SegmentTask::get_task_data()
+{
+  return this->task_data;
+}
+
+void SegmentTask::set_task_data(const std::string & value)
+{
+  this->task_data = value;
 }

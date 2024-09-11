@@ -366,10 +366,8 @@ void DAGManager::perform_schedule()
                 }
                 else
                 {
-                    vector<string> result;
-                    boost::split(result, parent.first, boost::is_any_of("-"));
-                    std::string parent_name = result[2];
-                    src_host = simgrid::s4u::Host::by_name(task_cache[parent_name]);
+
+                    src_host = simgrid::s4u::Host::by_name(task_cache[parent.second->get_task_data()]);
                     
 
                 }
@@ -434,11 +432,8 @@ void DAGManager::perform_schedule()
                     continue;
                 }
                 if(!parent.second->get_exec()->is_assigned() )
-                {
-                    vector<string> result;
-                    boost::split(result, parent.first, boost::is_any_of("-"));
-                    std::string parent_name = result[2];
-                   parent.second->get_exec()->set_host(simgrid::s4u::Host::by_name(task_cache[parent_name]));
+                {                
+                   parent.second->get_exec()->set_host(simgrid::s4u::Host::by_name(task_cache[parent.second->get_task_data()]));
                 }                
 
                 parent.second->complete();      
@@ -484,13 +479,10 @@ simgrid::s4u::Host* DAGManager::find_host(shared_ptr<SegmentTask> ready_task)
 
         XBT_INFO("#SCHEDULE;%s;%d;%s;%f",ready_task->get_exec()->get_cname(), hosts_cpuavailability[candidate_host->get_name()],candidate_host->get_cname(),simgrid::s4u::Engine::get_clock());
         ready_task->set_allocated_host(candidate_host);
-        
-        vector<string> result;
-        boost::split(result, ready_task->get_exec()->get_name(), boost::is_any_of("-"));
-        std::string task_name = result[2];
+
         // These ini and end tasks are used to simulate the user 
         // sending the request and receiving the result
-        if ( (task_name.compare("ini")!=0 &&  task_name.compare("end")!=0  ))
+        if ( (ready_task->get_task_data().compare("ini")!=0 &&  ready_task->get_task_data().compare("end")!=0  ))
         {
             hosts_cpuavailability[candidate_host->get_name()] -=1;
         }

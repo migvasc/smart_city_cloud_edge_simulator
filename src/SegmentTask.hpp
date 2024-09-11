@@ -18,6 +18,8 @@ class SegmentTask
     std::map<std::string,std::weak_ptr<SegmentTask>> parents_in_cache;
     bool task_completed = false;
     int priority =0;
+    std::string task_data;
+
   public:
     bool is_assigned();
     simgrid::s4u::Host* get_pref_host();
@@ -50,6 +52,8 @@ class SegmentTask
     {
         return (priority > str.priority);
     }
+    const std::string get_task_data();
+    void set_task_data(const std::string & value);
 
 };
 

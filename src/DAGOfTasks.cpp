@@ -41,13 +41,9 @@ std::vector<shared_ptr<SegmentTask>>  DAGOfTasks::get_ready_tasks_cache(unordere
   
   for (auto& task : dag) 
   {
-    vector<string> result;
-    boost::split(result, task->get_exec()->get_name(), boost::is_any_of("-"));
-    std::string task_name = result[2];
-
     // These ini and end tasks are used to simulate the user 
     // sending the request and receiving the result
-    if (task_name.compare("ini")!=0 )
+    if (task->get_task_data().compare("ini")!=0 )
     {
 
       // If the ini task has not been completed, it is not possible to execute the other tasks
@@ -61,14 +57,14 @@ std::vector<shared_ptr<SegmentTask>>  DAGOfTasks::get_ready_tasks_cache(unordere
       {
         // First we validate if we already computed information 
         // for this street and if it is in cache
-        auto it_cache = cache.find(task_name);    
+        auto it_cache = cache.find(task->get_task_data());    
         bool hasCache = it_cache != cache.end();    
         if (hasCache)
         {
           // If it is in cache, we need to validate if the data is still up to date
           // (if the information has not expired)
           bool cache_expired = false;      
-          auto it_time = time_cache.find(task_name);    
+          auto it_time = time_cache.find(task->get_task_data());    
           if(it_time!= time_cache.end())
           {
             cache_expired = it_time->second != current_time_for_cache;
@@ -76,11 +72,11 @@ std::vector<shared_ptr<SegmentTask>>  DAGOfTasks::get_ready_tasks_cache(unordere
           // If it has expired, we remove the data of the task from the cache
           if(!cache_expired)
           {
-            simgrid::s4u::Host* host = simgrid::s4u::Host::by_name(cache.at(task_name));
+            simgrid::s4u::Host* host = simgrid::s4u::Host::by_name(cache.at(task->get_task_data()));
             task->set_pref_host(host);
             task->set_cache();
 
-            std::string state = "";
+           /* std::string state = "";
 
             if (task->get_exec()->get_state()== simgrid::s4u::Activity::State::INITED) state = "INITED";
             if (task->get_exec()->get_state()== simgrid::s4u::Activity::State::STARTING) state = "STARTING";
@@ -91,12 +87,13 @@ std::vector<shared_ptr<SegmentTask>>  DAGOfTasks::get_ready_tasks_cache(unordere
 
 
             XBT_INFO("task %s is in cache and it  is still valid, so the task will NOOTTT be added to the list e  tem o estado %s ",task->get_exec()->get_cname(),state.c_str());
-            continue;
+            */
+           continue;
           }
           else
           {
 
-            std::string state = "";
+          /*  std::string state = "";
 
             if (task->get_exec()->get_state()== simgrid::s4u::Activity::State::INITED) state = "INITED";
             if (task->get_exec()->get_state()== simgrid::s4u::Activity::State::STARTING) state = "STARTING";
@@ -105,7 +102,7 @@ std::vector<shared_ptr<SegmentTask>>  DAGOfTasks::get_ready_tasks_cache(unordere
             if (task->get_exec()->get_state()== simgrid::s4u::Activity::State::CANCELED) state = "CANCELED";
             if (task->get_exec()->get_state()== simgrid::s4u::Activity::State::FINISHED) state = "FINISHED";
 
-            XBT_INFO("task %s ta expiradaaaaa c state %s ",task->get_exec()->get_cname(),state.c_str());
+            XBT_INFO("task %s ta expiradaaaaa c state %s ",task->get_exec()->get_cname(),state.c_str());*/
 
           }
 
@@ -122,16 +119,15 @@ std::vector<shared_ptr<SegmentTask>>  DAGOfTasks::get_ready_tasks_cache(unordere
             continue;
           }
 
-          boost::split(result, parent.second->get_exec()->get_name(), boost::is_any_of("-"));
-          std::string parent_name = result[2];
-          it_cache = cache.find(parent_name);
+
+          it_cache = cache.find(parent.second->get_task_data());
           bool hasCache = it_cache != cache.end();
           if (hasCache)
           {
             // Similar to the evaluation for the cache done aboove, we will 
             // erase the task data from the cache if it expired
             bool cache_expired = false;      
-            auto it_time = time_cache.find(parent_name);    
+            auto it_time = time_cache.find(parent.second->get_task_data());    
             if(it_time!= time_cache.end())
             {
               cache_expired = it_time->second != current_time_for_cache;
@@ -143,7 +139,7 @@ std::vector<shared_ptr<SegmentTask>>  DAGOfTasks::get_ready_tasks_cache(unordere
               if( parent.second->get_allocated_host()==nullptr && (parent.second->get_exec()->get_state() == simgrid::s4u::Activity::State::INITED ||parent.second->get_exec()->get_state() == simgrid::s4u::Activity::State::STARTING ))        
               {
 
-                std::string state = "";
+              /*  std::string state = "";
 
                 if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::INITED) state = "INITED";
                 if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::STARTING) state = "STARTING";
@@ -152,7 +148,7 @@ std::vector<shared_ptr<SegmentTask>>  DAGOfTasks::get_ready_tasks_cache(unordere
                 if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::CANCELED) state = "CANCELED";
                 if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::FINISHED) state = "FINISHED";
 
-                XBT_INFO("parent %s of task task %s is in cache and will not be executed state %s ",parent.second->get_exec()->get_cname(), task->get_exec()->get_cname(),state.c_str());
+                XBT_INFO("parent %s of task task %s is in cache and will not be executed state %s ",parent.second->get_exec()->get_cname(), task->get_exec()->get_cname(),state.c_str());*/
                 // Validates if the parent is already in the execution list,
                 // if so, we need to remove it from the list
                 std::vector<std::shared_ptr<SegmentTask>>::iterator it = ready_tasks.begin();
@@ -180,8 +176,8 @@ std::vector<shared_ptr<SegmentTask>>  DAGOfTasks::get_ready_tasks_cache(unordere
       if (auto* exec = dynamic_cast<simgrid::s4u::Exec*>(task->get_exec().get()))
       {
         ready_tasks.push_back(task);
-        XBT_INFO("TASK %s foi adicionada na lista pra ser executada",task->get_exec()->get_cname());
-        if (task_name.compare("ini")==0 ) break;
+       // XBT_INFO("TASK %s foi adicionada na lista pra ser executada",task->get_exec()->get_cname());
+        if (task->get_task_data().compare("ini")==0 ) break;
 
       }
     }
@@ -222,6 +218,12 @@ void DAGOfTasks::create_DAG_from_JSON(const std::string& filename)
     //Loads the task data from the json
     exec_task = simgrid::s4u::Exec::init()->set_name(task["name"].get<std::string>())->set_flops_amount(task["flopsAmount"].get<double>());
 
+    vector<string> result;
+    boost::split(result, exec_task->get_name(), boost::is_any_of("-"));
+    
+    seg_task->set_task_data(result[2]);
+
+
     std::string key = exec_task->get_name();  
     seg_task->set_pref_host(pref_host);
     seg_task->set_exec(exec_task);    
@@ -252,14 +254,14 @@ void DAGOfTasks::create_DAG_from_JSON(const std::string& filename)
   ini->set_exec(exec_task_ini);
 
   ini->set_pref_host(dag[1]->get_pref_host());
-
+  ini->set_task_data("ini");
 
   std::string req_end_id = name + "-end";
   std::shared_ptr<SegmentTask> end = make_shared<SegmentTask>() ;
   simgrid::s4u::ExecPtr exec_task_end =   simgrid::s4u::Exec::init()->set_name(req_end_id)->set_flops_amount(0);
   end->set_pref_host(ini->get_pref_host());
   end->set_exec(exec_task_end);
-
+  end->set_task_data("end");
   for (auto& task: dag)
   {
     if (task->get_exec()->get_name().compare(ini->get_exec()->get_name())==0)
