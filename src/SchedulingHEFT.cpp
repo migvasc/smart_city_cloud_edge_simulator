@@ -28,7 +28,7 @@ simgrid::s4u::Host* SchedulingHEFT::find_host(shared_ptr<SegmentTask> ready_task
     for(auto candidate_host :hosts )
     {        
         if((*hosts_cpuavailability)[candidate_host->get_name()]==0) continue;
-        XBT_INFO("ANALIZANDO O HOST %s pra tarefa %s",candidate_host->get_cname(),ready_task->get_exec()->get_cname());
+        //XBT_INFO("ANALIZANDO O HOST %s pra tarefa %s",candidate_host->get_cname(),ready_task->get_exec()->get_cname());
 
         double compute_time = ready_task->get_exec()->get_remaining() / candidate_host->get_speed();
         double comm_time = 0;
