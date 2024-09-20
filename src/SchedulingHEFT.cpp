@@ -145,8 +145,6 @@ simgrid::s4u::Host* SchedulingHEFT::find_host(shared_ptr<SegmentTask> ready_task
 void SchedulingHEFT::create_task_ranking_recursive(simgrid::s4u::ActivityPtr task,std::map<std::string,int>& rank)
 {
     
-    // XBT_INFO("processing task %s",task->get_cname());
-
     if (task->get_successors().empty()){
         rank[task->get_name()] = 1;
         return;
@@ -156,8 +154,13 @@ void SchedulingHEFT::create_task_ranking_recursive(simgrid::s4u::ActivityPtr tas
     for (auto sucessor : task->get_successors())
     {
         int temp = 0;
-        create_task_ranking_recursive(sucessor,rank);
+
+        if (rank.find(sucessor->get_name())==rank.end())
+        {
+            create_task_ranking_recursive(sucessor,rank);
+        }
         temp = 1 + rank[sucessor->get_name()];
+           
         if (temp > max_rank)
         {
             max_rank = temp;
