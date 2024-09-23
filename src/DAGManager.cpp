@@ -151,7 +151,7 @@ void DAGManager::init()
         if (exec.get_state()== simgrid::s4u::Activity::State::FINISHED) state = "FINISHED";
 
 
-        XBT_INFO("#COMECOU EXEC DA TASK;%s;%f;%f;%s;%s", exec.get_cname(), exec.get_start_time(), exec.get_finish_time(),exec.get_host()->get_cname(),state.c_str());
+        //XBT_INFO("#COMECOU EXEC DA TASK;%s;%f;%f;%s;%s", exec.get_cname(), exec.get_start_time(), exec.get_finish_time(),exec.get_host()->get_cname(),state.c_str());
         
     });    
 
