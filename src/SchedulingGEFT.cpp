@@ -60,14 +60,22 @@ simgrid::s4u::Host* SchedulingGEFT::find_host(shared_ptr<SegmentTask> ready_task
 
         double available_renewable_energy = get_host_available_renewable_energy(host);
 
-        XBT_INFO("ENERGIA VERDE DO HOST %s = %f",host->get_cname(),available_renewable_energy);
+        //XBT_INFO("ENERGIA VERDE DO HOST %s = %f",host->get_cname(),available_renewable_energy);
         if(available_renewable_energy>0.0)
         {
-            XBT_INFO("added na lista");
+           // XBT_INFO("added na lista");
 
             hosts_with_renewable_energy.push_back(host);
         }
     }
-    return SchedulingHEFT::find_host(ready_task,hosts_with_renewable_energy);
 
+    if (hosts_with_renewable_energy.empty())
+    {
+        return SchedulingHEFT::find_host(ready_task,all_hosts);
+
+    }
+    else
+    {
+        return SchedulingHEFT::find_host(ready_task,hosts_with_renewable_energy);
+    }
 }

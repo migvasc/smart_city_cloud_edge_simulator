@@ -69,8 +69,6 @@ simgrid::s4u::Host* SchedulingHEFT::find_host(shared_ptr<SegmentTask> ready_task
             if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::CANCELED) parent_task_state = "CANCELED";
             if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::FINISHED) parent_task_state = "FINISHED";
 
-         
-                        
             double parent_latency = 0.0;    
 
             const std::unordered_map<std::string, std::string> * host_properties = src_host-> get_properties();

@@ -60,7 +60,7 @@ void DAGManager::handle_task_finished(simgrid::s4u::Exec const& exec)
     std::string request_name = result[0]+"-"+ result[1];
     if(! (task_name.compare("ini")==0 || task_name.compare("end")==0))
     {
-        XBT_INFO("COLOCOU A TAREFA %s da request %s em cache na maquina %s",task_name.c_str(),exec.get_cname(),exec.get_host()->get_cname());
+        //XBT_INFO("COLOCOU A TAREFA %s da request %s em cache na maquina %s",task_name.c_str(),exec.get_cname(),exec.get_host()->get_cname());
         task_cache[task_name] = exec.get_host()->get_name();
         task_time_cache[task_name] = int (simgrid::s4u::Engine::get_clock()/cache_duration);
     }
@@ -86,18 +86,31 @@ void DAGManager::init()
     double battery_dod = std::stod(argsClass[++arg_index]);
     double battery_charge_efficiency = std::stod(argsClass[++arg_index]);
     double battery_discharge_efficiency = std::stod(argsClass[++arg_index]);
-
+    std::string city_solar_traces = argsClass[++arg_index];
+    std::string cloud_solar_traces = argsClass[++arg_index];
     // When the simulation starts, all hosts are available to receive tasks
     for (auto& host : simgrid::s4u::Engine::get_instance()->get_all_hosts())
     {
+        const std::unordered_map<std::string, std::string> * host_properties = host-> get_properties();
+
+        if(host_properties->find("host_type")!=host_properties->end())
+        {       
+            std::string host_type = host->get_property("host_type");
+            if (host_type.compare("bus_stop")==0)
+            {        
+                // We create the PV panels and batteries using information from the parameters        
+                hosts_pvpanels[host->get_name()] = new PVPanel(city_solar_traces,solar_panels_efficiency,solar_panels_area);
+                hosts_batteries[host->get_name()] = new LithiumIonBattery(battery_capacity, battery_dod,battery_charge_efficiency,battery_discharge_efficiency);        
+
+            }
+        }
         // Initially, the host "is responsible for itself", that is, 
         // since it is on, there is no need to redirect the workload to another host
         hosts_manager_map[host->get_name()] = host->get_name();
         // In the beginning of the simulations, all the cores are available, since it didnt started executing
         hosts_cpuavailability[host->get_name()] = host->get_core_count();
-        // We create the PV panels and batteries using information from the parameters
-        hosts_pvpanels[host->get_name()] = new PVPanel(argsClass[++arg_index],solar_panels_efficiency,solar_panels_area);
-        hosts_batteries[host->get_name()] = new LithiumIonBattery(battery_capacity, battery_dod,battery_charge_efficiency,battery_discharge_efficiency);        
+
+
         // We init the auxilary map with the information of the energy consumption
         hosts_energy_consumption[host->get_name()] = 0.0;
 
@@ -105,6 +118,12 @@ void DAGManager::init()
         //hosts_info[host->get_name()] = new EdgeHost();
 
     }
+
+
+    // We create the PV panels and batteries using information from the parameters        
+    hosts_pvpanels["cloud_cluster"] = new PVPanel(cloud_solar_traces,solar_panels_efficiency,solar_panels_area);
+    hosts_batteries["cloud_cluster"] = new LithiumIonBattery(battery_capacity, battery_dod,battery_charge_efficiency,battery_discharge_efficiency);        
+
 
     if (SCHEDULING_ALGORITHM == SCHEDULING_BASELINE)
     {
@@ -170,7 +189,7 @@ void DAGManager::init()
         XBT_INFO("#FE;%s;%f;%f;%s;%s", exec.get_cname(), exec.get_start_time(), exec.get_finish_time(),exec.get_host()->get_cname(),state.c_str());
         if(exec.get_finish_time()!= -1.0)
         {
-            XBT_INFO("HANDLE TASK FINISHED;%s;%f;%f;%s;%s", exec.get_cname(), exec.get_start_time(), exec.get_finish_time(),exec.get_host()->get_cname(),state.c_str());
+          //  XBT_INFO("HANDLE TASK FINISHED;%s;%f;%f;%s;%s", exec.get_cname(), exec.get_start_time(), exec.get_finish_time(),exec.get_host()->get_cname(),state.c_str());
 
             this->handle_task_finished(exec); 
         }
@@ -424,11 +443,11 @@ void DAGManager::perform_schedule()
                 if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::FAILED) parent_state = "FAILED";
                 if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::CANCELED) parent_state = "CANCELED";
                 if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::FINISHED) parent_state = "FINISHED";
-                XBT_INFO("TAREFA PAI %s ta em cache e tem o state %s, entao vamos completar ela pq vai ser usada pra tarefa %s ",parent.first.c_str(),parent_state.c_str(),task->get_cname());
+                //XBT_INFO("TAREFA PAI %s ta em cache e tem o state %s, entao vamos completar ela pq vai ser usada pra tarefa %s ",parent.first.c_str(),parent_state.c_str(),task->get_cname());
                 
                 if (parent.second->get_exec()->get_state()==simgrid::s4u::Activity::State::FINISHED || parent.second->completed())
                 {
-                    XBT_INFO("OPA A TAREFA JA TA COMPLETADA  %s ta em cache, entao vamos ignonrar ela pq vai ser usada pra tarefa %s",parent.first.c_str(),task->get_cname());
+                  //  XBT_INFO("OPA A TAREFA JA TA COMPLETADA  %s ta em cache, entao vamos ignonrar ela pq vai ser usada pra tarefa %s",parent.first.c_str(),task->get_cname());
                     continue;
                 }
                 if(!parent.second->get_exec()->is_assigned() )
@@ -500,40 +519,47 @@ void DAGManager::update_battery_state(simgrid::s4u::Host* host)
 {
 
     double host_energy_consumption =   Util::convert_joules_to_wh(sg_host_get_consumed_energy(host) - hosts_energy_consumption[host->get_name()]);
-    double brown_energy_wh   = 0.0; 
+    double brown_energy_wh   = host_energy_consumption; 
     double energy_discharged = 0.0; 
-    double renewable_power_prod = Util::convert_joules_to_wh(hosts_renewable_energy[host->get_name()]);
-
-    // Validate if there was a overproduction of solar power (more than consumption), in this case 
-    // no energy was discharged from the battery and we can charge the excess PV energy in the battery    
-    if (renewable_power_prod >= host_energy_consumption)
+    double renewable_power_prod = 0.0;
+    double battery_capacity = 0.0;
+    if (hosts_pvpanels.find(host->get_name())!=hosts_pvpanels.end())
     {
-        hosts_batteries[host->get_name()]->charge(renewable_power_prod-host_energy_consumption);
-    }
-
-    // If the solar power was not enough, we need to compute the amount of energy discharged from the batteries
-    else
-    {
-        // First we compute how much energy was consumed that did not originate from the PV panels
-        brown_energy_wh = host_energy_consumption - renewable_power_prod;
-
-        // If the batteries had more energy than the brown energy consumed, we assume that 
-        // this value was discharged from the batteries
-        if (hosts_batteries[host->get_name()]->getUsableWattsHour()>=brown_energy_wh)
+        renewable_power_prod = Util::convert_joules_to_wh(hosts_renewable_energy[host->get_name()]);
+          // Validate if there was a overproduction of solar power (more than consumption), in this case 
+        // no energy was discharged from the battery and we can charge the excess PV energy in the battery    
+        if (renewable_power_prod >= host_energy_consumption)
         {
-            energy_discharged = hosts_batteries[host->get_name()]->discharge(brown_energy_wh);
-            brown_energy_wh =0;
+            hosts_batteries[host->get_name()]->charge(renewable_power_prod-host_energy_consumption);
         }
 
-        // Otherwise, we only discharge what was possible
+        // If the solar power was not enough, we need to compute the amount of energy discharged from the batteries
         else
         {
-            energy_discharged = hosts_batteries[host->get_name()]->discharge( hosts_batteries[host->get_name()] ->getUsableWattsHour() );
-            brown_energy_wh-=energy_discharged;
+            // First we compute how much energy was consumed that did not originate from the PV panels
+            brown_energy_wh = host_energy_consumption - renewable_power_prod;
 
+            // If the batteries had more energy than the brown energy consumed, we assume that 
+            // this value was discharged from the batteries
+            if (hosts_batteries[host->get_name()]->getUsableWattsHour()>=brown_energy_wh)
+            {
+                energy_discharged = hosts_batteries[host->get_name()]->discharge(brown_energy_wh);
+                brown_energy_wh =0;
+            }
+
+            // Otherwise, we only discharge what was possible
+            else
+            {
+                energy_discharged = hosts_batteries[host->get_name()]->discharge( hosts_batteries[host->get_name()] ->getUsableWattsHour() );
+                brown_energy_wh-=energy_discharged;
+
+            }
         }
+        battery_capacity =hosts_batteries[host->get_name()]->getUsableWattsHour();
+
     }
-    XBT_INFO("#ENERGY;%f;%s;%f;%f;%f;%f",simgrid::s4u::Engine::get_clock(),host->get_cname(),host_energy_consumption,renewable_power_prod, brown_energy_wh,hosts_batteries[host->get_name()]->getUsableWattsHour());
+    
+    XBT_INFO("#ENERGY;%f;%s;%f;%f;%f;%f",simgrid::s4u::Engine::get_clock(),host->get_cname(),host_energy_consumption,renewable_power_prod, brown_energy_wh,battery_capacity);
 }
 
 /**
@@ -547,8 +573,13 @@ void DAGManager::update_hosts_energy_information()
         //First, update the energy in the batteries. For example, charge if there is overprduction during the previous time slot.
         update_battery_state(host);
 
+
         //Then, update the information about the solar panel energy production
-        hosts_renewable_energy[host->get_name()] =  Util::convert_wh_to_joules(hosts_pvpanels[host->get_name()]->get_current_green_power_production(simgrid::s4u::Engine::get_clock()));
+        
+        if (hosts_pvpanels.find(host->get_name())!=hosts_pvpanels.end())
+        {
+            hosts_renewable_energy[host->get_name()] =  Util::convert_wh_to_joules(hosts_pvpanels[host->get_name()]->get_current_green_power_production(simgrid::s4u::Engine::get_clock()));
+        }
         
         // Finally, we update the information of the host energy consumed
         hosts_energy_consumption[host->get_name()] =  sg_host_get_consumed_energy(host);
