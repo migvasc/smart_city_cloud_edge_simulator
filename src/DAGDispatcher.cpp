@@ -25,10 +25,11 @@ void DAGDispatcher::send_DAG_of_tasks(simgrid::xbt::ReplayAction& action){
     wait_for(time);
     std::string input_file;
     DAGOfTasks* dag = new DAGOfTasks(action[3]);
-    
-    for(auto task : dag->get_DAG()){
+    XBT_INFO("REQ %s\n",dag->get_name().c_str());
+
+    /*for(auto task : dag->get_DAG()){
         XBT_INFO("TASK '%s'",task->get_exec()->get_cname());
-    }
+    }*/
     MailBoxSingleton::get_instance()->send_message("dagmanager",new Message(MESSAGE_DAG_SUBMISSION,dag));
 
 }

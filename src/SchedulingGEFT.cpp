@@ -22,9 +22,11 @@ SchedulingGEFT::SchedulingGEFT(map<string, int> *hosts_cpu_availability,std::map
 */
 double SchedulingGEFT::get_host_available_renewable_energy(simgrid::s4u::Host* host)
 {
+
+  
     // First the energy from the solar panels
     double available_renewable_power = (*hosts_renewable_energy)[host->get_name()];
-    // Then we add the energy from the batteries
+    // Then we add the energy from the batteries    
     available_renewable_power += Util::convert_wh_to_joules( (*hosts_batteries)[host->get_name()]->getUsableWattsHour());    
     // We also need to remove the power consumed by the host, to update the available renewable energy info
     double host_consumed_energy = sg_host_get_consumed_energy(host) - (*hosts_energy_consumption)[host->get_name()];
@@ -58,7 +60,13 @@ simgrid::s4u::Host* SchedulingGEFT::find_host(shared_ptr<SegmentTask> ready_task
     for (auto host : all_hosts)
     {
 
-        double available_renewable_energy = get_host_available_renewable_energy(host);
+        double available_renewable_energy = 0;
+        
+        if (hosts_batteries->find(host->get_name())!=hosts_batteries->end())
+        {
+            available_renewable_energy =get_host_available_renewable_energy(host);
+
+        }
 
         //XBT_INFO("ENERGIA VERDE DO HOST %s = %f",host->get_cname(),available_renewable_energy);
         if(available_renewable_energy>0.0)

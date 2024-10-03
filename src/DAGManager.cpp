@@ -186,7 +186,7 @@ void DAGManager::init()
         if (exec.get_state()== simgrid::s4u::Activity::State::CANCELED) state = "CANCELED";
         if (exec.get_state()== simgrid::s4u::Activity::State::FINISHED) state = "FINISHED";
 
-        XBT_INFO("#FE;%s;%f;%f;%s;%s", exec.get_cname(), exec.get_start_time(), exec.get_finish_time(),exec.get_host()->get_cname(),state.c_str());
+        XBT_INFO("#FE;%s;%f;%f;%s;%s\n", exec.get_cname(), exec.get_start_time(), exec.get_finish_time(),exec.get_host()->get_cname(),state.c_str());
         if(exec.get_finish_time()!= -1.0)
         {
           //  XBT_INFO("HANDLE TASK FINISHED;%s;%f;%f;%s;%s", exec.get_cname(), exec.get_start_time(), exec.get_finish_time(),exec.get_host()->get_cname(),state.c_str());
@@ -198,7 +198,7 @@ void DAGManager::init()
 
     // Log when a communication finishes
     simgrid::s4u::Comm::on_completion_cb([this](simgrid::s4u::Comm const& comm) {
-        XBT_INFO("#FC;%s;%f;%f;%s;%s", comm.get_cname(), comm.get_start_time(), comm.get_finish_time(),comm.get_source()->get_cname(),comm.get_destination()->get_cname());   
+        XBT_INFO("#FC;%s;%f;%f;%s;%s\n", comm.get_cname(), comm.get_start_time(), comm.get_finish_time(),comm.get_source()->get_cname(),comm.get_destination()->get_cname());   
     });    
 }
 
@@ -459,7 +459,7 @@ void DAGManager::perform_schedule()
                 parent.second->get_exec()->unset_host();
             }     
 
-            XBT_INFO("#START TASK;%s;%d;%s",task->get_cname(), hosts_cpuavailability[candidate_host->get_name()],candidate_host->get_cname());
+            XBT_INFO("#START TASK;%s;%d;%s\n",task->get_cname(), hosts_cpuavailability[candidate_host->get_name()],candidate_host->get_cname());
             task->set_host(candidate_host);   
             simgrid::s4u::Actor::create("worker", segment->get_pref_host(), execute,task);        
 
@@ -476,7 +476,7 @@ void DAGManager::finish_request(const std::string last_task_id)
 
         if (request->get_last_exec()->get_name().compare(last_task_id)==0)
         {        
-            XBT_INFO("#FR;%s;%f", request->get_name().c_str(), simgrid::s4u::Engine::get_clock());
+            XBT_INFO("#FR;%s;%f\n", request->get_name().c_str(), simgrid::s4u::Engine::get_clock());
             this->requests.erase(std::remove(this->requests.begin(), this->requests.end(), request), this->requests.end());
             break;
         }
@@ -496,7 +496,7 @@ simgrid::s4u::Host* DAGManager::find_host(shared_ptr<SegmentTask> ready_task)
 
         if (candidate_host == nullptr) return candidate_host;
 
-        XBT_INFO("#SCHEDULE;%s;%d;%s;%f",ready_task->get_exec()->get_cname(), hosts_cpuavailability[candidate_host->get_name()],candidate_host->get_cname(),simgrid::s4u::Engine::get_clock());
+        XBT_INFO("#SCHEDULE;%s;%d;%s;%f\n",ready_task->get_exec()->get_cname(), hosts_cpuavailability[candidate_host->get_name()],candidate_host->get_cname(),simgrid::s4u::Engine::get_clock());
         ready_task->set_allocated_host(candidate_host);
 
         // These ini and end tasks are used to simulate the user 
@@ -559,7 +559,7 @@ void DAGManager::update_battery_state(simgrid::s4u::Host* host)
 
     }
     
-    XBT_INFO("#ENERGY;%f;%s;%f;%f;%f;%f",simgrid::s4u::Engine::get_clock(),host->get_cname(),host_energy_consumption,renewable_power_prod, brown_energy_wh,battery_capacity);
+    XBT_INFO("#ENERGY;%f;%s;%f;%f;%f;%f\n",simgrid::s4u::Engine::get_clock(),host->get_cname(),host_energy_consumption,renewable_power_prod, brown_energy_wh,battery_capacity);
 }
 
 /**
