@@ -30,15 +30,14 @@ double SchedulingGEFT::get_host_available_renewable_energy(simgrid::s4u::Host* h
     available_renewable_power += Util::convert_wh_to_joules( (*hosts_batteries)[host->get_name()]->getUsableWattsHour());    
     // We also need to remove the power consumed by the host, to update the available renewable energy info
     double host_consumed_energy = sg_host_get_consumed_energy(host) - (*hosts_energy_consumption)[host->get_name()];
-    double power_per_core = 1.2;
-    double idle_power = 2.5;
-    double run_time = 0.1;
-    if (host->get_name().compare("cloud_cluster")==0)
-    {
-        idle_power = 117.0;
-        power_per_core = 2.21875;
-        run_time = 0.05;
-    }
+    double default_task_flops = 1350000000.0;
+    
+    double idle_power = sg_host_get_idle_consumption(host);
+    double max_power  = sg_host_get_wattmax_at(host,host->get_pstate());
+
+    double power_per_core = (max_power - idle_power)/host->get_core_count();
+        
+    double run_time = default_task_flops/host->get_speed();
     int cores_used =  host->get_core_count() - (*hosts_cpuavailability)[host->get_name()] ;
     cores_used += 1 ; // to represent that we will allocate a task to this host
     double dynamic_energy = cores_used*power_per_core;
