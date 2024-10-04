@@ -16,6 +16,7 @@
 #include "SchedulingHEFT.hpp"
 #include "SchedulingGEFT.hpp"
 #include "SchedulingBestFit.hpp"
+#include "WriteBuffer.hpp"
 
 using namespace std::chrono; 
 
@@ -96,7 +97,12 @@ private:
 
   // Envelope with available renewable energy for 5 min 
   std::map<std::string, double> hosts_renewable_energy;
+  
   //void performSchedule();
+  WriteBuffer* tasks_output;
+  WriteBuffer* requests_output;
+  WriteBuffer* energy_output;
+  std::string output_dir;
 
   void handle_message(Message *message);
   void turn_host_off(simgrid::s4u::Host *host);

@@ -202,8 +202,9 @@ void DAGOfTasks::create_DAG_from_JSON(const std::string& filename)
   std::vector<shared_ptr<SegmentTask>> dag = {};
   // Map/Dictionary used for setting the dependences between the tasks
   std::map<std::string,shared_ptr<SegmentTask>> map_parents = {};
-  this->name = data["name"];
 
+  std::string prefix = std::to_string(simgrid::s4u::Engine::get_clock())+"#";
+  this->name = prefix + data["name"].get<std::string>();
   for (auto const& task: data["tasks"]) 
   {
     // Simgrid's computational task, the exec prtr
@@ -216,7 +217,7 @@ void DAGOfTasks::create_DAG_from_JSON(const std::string& filename)
     simgrid::s4u::Host* pref_host = simgrid::s4u::Host::by_name(task["machine"].get<std::string>());
 
     //Loads the task data from the json
-    exec_task = simgrid::s4u::Exec::init()->set_name(task["name"].get<std::string>())->set_flops_amount(task["flopsAmount"].get<double>());
+    exec_task = simgrid::s4u::Exec::init()->set_name(prefix+task["name"].get<std::string>())->set_flops_amount(task["flopsAmount"].get<double>());
 
     vector<string> result;
     boost::split(result, exec_task->get_name(), boost::is_any_of("-"));
@@ -231,7 +232,8 @@ void DAGOfTasks::create_DAG_from_JSON(const std::string& filename)
 
     for(std::string parent : task["parents"])
     {
-      shared_ptr<SegmentTask> parent_task = map_parents[parent];
+      std::string key = prefix + parent;
+      shared_ptr<SegmentTask> parent_task = map_parents[key];
       parent_task->get_exec()->add_successor(exec_task);
       seg_task->add_parent(parent_task);
     }
@@ -249,14 +251,14 @@ void DAGOfTasks::create_DAG_from_JSON(const std::string& filename)
   }  
 
   std::shared_ptr<SegmentTask> ini = make_shared<SegmentTask>();
-  std::string req_ini_id = name + "-ini";
+  std::string req_ini_id = this->name + "-ini";
   simgrid::s4u::ExecPtr exec_task_ini =   simgrid::s4u::Exec::init()->set_name(req_ini_id)->set_flops_amount(0);
   ini->set_exec(exec_task_ini);
 
   ini->set_pref_host(dag[1]->get_pref_host());
   ini->set_task_data("ini");
 
-  std::string req_end_id = name + "-end";
+  std::string req_end_id =  this->name + "-end";
   std::shared_ptr<SegmentTask> end = make_shared<SegmentTask>() ;
   simgrid::s4u::ExecPtr exec_task_end =   simgrid::s4u::Exec::init()->set_name(req_end_id)->set_flops_amount(0);
   end->set_pref_host(ini->get_pref_host());
@@ -273,7 +275,6 @@ void DAGOfTasks::create_DAG_from_JSON(const std::string& filename)
     {
       ini->get_exec()->add_successor(task->get_exec());
       task->add_parent(ini);
-
     }
   }
 
