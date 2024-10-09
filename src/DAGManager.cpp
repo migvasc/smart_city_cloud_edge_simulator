@@ -34,6 +34,7 @@ void DAGManager::operator()()
                 evaluate_turn_on_or_off();
             }
         }
+        update_valid_requests();
         perform_schedule(); 
         simgrid::s4u::this_actor::sleep_for(0.005);
     }        
@@ -157,11 +158,15 @@ void DAGManager::init()
         use_cache = true;
     }
 
+
     output_dir = argsClass[++arg_index];
 
     tasks_output = new WriteBuffer(output_dir + "tasks.csv");
     requests_output = new WriteBuffer(output_dir + "requests.csv");
     energy_output = new WriteBuffer(output_dir + "energy.csv");
+
+
+    max_request_run_time = std::stod(argsClass[++arg_index]);
 
     // Log when a tasks starts
     simgrid::s4u::Exec::on_start_cb([this](simgrid::s4u::Exec const& exec) 
@@ -201,7 +206,7 @@ void DAGManager::init()
         tasks_output->append_text(buf);
         free(buf);
 
-//        XBT_INFO("#FE;%s;%f;%f;%s;%s\n", exec.get_cname(), exec.get_start_time(), exec.get_finish_time(),exec.get_host()->get_cname(),state.c_str());
+        XBT_INFO("#FE;%s;%f;%f;%s;%s", exec.get_cname(), exec.get_start_time(), exec.get_finish_time(),exec.get_host()->get_cname(),state.c_str());
         if(exec.get_finish_time()!= -1.0)
         {
           //  XBT_INFO("HANDLE TASK FINISHED;%s;%f;%f;%s;%s", exec.get_cname(), exec.get_start_time(), exec.get_finish_time(),exec.get_host()->get_cname(),state.c_str());
@@ -238,9 +243,15 @@ void DAGManager::handle_message(Message* message)
                 handle_request_submission(static_cast<DAGOfTasks*>(message->data));        
                 break;      
             case MESSAGE_STOP:
-                tasks_output->flush_buffer();
                 requests_output->flush_buffer();
+                tasks_output->flush_buffer();
                 energy_output->flush_buffer();
+
+                /*requests_output->close_buffer();
+                tasks_output->close_buffer();
+                energy_output->close_buffer();
+                */
+
                 break;      
             default:
                 break;
@@ -252,7 +263,7 @@ void DAGManager::handle_message(Message* message)
 void DAGManager::handle_request_submission(DAGOfTasks* dag){
     requests.push_back(dag);
     requests_map[dag->get_name()] = dag;
-
+    dag->set_submission_time(simgrid::s4u::Engine::get_clock());
     if (SCHEDULING_ALGORITHM == SCHEDULING_HEFT || SCHEDULING_ALGORITHM == SCHEDULING_GEFT)
     {
         SchedulingHEFT *casted = dynamic_cast<SchedulingHEFT*>(schedulingstrategy);
@@ -500,9 +511,10 @@ void DAGManager::finish_request(const std::string last_task_id)
             int nb_printed;
             (void) nb_printed; // Avoids a warning if assertions are ignored
             char * buf = static_cast<char*>(malloc(sizeof(char) * buf_size));
-            snprintf(buf, buf_size,"%s,%f\n", request->get_name().c_str(), simgrid::s4u::Engine::get_clock());
+            snprintf(buf, buf_size,"%s,%f,%f,1\n", request->get_name().c_str(), request->get_submission_time(), simgrid::s4u::Engine::get_clock());
             requests_output->append_text(buf);
             free(buf);
+            
             //XBT_INFO("#FR;%s;%f\n", request->get_name().c_str(), simgrid::s4u::Engine::get_clock());
             this->requests.erase(std::remove(this->requests.begin(), this->requests.end(), request), this->requests.end());
             break;
@@ -558,6 +570,7 @@ void DAGManager::update_battery_state(simgrid::s4u::Host* host)
         if (renewable_power_prod >= host_energy_consumption)
         {
             hosts_batteries[host->get_name()]->charge(renewable_power_prod-host_energy_consumption);
+            brown_energy_wh   = 0;
         }
 
         // If the solar power was not enough, we need to compute the amount of energy discharged from the batteries
@@ -591,7 +604,8 @@ void DAGManager::update_battery_state(simgrid::s4u::Host* host)
     char * buf = static_cast<char*>(malloc(sizeof(char) * buf_size));
     snprintf(buf, buf_size,"%f,%s,%f,%f,%f,%f\n",simgrid::s4u::Engine::get_clock(),host->get_cname(),host_energy_consumption,renewable_power_prod, brown_energy_wh,battery_capacity);
     energy_output->append_text(buf);
-    
+    free(buf);
+
 }
 
 /**
@@ -681,4 +695,25 @@ simgrid::s4u::Host* DAGManager::get_nearest_neighbour_host(simgrid::s4u::Host* h
         }
     }
    return closest;
+}
+
+void DAGManager::update_valid_requests(){
+    std::vector<DAGOfTasks*>::iterator it = requests.begin();
+
+    while(it != requests.end()) {
+
+        if( ( simgrid::s4u::Engine::get_clock() -   (*it)->get_submission_time()   )  > max_request_run_time) {
+
+            const int buf_size = 256;
+            int nb_printed;
+            (void) nb_printed; // Avoids a warning if assertions are ignored
+            char * buf = static_cast<char*>(malloc(sizeof(char) * buf_size));
+            snprintf(buf, buf_size,"%s,%f,%f,0\n", (*it)->get_name().c_str(), (*it)->get_submission_time(), simgrid::s4u::Engine::get_clock());
+            requests_output->append_text(buf);
+            free(buf);
+            it = requests.erase(it);
+
+        }
+        else ++it;
+    }
 }

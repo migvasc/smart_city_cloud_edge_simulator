@@ -36,6 +36,7 @@ WriteBuffer::~WriteBuffer()
     }
 }
 
+
 void WriteBuffer::append_text(const char * text)
 {
     const size_t text_length = strlen(text);
@@ -72,3 +73,12 @@ void WriteBuffer::flush_buffer()
     f.write(buffer, static_cast<std::streamsize>(buffer_pos));
     buffer_pos = 0;
 }
+
+void WriteBuffer::close_buffer()
+{
+
+    delete buffer;
+    buffer = nullptr;
+}
+
+

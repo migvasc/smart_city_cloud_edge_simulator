@@ -203,8 +203,8 @@ void DAGOfTasks::create_DAG_from_JSON(const std::string& filename)
   // Map/Dictionary used for setting the dependences between the tasks
   std::map<std::string,shared_ptr<SegmentTask>> map_parents = {};
 
-  std::string prefix = std::to_string(simgrid::s4u::Engine::get_clock())+"#";
-  this->name = prefix + data["name"].get<std::string>();
+  std::string prefix = std::to_string(int(simgrid::s4u::Engine::get_clock()))+"#";
+  this->name =  prefix+data["name"].get<std::string>();
   for (auto const& task: data["tasks"]) 
   {
     // Simgrid's computational task, the exec prtr
@@ -232,7 +232,7 @@ void DAGOfTasks::create_DAG_from_JSON(const std::string& filename)
 
     for(std::string parent : task["parents"])
     {
-      std::string key = prefix + parent;
+      std::string key = prefix+ parent;
       shared_ptr<SegmentTask> parent_task = map_parents[key];
       parent_task->get_exec()->add_successor(exec_task);
       seg_task->add_parent(parent_task);
@@ -430,4 +430,15 @@ void DAGOfTasks::request_received()
 bool DAGOfTasks::can_start_computations()
 {
   return this->ini_task_finished;
+}
+
+
+void DAGOfTasks::set_submission_time(double time)
+{
+  this->submission_time = time;
+}
+double DAGOfTasks::get_submission_time()
+
+{
+  return this->submission_time;
 }

@@ -21,6 +21,7 @@ private:
     std::string name;
     simgrid::s4u::ExecPtr last_exec;
     std::vector<shared_ptr<SegmentTask>> dag;
+    double submission_time = 0;
     void create_DAG_from_JSON(const std::string& filename);
     // To control whether or not we can start the computations of the request
     // that is the path of the route
@@ -37,5 +38,7 @@ public:
     void request_received();
     void test_cache();
     bool can_start_computations();
+    void set_submission_time(double time);
+    double get_submission_time();
 };
 #endif
