@@ -9,7 +9,7 @@
     3: HEFT
     4: GEFT
     -->
-    <argument value="4"/>	
+    <argument value="0"/>	
     <!-- Area of the solar panels (m²) -->
     <argument value="0.05"/>
     <!-- Efficiency of the solar panels-->
@@ -48,10 +48,12 @@
     <argument value="-1"/>
     <!-- PV panel CO2eq/kwh-->
     <argument value="30.0"/>  <!-- UNECE 2022 for France/europe-->
+      <!-- Battery CO2eq/kwh-->
+    <argument value="33.0"/>  <!-- NREL -->
     <!-- Local grid co2-->
     <argument value="input/co2eq/FR_2023_hourly.csv"/> 
     <!-- Cloud electricity co2-->
-    <argument value="input/co2eq/US-MIDA-PJM_2023_hourly.csv"/> 
+    <argument value="input/co2eq/US-NW-PACW_2023_hourly.csv"/> 
     <!-- Cloud cluster host name-->
     <argument value="cloud_cluster"/> 
 

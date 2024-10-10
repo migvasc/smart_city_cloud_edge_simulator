@@ -17,6 +17,7 @@
 #include "SchedulingHEFT.hpp"
 #include "SchedulingGEFT.hpp"
 #include "SchedulingBestFit.hpp"
+#include "SchedulingBestCO2.hpp"
 
 using namespace std::chrono; 
 
@@ -32,6 +33,7 @@ private:
   int SCHEDULING_GEFT = 4;
   int SCHEDULING_FIXED_HOST = 5;
   int SCHEDULING_BASELINE_ON_OFF = 6;
+  int SCHEDULING_CO2 = 7;
 
 
   SchedulingStrategy *schedulingstrategy;
@@ -91,19 +93,17 @@ private:
   // Temporary map to include batteries of hosts
   std::map<std::string, LithiumIonBattery*> hosts_batteries;
 
-
   // Temporary map to include solar panels of hosts
   std::map<std::string, double> hosts_energy_consumption;
 
   // Envelope with available renewable energy for 5 min 
   std::map<std::string, double> hosts_renewable_energy;
 
-
-
   // Power production CO2eq values
   ElectricityCO2eq* local_grid_power_co2;
   ElectricityCO2eq* cloud_dc_power_co2;
   double pv_panel_power_co2; 
+  double battery_power_co2; 
   simgrid::s4u::Host* cloud_cluster;
 
 

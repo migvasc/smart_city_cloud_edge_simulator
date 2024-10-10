@@ -123,7 +123,6 @@ void DAGManager::init()
         schedulingstrategy = new SchedulingBestFit(&hosts_cpuavailability);
     }
 
-
     // If fixed host, we get the selected host from the parameter
     if (SCHEDULING_ALGORITHM == SCHEDULING_FIXED_HOST)
     {
@@ -133,10 +132,10 @@ void DAGManager::init()
     // If baseline with cache, we get the selected cache duration from the parameter
     cache_duration = std::stoi(argsClass[++arg_index]);
 
-
     if (argsClass.size() > 27)
     {
         pv_panel_power_co2 = std::stod(argsClass[++arg_index]);
+        battery_power_co2 = std::stod(argsClass[++arg_index]);
         local_grid_power_co2 = new ElectricityCO2eq(argsClass[++arg_index]);
         cloud_dc_power_co2 = new ElectricityCO2eq(argsClass[++arg_index]);
         cloud_cluster = simgrid::s4u::Host::by_name(argsClass[++arg_index]);
@@ -145,6 +144,11 @@ void DAGManager::init()
     if(cache_duration>-1)
     {
         use_cache = true;
+    }
+
+    if( SCHEDULING_ALGORITHM == SCHEDULING_CO2)
+    {
+        schedulingstrategy = new SchedulingBestCO2(&hosts_cpuavailability, local_grid_power_co2, cloud_dc_power_co2,  pv_panel_power_co2,  battery_power_co2,  cloud_cluster,&hosts_renewable_energy,&hosts_batteries, &hosts_energy_consumption);
     }
 
     // Log when a tasks starts
@@ -158,7 +162,6 @@ void DAGManager::init()
         if (exec.get_state()== simgrid::s4u::Activity::State::FAILED) state = "FAILED";
         if (exec.get_state()== simgrid::s4u::Activity::State::CANCELED) state = "CANCELED";
         if (exec.get_state()== simgrid::s4u::Activity::State::FINISHED) state = "FINISHED";
-
 
         XBT_INFO("#COMECOU EXEC DA TASK;%s;%f;%f;%s;%s", exec.get_cname(), exec.get_start_time(), exec.get_finish_time(),exec.get_host()->get_cname(),state.c_str());
         
@@ -180,7 +183,6 @@ void DAGManager::init()
         if(exec.get_finish_time()!= -1.0)
         {
             XBT_INFO("HANDLE TASK FINISHED;%s;%f;%f;%s;%s", exec.get_cname(), exec.get_start_time(), exec.get_finish_time(),exec.get_host()->get_cname(),state.c_str());
-
             this->handle_task_finished(exec); 
         }
         
@@ -219,18 +221,16 @@ void DAGManager::handle_message(Message* message)
     }
 }
 
-void DAGManager::handle_request_submission(DAGOfTasks* dag){
+void DAGManager::handle_request_submission(DAGOfTasks* dag)
+{
     requests.push_back(dag);
     requests_map[dag->get_name()] = dag;
-
     if (SCHEDULING_ALGORITHM == SCHEDULING_HEFT || SCHEDULING_ALGORITHM == SCHEDULING_GEFT)
     {
         SchedulingHEFT *casted = dynamic_cast<SchedulingHEFT*>(schedulingstrategy);
         std::vector<std::shared_ptr<SegmentTask>>  tasks = dag->get_DAG();    
         casted->create_tasks_ranking(tasks);
     }
- 
-    
 }
 
 /**
@@ -262,13 +262,13 @@ static void communicate(simgrid::s4u::ExecPtr task, simgrid::s4u::Host* src_host
 
     // Create one additional task to simulate power consumption in the destination node 
     // for communicating
-    simgrid::s4u::ExecPtr comm_load = simgrid::s4u::this_actor::exec_init(9999000000.0 * 100000); // huge flop amount to ensure that it will run during all the migration 
-    comm_load->set_host(dest_host);
-    comm_load->start();
+   // simgrid::s4u::ExecPtr comm_load = simgrid::s4u::this_actor::exec_init(9999000000.0 * 100000); // huge flop amount to ensure that it will run during all the migration 
+   // comm_load->set_host(dest_host);
+   // comm_load->start();
 
     comm->wait();
     // Finishes the communication task
-    comm_load->cancel();
+   // comm_load->cancel();
 
 
 }
@@ -294,15 +294,15 @@ static void communicate_different_best_host(shared_ptr<SegmentTask>  segment, si
 
     // Create one additional task to simulate power consumption in the destination node 
     // for communicating
-    simgrid::s4u::ExecPtr comm_load = simgrid::s4u::this_actor::exec_init(9999000000.0 * 100000); // huge flop amount to ensure that it will run during all the migration 
-    comm_load->set_host(dest_host);
-    comm_load->start();
+    //simgrid::s4u::ExecPtr comm_load = simgrid::s4u::this_actor::exec_init(9999000000.0 * 100000); // huge flop amount to ensure that it will run during all the migration 
+    //comm_load->set_host(dest_host);
+    //comm_load->start();
 
     comm1->wait();
     comm2->wait();
     // Create one additional task to simulate power consumption in the destination node 
     // for communicating    
-    comm_load->cancel();
+    // comm_load->cancel();
 
 }
 
@@ -539,6 +539,10 @@ void DAGManager::update_battery_state(simgrid::s4u::Host* host)
     double energy_discharged = 0.0; 
     double renewable_power_prod = Util::convert_joules_to_wh(hosts_renewable_energy[host->get_name()]);
 
+    double grid_co2 = 0;
+    double battery_co2 = 0;
+    double solar_co2 = 0;
+
     // Validate if there was a overproduction of solar power (more than consumption), in this case 
     // no energy was discharged from the battery and we can charge the excess PV energy in the battery    
     if (renewable_power_prod >= host_energy_consumption)
@@ -552,38 +556,38 @@ void DAGManager::update_battery_state(simgrid::s4u::Host* host)
         // First we compute how much energy was consumed that did not originate from the PV panels
         brown_energy_wh = host_energy_consumption - renewable_power_prod;
 
-        // If the batteries had more energy than the brown energy consumed, we assume that 
-        // this value was discharged from the batteries
-        if (hosts_batteries[host->get_name()]->getUsableWattsHour()>=brown_energy_wh)
+        if (brown_energy_wh > 0)
         {
-            energy_discharged = hosts_batteries[host->get_name()]->discharge(brown_energy_wh);
-            brown_energy_wh =0;
+            // If the batteries had more energy than the brown energy consumed, we assume that 
+            // this value was discharged from the batteries
+            if (hosts_batteries[host->get_name()]->getUsableWattsHour()>=brown_energy_wh)
+            {
+                energy_discharged = hosts_batteries[host->get_name()]->discharge(brown_energy_wh);
+                brown_energy_wh =0;
+            }
+
+            // Otherwise, we only discharge what was possible
+            else
+            {
+                energy_discharged = hosts_batteries[host->get_name()]->discharge( hosts_batteries[host->get_name()] ->getUsableWattsHour() );
+                brown_energy_wh-=energy_discharged;
+            }
         }
 
-        // Otherwise, we only discharge what was possible
-        else
-        {
-            energy_discharged = hosts_batteries[host->get_name()]->discharge( hosts_batteries[host->get_name()] ->getUsableWattsHour() );
-            brown_energy_wh-=hosts_batteries[host->get_name()] ->getUsableWattsHour();
-
-        }
     }
 
-    XBT_INFO("#ENERGY;%f;%s;%f;%f;%f;%f",simgrid::s4u::Engine::get_clock(),host->get_cname(),host_energy_consumption,renewable_power_prod, brown_energy_wh,hosts_batteries[host->get_name()]->getUsableWattsHour());
-    
-    double grid_co2 = 0;
-    
+    XBT_INFO("#ENERGY;%f;%s;%f;%f;%f;%f",simgrid::s4u::Engine::get_clock(),host->get_cname(),host_energy_consumption,renewable_power_prod, brown_energy_wh,hosts_batteries[host->get_name()]->getUsableWattsHour());        
     if(host==cloud_cluster)
-    {
-        grid_co2 = brown_energy_wh * local_grid_power_co2->get_current_co2_eq(simgrid::s4u::Engine::get_clock());
+    { 
+        grid_co2 = brown_energy_wh * cloud_dc_power_co2->get_current_co2_eq(simgrid::s4u::Engine::get_clock()); 
     } 
     else
     {
-        grid_co2 = brown_energy_wh * cloud_dc_power_co2->get_current_co2_eq(simgrid::s4u::Engine::get_clock());
+        grid_co2 = brown_energy_wh * local_grid_power_co2->get_current_co2_eq(simgrid::s4u::Engine::get_clock());
     }
-
-    XBT_INFO("#CO2;%f;%s;%f",simgrid::s4u::Engine::get_clock(),host->get_cname(),grid_co2);
-
+    battery_co2 = energy_discharged * battery_power_co2;
+    solar_co2 = renewable_power_prod * pv_panel_power_co2;
+    XBT_INFO("#CO2;%f;%s;%f;%f;%f;%f",simgrid::s4u::Engine::get_clock(),host->get_cname(),(grid_co2+battery_co2+solar_co2),grid_co2,battery_co2,solar_co2);
 }
 
 /**
