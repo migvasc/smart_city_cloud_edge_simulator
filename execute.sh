@@ -230,8 +230,15 @@
 #clear && clear && echo 'running GEFT cloud ...' && build/src/simulationmain input/platform/platform_latency_vieille-toulouse_vivaldi_cloud.xml input/deployment/deploy_GEFT.xml input/workload/vieille-toulouse_30k.txt --log=root.app:file:output/output_GEFT_30k/logfile.log
 #python3 util/process_log.py input/workload/vieille-toulouse_30k.txt output/output_GEFT_30k/logfile.log output/output_GEFT_30k
 
-rm -rf output/output_GEFT_30k_interface
-mkdir output/output_GEFT_30k_interface
-clear && clear && echo 'running GEFT cloud interface...' && build/src/simulationmain input/platform/platform_latency_vieille-toulouse_vivaldi_cloud.xml input/deployment/deploy_GEFT_cache.xml input/workload/vieille-toulouse_30k.txt --log=root.app:file:output/output_GEFT_30k_interface/logfile.log
-python3 util/process_log.py input/workload/vieille-toulouse_30k.txt output/output_GEFT_30k_interface/logfile.log output/output_GEFT_30k_interface
+#rm -rf output/output_GEFT_30k_interface
+#mkdir output/output_GEFT_30k_interface
+#clear && clear && echo 'running GEFT cloud interface...' && build/src/simulationmain input/platform/platform_latency_vieille-toulouse_vivaldi_cloud.xml input/deployment/deploy_GEFT_cache.xml input/workload/vieille-toulouse_30k.txt --log=root.app:file:output/output_GEFT_30k_interface/logfile.log
+#python3 util/process_log.py input/workload/vieille-toulouse_30k.txt output/output_GEFT_30k_interface/logfile.log output/output_GEFT_30k_interface
+#
+#
 
+
+rm -rf output/output_baseline_30k_cache
+mkdir  output/output_baseline_30k_cache
+clear && clear && echo 'running baseline vivaldi cache...' && build/src/simulationmain input/platform/platform_latency_vieille-toulouse_vivaldi_cloud.xml input/deployment/deploy_baseline_cache.xml input/workload/vieille-toulouse_30k.txt  --log=root.app:file:output/output_baseline_30k_cache/logfile.log
+python3 util/process_log.py input/workload/vieille-toulouse_30k.txt output/output_baseline_30k_cache/logfile.log output/output_baseline_30k_cache

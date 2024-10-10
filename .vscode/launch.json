@@ -10,7 +10,7 @@
             "request": "launch",
             "justMyCode": false,
             "program": "${workspaceFolder}/build/src/simulationmain",
-            "args": ["input/platform/vieille-toulouse.xml", "input/deployment/deploy_baseline.xml", "input/workload/dag-very-small.txt" ],
+            "args": ["input/platform/platform_latency_vieille-toulouse_vivaldi_cloud.xml", "input/deployment/deploy_baseline_cache.xml", "input/workload/vieille-toulouse_30k.txt" ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],

@@ -18,6 +18,7 @@
 #include "SchedulingGEFT.hpp"
 #include "SchedulingBestFit.hpp"
 #include "SchedulingBestCO2.hpp"
+#include "WriteBuffer.hpp"
 
 using namespace std::chrono; 
 
@@ -106,6 +107,18 @@ private:
   double battery_power_co2; 
   simgrid::s4u::Host* cloud_cluster;
 
+  
+  // Attributes for writing the output
+  WriteBuffer* tasks_output;
+  WriteBuffer* requests_output;
+  WriteBuffer* energy_output;
+  WriteBuffer* co2_output;;
+
+  std::string output_dir;
+
+
+  // Max request execute time before it is canceled
+  double max_request_run_time;
 
   void handle_message(Message *message);
   void turn_host_off(simgrid::s4u::Host *host);
@@ -119,7 +132,7 @@ private:
   double get_host_available_renewable_energy(simgrid::s4u::Host* host);
   void update_hosts_energy_information();
   void update_battery_state(simgrid::s4u::Host* host);
-
+  void update_valid_requests();
   void evaluate_turn_on_or_off();
   simgrid::s4u::Host* get_nearest_neighbour_host(simgrid::s4u::Host* host);
   // Get the network latency using Simgrid's Vivaldi network topology. More info: https://simgrid.org/doc/latest/Platform_routing.html#vivaldi

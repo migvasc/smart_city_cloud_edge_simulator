@@ -1,0 +1,35 @@
+<?xml version='1.0'?>
+<!DOCTYPE platform SYSTEM "https://simgrid.org/simgrid.dtd">
+<platform version="4.1">
+  <actor host="bus_stop_0" function="dagmanager">  
+    <!-- Parameter to chose the scheduling strategy for the VMs.
+    0: Baseline
+    1: BestFit
+  -->
+    <argument value="4"/>	
+      <!-- Area of the solar panels (m²) -->
+    <argument value="0.05"/>
+    <!-- Efficiency of the solar panels-->
+    <argument value="0.15"/>
+
+    <!-- Capacity of the batteries (Wh)-->
+    <argument value="40"/>
+
+    <!-- Battery Depth of Discharge-->
+    <argument value="0.8"/>
+    <!-- Battery charge process efficiency-->
+    <argument value="0.85"/>
+    <!-- Battery discharge process efficiency-->
+    <argument value="0.85"/>
+
+    <!-- input files for the solar traces -->                
+    <argument value="input/photo-voltaic/x_0_y_0.csv"/>
+    <!-- Cloud solar trace -->                    
+    <argument value="input/photo-voltaic/cloud_trace.csv"/>
+
+    <!-- Cache duration in seconds -->                
+    <argument value="-1"/>
+
+  </actor>
+  <actor host="bus_stop_0" function="dagdispatcher"/>
+</platform>

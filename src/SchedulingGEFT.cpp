@@ -22,21 +22,22 @@ SchedulingGEFT::SchedulingGEFT(map<string, int> *hosts_cpu_availability,std::map
 */
 double SchedulingGEFT::get_host_available_renewable_energy(simgrid::s4u::Host* host)
 {
+
+  
     // First the energy from the solar panels
     double available_renewable_power = (*hosts_renewable_energy)[host->get_name()];
-    // Then we add the energy from the batteries
+    // Then we add the energy from the batteries    
     available_renewable_power += Util::convert_wh_to_joules( (*hosts_batteries)[host->get_name()]->getUsableWattsHour());    
     // We also need to remove the power consumed by the host, to update the available renewable energy info
     double host_consumed_energy = sg_host_get_consumed_energy(host) - (*hosts_energy_consumption)[host->get_name()];
-    double power_per_core = 1.2;
-    double idle_power = 2.5;
-    double run_time = 0.1;
-    if (host->get_name().compare("cloud_cluster")==0)
-    {
-        idle_power = 117.0;
-        power_per_core = 2.21875;
-        run_time = 0.05;
-    }
+    double default_task_flops = 1350000000.0;
+    
+    double idle_power = sg_host_get_idle_consumption(host);
+    double max_power  = sg_host_get_wattmax_at(host,host->get_pstate());
+
+    double power_per_core = (max_power - idle_power)/host->get_core_count();
+        
+    double run_time = default_task_flops/host->get_speed();
     int cores_used =  host->get_core_count() - (*hosts_cpuavailability)[host->get_name()] ;
     cores_used += 1 ; // to represent that we will allocate a task to this host
     double dynamic_energy = cores_used*power_per_core;
@@ -58,16 +59,30 @@ simgrid::s4u::Host* SchedulingGEFT::find_host(shared_ptr<SegmentTask> ready_task
     for (auto host : all_hosts)
     {
 
-        double available_renewable_energy = get_host_available_renewable_energy(host);
+        double available_renewable_energy = 0;
+        
+        if (hosts_batteries->find(host->get_name())!=hosts_batteries->end())
+        {
+            available_renewable_energy =get_host_available_renewable_energy(host);
 
-        XBT_INFO("ENERGIA VERDE DO HOST %s = %f",host->get_cname(),available_renewable_energy);
+        }
+
+        //XBT_INFO("ENERGIA VERDE DO HOST %s = %f",host->get_cname(),available_renewable_energy);
         if(available_renewable_energy>0.0)
         {
-            XBT_INFO("added na lista");
+           // XBT_INFO("added na lista");
 
             hosts_with_renewable_energy.push_back(host);
         }
     }
-    return SchedulingHEFT::find_host(ready_task,hosts_with_renewable_energy);
 
+    if (hosts_with_renewable_energy.empty())
+    {
+        return SchedulingHEFT::find_host(ready_task,all_hosts);
+
+    }
+    else
+    {
+        return SchedulingHEFT::find_host(ready_task,hosts_with_renewable_energy);
+    }
 }

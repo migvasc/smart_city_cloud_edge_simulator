@@ -28,7 +28,7 @@ simgrid::s4u::Host* SchedulingHEFT::find_host(shared_ptr<SegmentTask> ready_task
     for(auto candidate_host :hosts )
     {        
         if((*hosts_cpuavailability)[candidate_host->get_name()]==0) continue;
-        XBT_INFO("ANALIZANDO O HOST %s pra tarefa %s",candidate_host->get_cname(),ready_task->get_exec()->get_cname());
+        //XBT_INFO("ANALIZANDO O HOST %s pra tarefa %s",candidate_host->get_cname(),ready_task->get_exec()->get_cname());
 
         double compute_time = ready_task->get_exec()->get_remaining() / candidate_host->get_speed();
         double comm_time = 0;
@@ -69,8 +69,6 @@ simgrid::s4u::Host* SchedulingHEFT::find_host(shared_ptr<SegmentTask> ready_task
             if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::CANCELED) parent_task_state = "CANCELED";
             if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::FINISHED) parent_task_state = "FINISHED";
 
-         
-                        
             double parent_latency = 0.0;    
 
             const std::unordered_map<std::string, std::string> * host_properties = src_host-> get_properties();
@@ -136,20 +134,15 @@ simgrid::s4u::Host* SchedulingHEFT::find_host(shared_ptr<SegmentTask> ready_task
 }
 
 
-
 simgrid::s4u::Host* SchedulingHEFT::find_host(shared_ptr<SegmentTask> ready_task)
 {
     std::vector<simgrid::s4u::Host *> hosts = simgrid::s4u::Engine::get_instance()->get_all_hosts();
     return this->find_host(ready_task,hosts);
 }
 
-
-
 void SchedulingHEFT::create_task_ranking_recursive(simgrid::s4u::ActivityPtr task,std::map<std::string,int>& rank)
 {
     
-    XBT_INFO("processing task %s",task->get_cname());
-
     if (task->get_successors().empty()){
         rank[task->get_name()] = 1;
         return;
@@ -159,8 +152,13 @@ void SchedulingHEFT::create_task_ranking_recursive(simgrid::s4u::ActivityPtr tas
     for (auto sucessor : task->get_successors())
     {
         int temp = 0;
-        create_task_ranking_recursive(sucessor,rank);
+
+        if (rank.find(sucessor->get_name())==rank.end())
+        {
+            create_task_ranking_recursive(sucessor,rank);
+        }
         temp = 1 + rank[sucessor->get_name()];
+           
         if (temp > max_rank)
         {
             max_rank = temp;
@@ -178,5 +176,3 @@ void SchedulingHEFT::create_tasks_ranking(std::vector<std::shared_ptr<SegmentTas
         task->set_priority(task_rank[task->get_exec()->get_name()]);
     }    
 }
-
-

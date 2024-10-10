@@ -34,6 +34,7 @@ void DAGManager::operator()()
                 evaluate_turn_on_or_off();
             }
         }
+        update_valid_requests();
         perform_schedule(); 
         simgrid::s4u::this_actor::sleep_for(0.005);
     }        
@@ -86,18 +87,31 @@ void DAGManager::init()
     double battery_dod = std::stod(argsClass[++arg_index]);
     double battery_charge_efficiency = std::stod(argsClass[++arg_index]);
     double battery_discharge_efficiency = std::stod(argsClass[++arg_index]);
-
+    std::string city_solar_traces = argsClass[++arg_index];
+    std::string cloud_solar_traces = argsClass[++arg_index];
     // When the simulation starts, all hosts are available to receive tasks
     for (auto& host : simgrid::s4u::Engine::get_instance()->get_all_hosts())
     {
+        const std::unordered_map<std::string, std::string> * host_properties = host-> get_properties();
+
+        if(host_properties->find("host_type")!=host_properties->end())
+        {       
+            std::string host_type = host->get_property("host_type");
+            if (host_type.compare("bus_stop")==0)
+            {        
+                // We create the PV panels and batteries using information from the parameters        
+                hosts_pvpanels[host->get_name()] = new PVPanel(city_solar_traces,solar_panels_efficiency,solar_panels_area);
+                hosts_batteries[host->get_name()] = new LithiumIonBattery(battery_capacity, battery_dod,battery_charge_efficiency,battery_discharge_efficiency);        
+
+            }
+        }
         // Initially, the host "is responsible for itself", that is, 
         // since it is on, there is no need to redirect the workload to another host
         hosts_manager_map[host->get_name()] = host->get_name();
         // In the beginning of the simulations, all the cores are available, since it didnt started executing
         hosts_cpuavailability[host->get_name()] = host->get_core_count();
-        // We create the PV panels and batteries using information from the parameters
-        hosts_pvpanels[host->get_name()] = new PVPanel(argsClass[++arg_index],solar_panels_efficiency,solar_panels_area);
-        hosts_batteries[host->get_name()] = new LithiumIonBattery(battery_capacity, battery_dod,battery_charge_efficiency,battery_discharge_efficiency);        
+
+
         // We init the auxilary map with the information of the energy consumption
         hosts_energy_consumption[host->get_name()] = 0.0;
 
@@ -105,6 +119,12 @@ void DAGManager::init()
         //hosts_info[host->get_name()] = new EdgeHost();
 
     }
+
+
+    // We create the PV panels and batteries using information from the parameters        
+    hosts_pvpanels["cloud_cluster"] = new PVPanel(cloud_solar_traces,solar_panels_efficiency,solar_panels_area);
+    hosts_batteries["cloud_cluster"] = new LithiumIonBattery(battery_capacity, battery_dod,battery_charge_efficiency,battery_discharge_efficiency);        
+
 
     if (SCHEDULING_ALGORITHM == SCHEDULING_BASELINE)
     {
@@ -132,24 +152,33 @@ void DAGManager::init()
     // If baseline with cache, we get the selected cache duration from the parameter
     cache_duration = std::stoi(argsClass[++arg_index]);
 
-    if (argsClass.size() > 27)
-    {
-        pv_panel_power_co2 = std::stod(argsClass[++arg_index]);
-        battery_power_co2 = std::stod(argsClass[++arg_index]);
-        local_grid_power_co2 = new ElectricityCO2eq(argsClass[++arg_index]);
-        cloud_dc_power_co2 = new ElectricityCO2eq(argsClass[++arg_index]);
-        cloud_cluster = simgrid::s4u::Host::by_name(argsClass[++arg_index]);
-    }
 
     if(cache_duration>-1)
     {
         use_cache = true;
     }
 
+
     if( SCHEDULING_ALGORITHM == SCHEDULING_CO2)
     {
         schedulingstrategy = new SchedulingBestCO2(&hosts_cpuavailability, local_grid_power_co2, cloud_dc_power_co2,  pv_panel_power_co2,  battery_power_co2,  cloud_cluster,&hosts_renewable_energy,&hosts_batteries, &hosts_energy_consumption);
     }
+
+    output_dir = argsClass[++arg_index];
+
+    tasks_output = new WriteBuffer(output_dir + "tasks.csv");
+    requests_output = new WriteBuffer(output_dir + "requests.csv");
+    energy_output = new WriteBuffer(output_dir + "energy.csv");
+    co2_output = new WriteBuffer(output_dir + "co2.csv");
+
+    max_request_run_time = std::stod(argsClass[++arg_index]);
+
+    pv_panel_power_co2 = std::stod(argsClass[++arg_index]);
+    battery_power_co2 = std::stod(argsClass[++arg_index]);
+    local_grid_power_co2 = new ElectricityCO2eq(argsClass[++arg_index]);
+    cloud_dc_power_co2 = new ElectricityCO2eq(argsClass[++arg_index]);
+    cloud_cluster = simgrid::s4u::Host::by_name(argsClass[++arg_index]);
+    
 
     // Log when a tasks starts
     simgrid::s4u::Exec::on_start_cb([this](simgrid::s4u::Exec const& exec) 
@@ -163,7 +192,8 @@ void DAGManager::init()
         if (exec.get_state()== simgrid::s4u::Activity::State::CANCELED) state = "CANCELED";
         if (exec.get_state()== simgrid::s4u::Activity::State::FINISHED) state = "FINISHED";
 
-        XBT_INFO("#COMECOU EXEC DA TASK;%s;%f;%f;%s;%s", exec.get_cname(), exec.get_start_time(), exec.get_finish_time(),exec.get_host()->get_cname(),state.c_str());
+
+        //XBT_INFO("#COMECOU EXEC DA TASK;%s;%f;%f;%s;%s", exec.get_cname(), exec.get_start_time(), exec.get_finish_time(),exec.get_host()->get_cname(),state.c_str());
         
     });    
 
@@ -179,10 +209,20 @@ void DAGManager::init()
         if (exec.get_state()== simgrid::s4u::Activity::State::CANCELED) state = "CANCELED";
         if (exec.get_state()== simgrid::s4u::Activity::State::FINISHED) state = "FINISHED";
 
-        XBT_INFO("#FE;%s;%f;%f;%s;%s", exec.get_cname(), exec.get_start_time(), exec.get_finish_time(),exec.get_host()->get_cname(),state.c_str());
+
+        const int buf_size = 256;
+        int nb_printed;
+        (void) nb_printed; // Avoids a warning if assertions are ignored
+        char * buf = static_cast<char*>(malloc(sizeof(char) * buf_size));
+        snprintf(buf, buf_size,"%s,%f,%f,%s,%s\n", exec.get_cname(), exec.get_start_time(), exec.get_finish_time(),exec.get_host()->get_cname(),state.c_str());
+        tasks_output->append_text(buf);
+        free(buf);
+
+        //XBT_INFO("#FE;%s;%f;%f;%s;%s", exec.get_cname(), exec.get_start_time(), exec.get_finish_time(),exec.get_host()->get_cname(),state.c_str());
         if(exec.get_finish_time()!= -1.0)
         {
-            XBT_INFO("HANDLE TASK FINISHED;%s;%f;%f;%s;%s", exec.get_cname(), exec.get_start_time(), exec.get_finish_time(),exec.get_host()->get_cname(),state.c_str());
+          //  XBT_INFO("HANDLE TASK FINISHED;%s;%f;%f;%s;%s", exec.get_cname(), exec.get_start_time(), exec.get_finish_time(),exec.get_host()->get_cname(),state.c_str());
+
             this->handle_task_finished(exec); 
         }
         
@@ -190,7 +230,7 @@ void DAGManager::init()
 
     // Log when a communication finishes
     simgrid::s4u::Comm::on_completion_cb([this](simgrid::s4u::Comm const& comm) {
-        XBT_INFO("#FC;%s;%f;%f;%s;%s", comm.get_cname(), comm.get_start_time(), comm.get_finish_time(),comm.get_source()->get_cname(),comm.get_destination()->get_cname());   
+  //      XBT_INFO("#FC;%s;%f;%f;%s;%s\n", comm.get_cname(), comm.get_start_time(), comm.get_finish_time(),comm.get_source()->get_cname(),comm.get_destination()->get_cname());   
     });    
 }
 
@@ -214,6 +254,17 @@ void DAGManager::handle_message(Message* message)
             case MESSAGE_DAG_SUBMISSION:
                 handle_request_submission(static_cast<DAGOfTasks*>(message->data));        
                 break;      
+            case MESSAGE_STOP:
+                requests_output->flush_buffer();
+                tasks_output->flush_buffer();
+                energy_output->flush_buffer();
+                co2_output->flush_buffer();
+                /*requests_output->close_buffer();
+                tasks_output->close_buffer();
+                energy_output->close_buffer();
+                */
+
+                break;      
             default:
                 break;
         }
@@ -225,6 +276,7 @@ void DAGManager::handle_request_submission(DAGOfTasks* dag)
 {
     requests.push_back(dag);
     requests_map[dag->get_name()] = dag;
+    dag->set_submission_time(simgrid::s4u::Engine::get_clock());
     if (SCHEDULING_ALGORITHM == SCHEDULING_HEFT || SCHEDULING_ALGORITHM == SCHEDULING_GEFT)
     {
         SchedulingHEFT *casted = dynamic_cast<SchedulingHEFT*>(schedulingstrategy);
@@ -396,10 +448,10 @@ void DAGManager::perform_schedule()
                 }
                 else
                 {
-                    vector<string> result;
-                    boost::split(result, parent.first, boost::is_any_of("-"));
-                    std::string parent_name = result[2];
-                    src_host = simgrid::s4u::Host::by_name(task_cache[parent_name]);
+
+                    src_host = simgrid::s4u::Host::by_name(task_cache[parent.second->get_task_data()]);
+                    
+
                 }
 
                 if(src_host!=candidate_host)
@@ -454,26 +506,23 @@ void DAGManager::perform_schedule()
                 if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::FAILED) parent_state = "FAILED";
                 if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::CANCELED) parent_state = "CANCELED";
                 if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::FINISHED) parent_state = "FINISHED";
-               // XBT_INFO("TAREFA PAI %s ta em cache e tem o state %s, entao vamos completar ela pq vai ser usada pra tarefa %s ",parent.first.c_str(),parent_state.c_str(),task->get_cname());
+                //XBT_INFO("TAREFA PAI %s ta em cache e tem o state %s, entao vamos completar ela pq vai ser usada pra tarefa %s ",parent.first.c_str(),parent_state.c_str(),task->get_cname());
                 
                 if (parent.second->get_exec()->get_state()==simgrid::s4u::Activity::State::FINISHED || parent.second->completed())
                 {
-                   // XBT_INFO("OPA A TAREFA JA TA COMPLETADA  %s ta em cache, entao vamos ignonrar ela pq vai ser usada pra tarefa %s",parent.first.c_str(),task->get_cname());
+                  //  XBT_INFO("OPA A TAREFA JA TA COMPLETADA  %s ta em cache, entao vamos ignonrar ela pq vai ser usada pra tarefa %s",parent.first.c_str(),task->get_cname());
                     continue;
                 }
                 if(!parent.second->get_exec()->is_assigned() )
-                {
-                    vector<string> result;
-                    boost::split(result, parent.first, boost::is_any_of("-"));
-                    std::string parent_name = result[2];
-                   parent.second->get_exec()->set_host(simgrid::s4u::Host::by_name(task_cache[parent_name]));
+                {                
+                   parent.second->get_exec()->set_host(simgrid::s4u::Host::by_name(task_cache[parent.second->get_task_data()]));
                 }                
 
                 parent.second->complete();      
                 parent.second->get_exec()->unset_host();
             }     
 
-            XBT_INFO("#START TASK;%s;%d;%s",task->get_cname(), hosts_cpuavailability[candidate_host->get_name()],candidate_host->get_cname());
+            //XBT_INFO("#START TASK;%s;%d;%s\n",task->get_cname(), hosts_cpuavailability[candidate_host->get_name()],candidate_host->get_cname());
             task->set_host(candidate_host);   
             simgrid::s4u::Actor::create("worker", segment->get_pref_host(), execute,task);        
 
@@ -490,7 +539,15 @@ void DAGManager::finish_request(const std::string last_task_id)
 
         if (request->get_last_exec()->get_name().compare(last_task_id)==0)
         {        
-            XBT_INFO("#FR;%s;%f", request->get_name().c_str(), simgrid::s4u::Engine::get_clock());
+            const int buf_size = 256;
+            int nb_printed;
+            (void) nb_printed; // Avoids a warning if assertions are ignored
+            char * buf = static_cast<char*>(malloc(sizeof(char) * buf_size));
+            snprintf(buf, buf_size,"%s,%f,%f,1\n", request->get_name().c_str(), request->get_submission_time(), simgrid::s4u::Engine::get_clock());
+            requests_output->append_text(buf);
+            free(buf);
+            
+            //XBT_INFO("#FR;%s;%f\n", request->get_name().c_str(), simgrid::s4u::Engine::get_clock());
             this->requests.erase(std::remove(this->requests.begin(), this->requests.end(), request), this->requests.end());
             break;
         }
@@ -510,15 +567,12 @@ simgrid::s4u::Host* DAGManager::find_host(shared_ptr<SegmentTask> ready_task)
 
         if (candidate_host == nullptr) return candidate_host;
 
-        XBT_INFO("#SCHEDULE;%s;%d;%s;%f",ready_task->get_exec()->get_cname(), hosts_cpuavailability[candidate_host->get_name()],candidate_host->get_cname(),simgrid::s4u::Engine::get_clock());
+        //XBT_INFO("#SCHEDULE;%s;%d;%s;%f\n",ready_task->get_exec()->get_cname(), hosts_cpuavailability[candidate_host->get_name()],candidate_host->get_cname(),simgrid::s4u::Engine::get_clock());
         ready_task->set_allocated_host(candidate_host);
-        
-        vector<string> result;
-        boost::split(result, ready_task->get_exec()->get_name(), boost::is_any_of("-"));
-        std::string task_name = result[2];
+
         // These ini and end tasks are used to simulate the user 
         // sending the request and receiving the result
-        if ( (task_name.compare("ini")!=0 &&  task_name.compare("end")!=0  ))
+        if ( (ready_task->get_task_data().compare("ini")!=0 &&  ready_task->get_task_data().compare("end")!=0  ))
         {
             hosts_cpuavailability[candidate_host->get_name()] -=1;
         }
@@ -535,29 +589,32 @@ simgrid::s4u::Host* DAGManager::find_host(shared_ptr<SegmentTask> ready_task)
 void DAGManager::update_battery_state(simgrid::s4u::Host* host)
 {
     double host_energy_consumption =   Util::convert_joules_to_wh(sg_host_get_consumed_energy(host) - hosts_energy_consumption[host->get_name()]);
-    double brown_energy_wh   = 0.0; 
+    double brown_energy_wh   = host_energy_consumption; 
     double energy_discharged = 0.0; 
-    double renewable_power_prod = Util::convert_joules_to_wh(hosts_renewable_energy[host->get_name()]);
-
+    double renewable_power_prod =0;
+    double battery_capacity = 0;
     double grid_co2 = 0;
     double battery_co2 = 0;
     double solar_co2 = 0;
-
-    // Validate if there was a overproduction of solar power (more than consumption), in this case 
-    // no energy was discharged from the battery and we can charge the excess PV energy in the battery    
-    if (renewable_power_prod >= host_energy_consumption)
+    if (hosts_pvpanels.find(host->get_name())!=hosts_pvpanels.end())
     {
-        hosts_batteries[host->get_name()]->charge(renewable_power_prod-host_energy_consumption);
-    }
-
-    // If the solar power was not enough, we need to compute the amount of energy discharged from the batteries
-    else
-    {
-        // First we compute how much energy was consumed that did not originate from the PV panels
-        brown_energy_wh = host_energy_consumption - renewable_power_prod;
-
-        if (brown_energy_wh > 0)
+        renewable_power_prod = Util::convert_joules_to_wh(hosts_renewable_energy[host->get_name()]);
+        // Validate if there was a overproduction of solar power (more than consumption), in this case 
+        // no energy was discharged from the battery and we can charge the excess PV energy in the battery    
+        if (renewable_power_prod >= host_energy_consumption)
         {
+            hosts_batteries[host->get_name()]->charge(renewable_power_prod-host_energy_consumption);    
+            brown_energy_wh   = 0;
+
+        }
+
+        // If the solar power was not enough, we need to compute the amount of energy discharged from the batteries
+        else
+        {
+            // First we compute how much energy was consumed that did not originate from the PV panels
+            brown_energy_wh = host_energy_consumption - renewable_power_prod;
+
+        
             // If the batteries had more energy than the brown energy consumed, we assume that 
             // this value was discharged from the batteries
             if (hosts_batteries[host->get_name()]->getUsableWattsHour()>=brown_energy_wh)
@@ -572,11 +629,20 @@ void DAGManager::update_battery_state(simgrid::s4u::Host* host)
                 energy_discharged = hosts_batteries[host->get_name()]->discharge( hosts_batteries[host->get_name()] ->getUsableWattsHour() );
                 brown_energy_wh-=energy_discharged;
             }
+            
+
         }
-
+        battery_capacity = hosts_batteries[host->get_name()]->getUsableWattsHour();
     }
+    //XBT_INFO("#ENERGY;%f;%s;%f;%f;%f;%f",simgrid::s4u::Engine::get_clock(),host->get_cname(),host_energy_consumption,renewable_power_prod, brown_energy_wh);        
+    const int buf_size = 256;
+    int nb_printed;
+    (void) nb_printed; // Avoids a warning if assertions are ignored
+    char * buf = static_cast<char*>(malloc(sizeof(char) * buf_size));
+    snprintf(buf, buf_size,"%f,%s,%f,%f,%f,%f\n",simgrid::s4u::Engine::get_clock(),host->get_cname(),host_energy_consumption,renewable_power_prod, brown_energy_wh,battery_capacity);
+    energy_output->append_text(buf);
+    free(buf);
 
-    XBT_INFO("#ENERGY;%f;%s;%f;%f;%f;%f",simgrid::s4u::Engine::get_clock(),host->get_cname(),host_energy_consumption,renewable_power_prod, brown_energy_wh,hosts_batteries[host->get_name()]->getUsableWattsHour());        
     if(host==cloud_cluster)
     { 
         grid_co2 = brown_energy_wh * cloud_dc_power_co2->get_current_co2_eq(simgrid::s4u::Engine::get_clock()); 
@@ -587,7 +653,19 @@ void DAGManager::update_battery_state(simgrid::s4u::Host* host)
     }
     battery_co2 = energy_discharged * battery_power_co2;
     solar_co2 = renewable_power_prod * pv_panel_power_co2;
-    XBT_INFO("#CO2;%f;%s;%f;%f;%f;%f",simgrid::s4u::Engine::get_clock(),host->get_cname(),(grid_co2+battery_co2+solar_co2),grid_co2,battery_co2,solar_co2);
+
+    buf = static_cast<char*>(malloc(sizeof(char) * buf_size));
+    //XBT_INFO("#CO2;%f;%s;%f;%f;%f;%f",simgrid::s4u::Engine::get_clock(),host->get_cname(),(grid_co2+battery_co2+solar_co2),grid_co2,battery_co2,solar_co2);
+
+    snprintf(buf, buf_size,"%f;%s;%f;%f;%f;%f\n",simgrid::s4u::Engine::get_clock(),host->get_cname(),(grid_co2+battery_co2+solar_co2),grid_co2,battery_co2,solar_co2);
+    co2_output->append_text(buf);
+    free(buf);
+
+
+    
+
+
+ 
 }
 
 /**
@@ -601,8 +679,13 @@ void DAGManager::update_hosts_energy_information()
         //First, update the energy in the batteries. For example, charge if there is overprduction during the previous time slot.
         update_battery_state(host);
 
+
         //Then, update the information about the solar panel energy production
-        hosts_renewable_energy[host->get_name()] =  Util::convert_wh_to_joules(hosts_pvpanels[host->get_name()]->get_current_green_power_production(simgrid::s4u::Engine::get_clock()));
+        
+        if (hosts_pvpanels.find(host->get_name())!=hosts_pvpanels.end())
+        {
+            hosts_renewable_energy[host->get_name()] =  Util::convert_wh_to_joules(hosts_pvpanels[host->get_name()]->get_current_green_power_production(simgrid::s4u::Engine::get_clock()));
+        }
         
         // Finally, we update the information of the host energy consumed
         hosts_energy_consumption[host->get_name()] =  sg_host_get_consumed_energy(host);
@@ -671,4 +754,25 @@ simgrid::s4u::Host* DAGManager::get_nearest_neighbour_host(simgrid::s4u::Host* h
         }
     }
    return closest;
+}
+
+void DAGManager::update_valid_requests(){
+    std::vector<DAGOfTasks*>::iterator it = requests.begin();
+
+    while(it != requests.end()) {
+
+        if( ( simgrid::s4u::Engine::get_clock() -   (*it)->get_submission_time()   )  > max_request_run_time) {
+
+            const int buf_size = 256;
+            int nb_printed;
+            (void) nb_printed; // Avoids a warning if assertions are ignored
+            char * buf = static_cast<char*>(malloc(sizeof(char) * buf_size));
+            snprintf(buf, buf_size,"%s,%f,%f,0\n", (*it)->get_name().c_str(), (*it)->get_submission_time(), simgrid::s4u::Engine::get_clock());
+            requests_output->append_text(buf);
+            free(buf);
+            it = requests.erase(it);
+
+        }
+        else ++it;
+    }
 }
