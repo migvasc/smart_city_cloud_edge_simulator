@@ -121,11 +121,6 @@ void DAGManager::init()
     }
 
 
-    // We create the PV panels and batteries using information from the parameters        
-    hosts_pvpanels["cloud_cluster"] = new PVPanel(cloud_solar_traces,solar_panels_efficiency,solar_panels_area);
-    hosts_batteries["cloud_cluster"] = new LithiumIonBattery(battery_capacity, battery_dod,battery_charge_efficiency,battery_discharge_efficiency);        
-
-
     if (SCHEDULING_ALGORITHM == SCHEDULING_BASELINE)
     {
         schedulingstrategy = new SchedulingBaseline(&hosts_cpuavailability);
@@ -159,10 +154,6 @@ void DAGManager::init()
     }
 
 
-    if( SCHEDULING_ALGORITHM == SCHEDULING_CO2)
-    {
-        schedulingstrategy = new SchedulingBestCO2(&hosts_cpuavailability, local_grid_power_co2, cloud_dc_power_co2,  pv_panel_power_co2,  battery_power_co2,  cloud_cluster,&hosts_renewable_energy,&hosts_batteries, &hosts_energy_consumption);
-    }
 
     output_dir = argsClass[++arg_index];
 
@@ -177,8 +168,11 @@ void DAGManager::init()
     battery_power_co2 = std::stod(argsClass[++arg_index]);
     local_grid_power_co2 = new ElectricityCO2eq(argsClass[++arg_index]);
     cloud_dc_power_co2 = new ElectricityCO2eq(argsClass[++arg_index]);
-    cloud_cluster = simgrid::s4u::Host::by_name(argsClass[++arg_index]);
     
+    if( SCHEDULING_ALGORITHM == SCHEDULING_CO2)
+    {
+        schedulingstrategy = new SchedulingBestCO2(&hosts_cpuavailability, local_grid_power_co2, cloud_dc_power_co2,  pv_panel_power_co2,  battery_power_co2,  cloud_cluster,&hosts_renewable_energy,&hosts_batteries, &hosts_energy_consumption);
+    }
 
     // Log when a tasks starts
     simgrid::s4u::Exec::on_start_cb([this](simgrid::s4u::Exec const& exec) 
@@ -592,6 +586,8 @@ void DAGManager::update_battery_state(simgrid::s4u::Host* host)
     double brown_energy_wh   = host_energy_consumption; 
     double energy_discharged = 0.0; 
     double renewable_power_prod =0;
+    double renewable_energy_used = 0;
+    double grid_energy_used =0;
     double battery_capacity = 0;
     double grid_co2 = 0;
     double battery_co2 = 0;
@@ -605,7 +601,7 @@ void DAGManager::update_battery_state(simgrid::s4u::Host* host)
         {
             hosts_batteries[host->get_name()]->charge(renewable_power_prod-host_energy_consumption);    
             brown_energy_wh   = 0;
-
+            renewable_energy_used = host_energy_consumption;
         }
 
         // If the solar power was not enough, we need to compute the amount of energy discharged from the batteries
@@ -614,7 +610,7 @@ void DAGManager::update_battery_state(simgrid::s4u::Host* host)
             // First we compute how much energy was consumed that did not originate from the PV panels
             brown_energy_wh = host_energy_consumption - renewable_power_prod;
 
-        
+            renewable_energy_used = renewable_power_prod;
             // If the batteries had more energy than the brown energy consumed, we assume that 
             // this value was discharged from the batteries
             if (hosts_batteries[host->get_name()]->getUsableWattsHour()>=brown_energy_wh)
@@ -634,6 +630,9 @@ void DAGManager::update_battery_state(simgrid::s4u::Host* host)
         }
         battery_capacity = hosts_batteries[host->get_name()]->getUsableWattsHour();
     }
+
+
+    grid_energy_used = brown_energy_wh;
     //XBT_INFO("#ENERGY;%f;%s;%f;%f;%f;%f",simgrid::s4u::Engine::get_clock(),host->get_cname(),host_energy_consumption,renewable_power_prod, brown_energy_wh);        
     const int buf_size = 256;
     int nb_printed;
@@ -643,16 +642,22 @@ void DAGManager::update_battery_state(simgrid::s4u::Host* host)
     energy_output->append_text(buf);
     free(buf);
 
-    if(host==cloud_cluster)
-    { 
-        grid_co2 = brown_energy_wh * cloud_dc_power_co2->get_current_co2_eq(simgrid::s4u::Engine::get_clock()); 
-    } 
+    const std::unordered_map<std::string, std::string> * host_properties = host-> get_properties();
+    if(host_properties->find("host_type")!=host_properties->end())
+    {       
+        std::string host_type = host->get_property("host_type");
+        if (host_type.compare("cloud_host")==0)
+        {
+            grid_co2 = grid_energy_used * cloud_dc_power_co2->get_current_co2_eq(simgrid::s4u::Engine::get_clock()) *1/1000; 
+        }
+    }
     else
     {
-        grid_co2 = brown_energy_wh * local_grid_power_co2->get_current_co2_eq(simgrid::s4u::Engine::get_clock());
+        grid_co2 = grid_energy_used * local_grid_power_co2->get_current_co2_eq(simgrid::s4u::Engine::get_clock())*1/1000;
     }
-    battery_co2 = energy_discharged * battery_power_co2;
-    solar_co2 = renewable_power_prod * pv_panel_power_co2;
+    
+    battery_co2 = energy_discharged * battery_power_co2*1/1000;
+    solar_co2 = renewable_energy_used * pv_panel_power_co2*1/1000;
 
     buf = static_cast<char*>(malloc(sizeof(char) * buf_size));
     //XBT_INFO("#CO2;%f;%s;%f;%f;%f;%f",simgrid::s4u::Engine::get_clock(),host->get_cname(),(grid_co2+battery_co2+solar_co2),grid_co2,battery_co2,solar_co2);
@@ -660,11 +665,6 @@ void DAGManager::update_battery_state(simgrid::s4u::Host* host)
     snprintf(buf, buf_size,"%f;%s;%f;%f;%f;%f\n",simgrid::s4u::Engine::get_clock(),host->get_cname(),(grid_co2+battery_co2+solar_co2),grid_co2,battery_co2,solar_co2);
     co2_output->append_text(buf);
     free(buf);
-
-
-    
-
-
  
 }
 

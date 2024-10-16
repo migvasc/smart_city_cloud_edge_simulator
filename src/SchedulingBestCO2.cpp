@@ -44,32 +44,37 @@ double SchedulingBestCO2::get_host_expected_co2(simgrid::s4u::Host* host)
     double solar_co2 = 0;
     double brown_energy_wh   = 0.0; 
     double energy_discharged = 0;
+    double default_task_flops = 1350000000.0;
+    double renewable_energy_used = 0;
+    double grid_energy_used =0;
+
+
+
 
     // First the energy from the solar panels
     double available_renewable_power = Util::convert_joules_to_wh((*hosts_renewable_energy)[host->get_name()]);
 
     // We also need to remove the power consumed by the host, to update the available renewable energy info
     double host_consumed_energy = sg_host_get_consumed_energy(host) - (*hosts_energy_consumption)[host->get_name()];
-    double power_per_core = 1.2;
-    double idle_power = 2.5;
-    double run_time = 0.1;
+    double max_power  = sg_host_get_wattmax_at(host,host->get_pstate());
+    double idle_power = sg_host_get_idle_consumption(host);
+    double power_per_core = (max_power - idle_power)/host->get_core_count();
+
+    double run_time = default_task_flops/host->get_speed();
     int cores_used =  host->get_core_count() - (*hosts_cpuavailability)[host->get_name()] ;
 
-    if (host == cloud_cluster)
-    {
-        idle_power = 117.0;
-        power_per_core = 2.21875;
-        run_time = 0.05;
-    }    
     cores_used += 1 ; // to represent that we will allocate a task to this host
     double dynamic_energy = cores_used * power_per_core;
     host_consumed_energy += ((dynamic_energy+idle_power)*run_time);
     host_consumed_energy = Util::convert_joules_to_wh(host_consumed_energy);
+    
     // If we have less renewable than what the host is consuming, we will use energy from the grid
     // so we first validate if we have energy in the batteries
     if (available_renewable_power < host_consumed_energy)
     {
         brown_energy_wh = host_consumed_energy - available_renewable_power;
+
+        renewable_energy_used = available_renewable_power;
         if (brown_energy_wh > 0.0)
         {
             if ((*hosts_batteries)[host->get_name()]->getUsableWattsHour()>=brown_energy_wh)
@@ -85,19 +90,29 @@ double SchedulingBestCO2::get_host_expected_co2(simgrid::s4u::Host* host)
             }
         }
     }
-
-
-    if(host==cloud_cluster)
-    {
-        grid_co2 =brown_energy_wh * cloud_dc_power_co2->get_current_co2_eq(simgrid::s4u::Engine::get_clock());
-    } 
     else
     {
-        grid_co2 =brown_energy_wh * local_grid_power_co2->get_current_co2_eq(simgrid::s4u::Engine::get_clock());
+        renewable_energy_used = host_consumed_energy;
     }
+    grid_energy_used = brown_energy_wh;
+    
+    const std::unordered_map<std::string, std::string> * host_properties = host-> get_properties();
+    if(host_properties->find("host_type")!=host_properties->end())
+    {       
+        std::string host_type = host->get_property("host_type");
+        if (host_type.compare("cloud_host")==0)
+        {
+            grid_co2 = grid_energy_used * cloud_dc_power_co2->get_current_co2_eq(simgrid::s4u::Engine::get_clock()) *1/1000; 
+        }
+    }
+    else
+    {
+        grid_co2 = grid_energy_used * local_grid_power_co2->get_current_co2_eq(simgrid::s4u::Engine::get_clock())*1/1000;
+    }
+    
 
     battery_co2 = energy_discharged * battery_power_co2;
-    solar_co2   = available_renewable_power * pv_panel_power_co2;
+    solar_co2   = renewable_energy_used * pv_panel_power_co2;
 
     return grid_co2 + solar_co2 + battery_co2;
 
