@@ -2,14 +2,10 @@
 #include <bits/stdc++.h>
 #include <boost/algorithm/string.hpp>
 #include <memory>
+#include "Util.hpp"
 
 XBT_LOG_NEW_DEFAULT_CATEGORY(SchedulingHEFT, "SchedulingHEFT category");
 
-double SchedulingHEFT::getNetworkLatencyVivaldi(double x1, double y1, double z1, double x2, double y2, double z2)
-{
-    return sqrt( pow(x1-x2,2) + pow( y1-y2,2))  + z1 + z2;
-    
-}
 
 
 SchedulingHEFT::SchedulingHEFT(map<string, int> *hosts_cpu_availability,std::unordered_map<std::string, string> * cache)
@@ -83,8 +79,11 @@ simgrid::s4u::Host* SchedulingHEFT::find_host(shared_ptr<SegmentTask> ready_task
                 double cand_host_long = std::stod(candidate_host ->get_property("long"));
                 double cand_host_z_coord = std::stod(candidate_host->get_property("z_coord"));
 
-                max_parent_comms = getNetworkLatencyVivaldi(parent_long,parent_lat,parent_z_coord,cand_host_long,cand_host_lat,cand_host_z_coord);
-
+                parent_latency = Util::getNetworkLatencyVivaldi(parent_long,parent_lat,parent_z_coord,cand_host_long,cand_host_lat,cand_host_z_coord);
+                if (parent_latency > max_parent_comms)
+                {
+                    max_parent_comms = parent_latency;
+                }                
             }
             else
             {
@@ -110,15 +109,35 @@ simgrid::s4u::Host* SchedulingHEFT::find_host(shared_ptr<SegmentTask> ready_task
         // Now, we validate if the host does not has the local data
         if(candidate_host != ready_task->get_pref_host())
         {
-            std::vector<simgrid::s4u::Link *> links;                            
-            ready_task->get_pref_host()->route_to(candidate_host,links,nullptr);
+            const std::unordered_map<std::string, std::string> * host_properties = candidate_host-> get_properties();
 
-            double latency = 0.0;    
-            for(auto link : links)
+            if(host_properties->find("lat")!=host_properties->end())
+            {       
+                double cand_host_lat =  std::stod(candidate_host->get_property("lat"));
+                double cand_host_long = std::stod(candidate_host->get_property("long"));
+                double cand_host_z_coord  = std::stod(candidate_host->get_property("z_coord"));
+                                
+                double best_host_lat = std::stod(ready_task->get_pref_host()->get_property("lat"));
+                double best_host_long = std::stod(ready_task->get_pref_host() ->get_property("long"));
+                double best_host_z_coord = std::stod(ready_task->get_pref_host()->get_property("z_coord"));
+
+                double latency = Util::getNetworkLatencyVivaldi(best_host_long,best_host_lat,best_host_z_coord,cand_host_long,cand_host_lat,cand_host_z_coord);
+                comm_time+= 2*latency;
+
+            }
+
+            else
             {
-                latency+=link->get_latency();
-            }                 
-            comm_time+=2*latency;
+                std::vector<simgrid::s4u::Link *> links;                            
+                ready_task->get_pref_host()->route_to(candidate_host,links,nullptr);
+
+                double latency = 0.0;    
+                for(auto link : links)
+                {
+                    latency+=link->get_latency();
+                }                 
+                comm_time+=2*latency;
+            }
 
         }
         // Validates if the finish time (computation and communication) is the smallest 

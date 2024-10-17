@@ -1,8 +1,8 @@
 
-#include "SchedulingBestCO2.hpp"
+#include "SchedulingBestCO2Volume.hpp"
 #include "Util.hpp"
 
-SchedulingBestCO2::SchedulingBestCO2(map<string, int> *hosts_cpu_availability_, ElectricityCO2eq* local_grid_power_co2_, ElectricityCO2eq* cloud_dc_power_co2_, double pv_panel_power_co2_, double battery_power_co2_, simgrid::s4u::Host* cloud_cluster_,std::map<std::string, double> *hosts_renewable_energy_,std::map<std::string, LithiumIonBattery*> *hosts_batteries_, std::map<std::string, double> *hosts_energy_consumption_)
+SchedulingBestCO2Volume::SchedulingBestCO2Volume(map<string, int> *hosts_cpu_availability_, ElectricityCO2eq* local_grid_power_co2_, ElectricityCO2eq* cloud_dc_power_co2_, double pv_panel_power_co2_, double battery_power_co2_, simgrid::s4u::Host* cloud_cluster_,std::map<std::string, double> *hosts_renewable_energy_,std::map<std::string, LithiumIonBattery*> *hosts_batteries_, std::map<std::string, double> *hosts_energy_consumption_)
 {
     hosts_cpuavailability =hosts_cpu_availability_;
     local_grid_power_co2 =local_grid_power_co2_;
@@ -16,7 +16,7 @@ SchedulingBestCO2::SchedulingBestCO2(map<string, int> *hosts_cpu_availability_, 
 
 }
 
-simgrid::s4u::Host* SchedulingBestCO2::find_host(shared_ptr<SegmentTask> ready_task)
+simgrid::s4u::Host* SchedulingBestCO2Volume::find_host(shared_ptr<SegmentTask> ready_task)
 {
     sg_host_energy_update_all();
 
@@ -27,7 +27,7 @@ simgrid::s4u::Host* SchedulingBestCO2::find_host(shared_ptr<SegmentTask> ready_t
     {
         if((*hosts_cpuavailability)[candidate_host->get_name()] > 0)
         {
-            host_co2 = get_host_expected_co2(candidate_host,ready_task);
+            host_co2 = get_host_expected_volume(candidate_host,ready_task);
             if (host_co2 < min_co2)
             {
                 selected_host = candidate_host;
@@ -39,7 +39,7 @@ simgrid::s4u::Host* SchedulingBestCO2::find_host(shared_ptr<SegmentTask> ready_t
 }
 
 
-double SchedulingBestCO2::get_host_expected_co2(simgrid::s4u::Host* host,shared_ptr<SegmentTask> ready_task)
+double SchedulingBestCO2Volume::get_host_expected_volume(simgrid::s4u::Host* host,shared_ptr<SegmentTask> ready_task)
 {
     // Variables to store co2 info
     double grid_co2 = 0;
@@ -140,6 +140,6 @@ double SchedulingBestCO2::get_host_expected_co2(simgrid::s4u::Host* host,shared_
     battery_co2 = energy_discharged * battery_power_co2;
     solar_co2   = renewable_energy_used * pv_panel_power_co2;
 
-    return grid_co2 + solar_co2 + battery_co2;
+    return (grid_co2 + solar_co2 + battery_co2)* (run_time + comm_time);
 
 }

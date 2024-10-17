@@ -88,7 +88,6 @@ void DAGManager::init()
     double battery_charge_efficiency = std::stod(argsClass[++arg_index]);
     double battery_discharge_efficiency = std::stod(argsClass[++arg_index]);
     std::string city_solar_traces = argsClass[++arg_index];
-    std::string cloud_solar_traces = argsClass[++arg_index];
     // When the simulation starts, all hosts are available to receive tasks
     for (auto& host : simgrid::s4u::Engine::get_instance()->get_all_hosts())
     {
@@ -138,11 +137,6 @@ void DAGManager::init()
         schedulingstrategy = new SchedulingBestFit(&hosts_cpuavailability);
     }
 
-    // If fixed host, we get the selected host from the parameter
-    if (SCHEDULING_ALGORITHM == SCHEDULING_FIXED_HOST)
-    {
-        fixed_host = simgrid::s4u::Host::by_name(argsClass[++arg_index]);
-    }
 
     // If baseline with cache, we get the selected cache duration from the parameter
     cache_duration = std::stoi(argsClass[++arg_index]);
@@ -173,6 +167,17 @@ void DAGManager::init()
     {
         schedulingstrategy = new SchedulingBestCO2(&hosts_cpuavailability, local_grid_power_co2, cloud_dc_power_co2,  pv_panel_power_co2,  battery_power_co2,  cloud_cluster,&hosts_renewable_energy,&hosts_batteries, &hosts_energy_consumption);
     }
+    if( SCHEDULING_ALGORITHM == SCHEDULING_CO2VOLUME)
+    {
+        schedulingstrategy = new SchedulingBestCO2Volume(&hosts_cpuavailability, local_grid_power_co2, cloud_dc_power_co2,  pv_panel_power_co2,  battery_power_co2,  cloud_cluster,&hosts_renewable_energy,&hosts_batteries, &hosts_energy_consumption);
+    }
+
+    // If fixed host, we get the selected host from the parameter
+    if (SCHEDULING_ALGORITHM == SCHEDULING_FIXED_HOST)
+    {
+        fixed_host = simgrid::s4u::Host::by_name(argsClass[++arg_index]);
+    }
+
 
     // Log when a tasks starts
     simgrid::s4u::Exec::on_start_cb([this](simgrid::s4u::Exec const& exec) 
@@ -309,8 +314,8 @@ static void communicate(simgrid::s4u::ExecPtr task, simgrid::s4u::Host* src_host
     // Create one additional task to simulate power consumption in the destination node 
     // for communicating
    // simgrid::s4u::ExecPtr comm_load = simgrid::s4u::this_actor::exec_init(9999000000.0 * 100000); // huge flop amount to ensure that it will run during all the migration 
-   // comm_load->set_host(dest_host);
-   // comm_load->start();
+    //comm_load->set_host(dest_host);
+    //comm_load->start();
 
     comm->wait();
     // Finishes the communication task
@@ -340,8 +345,8 @@ static void communicate_different_best_host(shared_ptr<SegmentTask>  segment, si
 
     // Create one additional task to simulate power consumption in the destination node 
     // for communicating
-    //simgrid::s4u::ExecPtr comm_load = simgrid::s4u::this_actor::exec_init(9999000000.0 * 100000); // huge flop amount to ensure that it will run during all the migration 
-    //comm_load->set_host(dest_host);
+   // simgrid::s4u::ExecPtr comm_load = simgrid::s4u::this_actor::exec_init(9999000000.0 * 100000); // huge flop amount to ensure that it will run during all the migration 
+    //comm_load->set_host(src_host);
     //comm_load->start();
 
     comm1->wait();
@@ -557,7 +562,19 @@ simgrid::s4u::Host* DAGManager::find_host(shared_ptr<SegmentTask> ready_task)
     // Validates if there is no host allocated yet to the task
     if (ready_task->get_allocated_host()==nullptr)
     {   
-        candidate_host =    schedulingstrategy->find_host(ready_task);
+
+        if (SCHEDULING_ALGORITHM == SCHEDULING_FIXED_HOST)
+        {
+            if ( hosts_cpuavailability[fixed_host->get_name()] >0)
+            {
+                candidate_host =fixed_host;
+            }
+        }
+        else
+        {
+            candidate_host =    schedulingstrategy->find_host(ready_task);
+        }
+        
 
         if (candidate_host == nullptr) return candidate_host;
 
@@ -582,6 +599,7 @@ simgrid::s4u::Host* DAGManager::find_host(shared_ptr<SegmentTask> ready_task)
 
 void DAGManager::update_battery_state(simgrid::s4u::Host* host)
 {
+    
     double host_energy_consumption =   Util::convert_joules_to_wh(sg_host_get_consumed_energy(host) - hosts_energy_consumption[host->get_name()]);
     double brown_energy_wh   = host_energy_consumption; 
     double energy_discharged = 0.0; 
@@ -674,14 +692,13 @@ void DAGManager::update_battery_state(simgrid::s4u::Host* host)
 */
 void DAGManager::update_hosts_energy_information()
 {
+    sg_host_energy_update_all();
     for (auto& host : simgrid::s4u::Engine::get_instance()->get_all_hosts())
     { 
         //First, update the energy in the batteries. For example, charge if there is overprduction during the previous time slot.
         update_battery_state(host);
 
-
         //Then, update the information about the solar panel energy production
-        
         if (hosts_pvpanels.find(host->get_name())!=hosts_pvpanels.end())
         {
             hosts_renewable_energy[host->get_name()] =  Util::convert_wh_to_joules(hosts_pvpanels[host->get_name()]->get_current_green_power_production(simgrid::s4u::Engine::get_clock()));
@@ -689,6 +706,7 @@ void DAGManager::update_hosts_energy_information()
         
         // Finally, we update the information of the host energy consumed
         hosts_energy_consumption[host->get_name()] =  sg_host_get_consumed_energy(host);
+
     }
 
     next_time_to_update += timeslot_duration;

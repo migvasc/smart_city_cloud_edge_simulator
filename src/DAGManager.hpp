@@ -18,6 +18,8 @@
 #include "SchedulingGEFT.hpp"
 #include "SchedulingBestFit.hpp"
 #include "SchedulingBestCO2.hpp"
+#include "SchedulingBestCO2Volume.hpp"
+
 #include "WriteBuffer.hpp"
 
 using namespace std::chrono; 
@@ -35,6 +37,7 @@ private:
   int SCHEDULING_FIXED_HOST = 5;
   int SCHEDULING_BASELINE_ON_OFF = 6;
   int SCHEDULING_CO2 = 7;
+  int SCHEDULING_CO2VOLUME = 8;
 
 
   SchedulingStrategy *schedulingstrategy;

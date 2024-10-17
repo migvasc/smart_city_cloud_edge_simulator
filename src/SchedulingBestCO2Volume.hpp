@@ -1,5 +1,5 @@
-#ifndef SCHEDULINGBESTCO2_HPP
-#define SCHEDULINGBESTCO2_HPP
+#ifndef SCHEDULINGBESTCO2VOLUME_HPP
+#define SCHEDULINGBESTCO2VOLUME_HPP
 
 #include "SchedulingStrategy.hpp"
 #include <stdlib.h>
@@ -9,7 +9,7 @@
 #include "simgrid/plugins/energy.h"
 #include <stdlib.h>
 
-class SchedulingBestCO2 : public SchedulingStrategy {
+class SchedulingBestCO2Volume : public SchedulingStrategy {
 
 private:
 
@@ -28,9 +28,9 @@ std::map<std::string, double> *hosts_energy_consumption;
 
 
 public:
-    SchedulingBestCO2(map<string, int> *hosts_cpu_availability_, ElectricityCO2eq* local_grid_power_co2_, ElectricityCO2eq* cloud_dc_power_co2_, double pv_panel_power_co2_, double battery_power_co2_, simgrid::s4u::Host* cloud_cluster_,std::map<std::string, double> *hosts_renewable_energy_,std::map<std::string, LithiumIonBattery*> *hosts_batteries_, std::map<std::string, double> *hosts_energy_consumption_);
+    SchedulingBestCO2Volume(map<string, int> *hosts_cpu_availability_, ElectricityCO2eq* local_grid_power_co2_, ElectricityCO2eq* cloud_dc_power_co2_, double pv_panel_power_co2_, double battery_power_co2_, simgrid::s4u::Host* cloud_cluster_,std::map<std::string, double> *hosts_renewable_energy_,std::map<std::string, LithiumIonBattery*> *hosts_batteries_, std::map<std::string, double> *hosts_energy_consumption_);
     simgrid::s4u::Host* find_host(shared_ptr<SegmentTask> ready_task);
-    double get_host_expected_co2(simgrid::s4u::Host* host,shared_ptr<SegmentTask> ready_task);
+    double get_host_expected_volume(simgrid::s4u::Host* host,shared_ptr<SegmentTask> ready_task);
 
 };
 #endif
