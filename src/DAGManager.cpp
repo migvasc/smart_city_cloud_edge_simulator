@@ -599,7 +599,6 @@ simgrid::s4u::Host* DAGManager::find_host(shared_ptr<SegmentTask> ready_task)
 
 void DAGManager::update_battery_state(simgrid::s4u::Host* host)
 {
-    
     double host_energy_consumption =   Util::convert_joules_to_wh(sg_host_get_consumed_energy(host) - hosts_energy_consumption[host->get_name()]);
     double brown_energy_wh   = host_energy_consumption; 
     double energy_discharged = 0.0; 
@@ -668,10 +667,10 @@ void DAGManager::update_battery_state(simgrid::s4u::Host* host)
         {
             grid_co2 = grid_energy_used * cloud_dc_power_co2->get_current_co2_eq(simgrid::s4u::Engine::get_clock()) *1/1000; 
         }
-    }
-    else
-    {
-        grid_co2 = grid_energy_used * local_grid_power_co2->get_current_co2_eq(simgrid::s4u::Engine::get_clock())*1/1000;
+        else
+        {
+            grid_co2 = grid_energy_used * local_grid_power_co2->get_current_co2_eq(simgrid::s4u::Engine::get_clock())*1/1000;
+        }
     }
     
     battery_co2 = energy_discharged * battery_power_co2*1/1000;
