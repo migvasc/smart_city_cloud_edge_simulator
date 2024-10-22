@@ -88,7 +88,8 @@ void DAGManager::init()
     double battery_charge_efficiency = std::stod(argsClass[++arg_index]);
     double battery_discharge_efficiency = std::stod(argsClass[++arg_index]);
     std::string city_solar_traces = argsClass[++arg_index];
-    // When the simulation starts, all hosts are available to receive tasks
+
+
     for (auto& host : simgrid::s4u::Engine::get_instance()->get_all_hosts())
     {
         const std::unordered_map<std::string, std::string> * host_properties = host-> get_properties();
@@ -104,18 +105,16 @@ void DAGManager::init()
 
             }
         }
+
         // Initially, the host "is responsible for itself", that is, 
         // since it is on, there is no need to redirect the workload to another host
         hosts_manager_map[host->get_name()] = host->get_name();
         // In the beginning of the simulations, all the cores are available, since it didnt started executing
         hosts_cpuavailability[host->get_name()] = host->get_core_count();
 
-
         // We init the auxilary map with the information of the energy consumption
         hosts_energy_consumption[host->get_name()] = 0.0;
 
-        // We init the host info for caching
-        //hosts_info[host->get_name()] = new EdgeHost();
 
     }
 
@@ -173,9 +172,29 @@ void DAGManager::init()
     }
 
     // If fixed host, we get the selected host from the parameter
-    if (SCHEDULING_ALGORITHM == SCHEDULING_FIXED_HOST)
+    if (SCHEDULING_ALGORITHM == SCHEDULING_FIXED_HOST_TYPE)
     {
-        fixed_host = simgrid::s4u::Host::by_name(argsClass[++arg_index]);
+        std::string selected_host_type = argsClass[++arg_index];
+        std::vector<simgrid::s4u::Host *> selected_host_type_array ;
+
+         // Validate if the host is the selected type
+        for (auto& host : simgrid::s4u::Engine::get_instance()->get_all_hosts())
+        {
+            const std::unordered_map<std::string, std::string> * host_properties = host-> get_properties();
+
+            if(host_properties->find("host_type")!=host_properties->end())
+            {       
+                std::string host_type = host->get_property("host_type");
+                if (host_type.compare(selected_host_type)==0)
+                {       
+                    selected_host_type_array.push_back(host);
+    
+                }
+            }
+
+        }
+        schedulingstrategy = new SchedulingHostType(&hosts_cpuavailability,selected_host_type_array );
+
     }
 
 
@@ -563,18 +582,7 @@ simgrid::s4u::Host* DAGManager::find_host(shared_ptr<SegmentTask> ready_task)
     if (ready_task->get_allocated_host()==nullptr)
     {   
 
-        if (SCHEDULING_ALGORITHM == SCHEDULING_FIXED_HOST)
-        {
-            if ( hosts_cpuavailability[fixed_host->get_name()] >0)
-            {
-                candidate_host =fixed_host;
-            }
-        }
-        else
-        {
-            candidate_host =    schedulingstrategy->find_host(ready_task);
-        }
-        
+        candidate_host =    schedulingstrategy->find_host(ready_task);
 
         if (candidate_host == nullptr) return candidate_host;
 

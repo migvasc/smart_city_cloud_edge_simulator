@@ -19,6 +19,7 @@
 #include "SchedulingBestFit.hpp"
 #include "SchedulingBestCO2.hpp"
 #include "SchedulingBestCO2Volume.hpp"
+#include "SchedulingHostType.hpp"
 
 #include "WriteBuffer.hpp"
 
@@ -30,19 +31,18 @@ private:
   // List of possible scheduling algorithms
   int SCHEDULING_ALGORITHM = -1;
   int SCHEDULING_BASELINE = 0;
-  int SCHEDULING_BESTFIT = 1;  
-  int SCHEDULING_FIRSTFITSOLAR = 2;
-  int SCHEDULING_HEFT = 3;
-  int SCHEDULING_GEFT = 4;
-  int SCHEDULING_FIXED_HOST = 5;
-  int SCHEDULING_BASELINE_ON_OFF = 6;
-  int SCHEDULING_CO2 = 7;
-  int SCHEDULING_CO2VOLUME = 8;
+  int SCHEDULING_HEFT = 1;
+  int SCHEDULING_CO2 = 2;
+  int SCHEDULING_CO2VOLUME = 3;
+  int SCHEDULING_FIXED_HOST_TYPE = 4;
+  int SCHEDULING_BESTFIT = 5;  
+  int SCHEDULING_FIRSTFITSOLAR = 6;
+  int SCHEDULING_GEFT = 7;
+  int SCHEDULING_BASELINE_ON_OFF = 8;
 
 
   SchedulingStrategy *schedulingstrategy;
   // Host for the algorithm where all the tasks are scheduled to it (for example, offloading everything to the cloud)
-  simgrid::s4u::Host *fixed_host = nullptr;
 
   //Time slot duration in seconds (used for the energy envelope)
   double timeslot_duration = 60.0;
