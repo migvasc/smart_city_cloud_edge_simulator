@@ -116,6 +116,12 @@ void DAGManager::init()
         hosts_energy_consumption[host->get_name()] = 0.0;
 
 
+        // We init the host info for caching
+        host_cache_mem_used[host->get_name()] = 0;
+        
+
+
+
     }
 
 
@@ -175,8 +181,6 @@ void DAGManager::init()
         schedulingstrategy = new SchedulingBestCO2Neighbours(&hosts_cpuavailability, local_grid_power_co2, cloud_dc_power_co2,  pv_panel_power_co2,  battery_power_co2,  cloud_cluster,&hosts_renewable_energy,&hosts_batteries, &hosts_energy_consumption);
     }
 
-    
-
     // If fixed host, we get the selected host from the parameter
     if (SCHEDULING_ALGORITHM == SCHEDULING_FIXED_HOST_TYPE)
     {
@@ -194,15 +198,21 @@ void DAGManager::init()
                 if (host_type.compare(selected_host_type)==0)
                 {       
                     selected_host_type_array.push_back(host);
-    
                 }
             }
-
         }
+        
         schedulingstrategy = new SchedulingHostType(&hosts_cpuavailability,selected_host_type_array );
-
     }
 
+    if (use_cache)
+    {
+        int host_cache_memory = std::stoi(argsClass[++arg_index]);
+        for (auto& host : simgrid::s4u::Engine::get_instance()->get_all_hosts())
+        {
+            hosts_info[host->get_name()] = new EdgeHost(host->get_name(),host_cache_memory);
+        }
+    }
 
     // Log when a tasks starts
     simgrid::s4u::Exec::on_start_cb([this](simgrid::s4u::Exec const& exec) 
@@ -659,9 +669,10 @@ void DAGManager::update_battery_state(simgrid::s4u::Host* host)
             
 
         }
-        battery_capacity = hosts_batteries[host->get_name()]->getUsableWattsHour();
-    }
 
+        battery_capacity = hosts_batteries[host->get_name()]->getUsableWattsHour();
+
+    }
 
     grid_energy_used = brown_energy_wh;
     //XBT_INFO("#ENERGY;%f;%s;%f;%f;%f;%f",simgrid::s4u::Engine::get_clock(),host->get_cname(),host_energy_consumption,renewable_power_prod, brown_energy_wh);        
@@ -806,4 +817,26 @@ void DAGManager::update_valid_requests(){
         }
         else ++it;
     }
+}
+
+void DAGManager::add_task_in_cache(std::string & task_name, const std::string& host_name)
+{
+    simgrid::s4u::Host * host = simgrid::s4u::Host::by_name(host_name);
+    int timeslot = int (simgrid::s4u::Engine::get_clock()/cache_duration);
+    bool host_has_free_memory = hosts_info[host_name]->has_free_memory_in_cache();
+
+    if (!host_has_free_memory)
+    {
+        hosts_info[host_name]->expire_tasks(timeslot);
+        host_has_free_memory = hosts_info[host_name]->has_free_memory_in_cache();
+    }
+
+    if (host_has_free_memory)
+    {
+        task_cache[task_name] = host_name;
+        task_time_cache[task_name] = timeslot;
+        host_cache_mem_used[host_name] = 1 + host_cache_mem_used[host_name];        
+        hosts_info[host_name]->add_task_in_cache(task_name, timeslot);
+        cache_of_tasks[task_name].push_back(host_name);
+    }    
 }

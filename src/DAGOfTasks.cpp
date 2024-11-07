@@ -442,3 +442,4 @@ double DAGOfTasks::get_submission_time()
 {
   return this->submission_time;
 }
+

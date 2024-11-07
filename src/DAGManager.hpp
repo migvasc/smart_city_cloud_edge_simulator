@@ -72,13 +72,17 @@ private:
   std::map<std::string, EdgeHost*> hosts_info;
 
 
+
+  // VARIABLES FOR CACHING
+
   // Used to store where the cache is (which host)
   std::unordered_map<std::string, string> task_cache;
-
+  std::unordered_map<std::string, std::list<std::string>> cache_of_tasks;
 
   // Used to store when the cache was stored (for expiration)
   std::unordered_map<std::string, int> task_time_cache;
-
+  void add_task_in_cache(std::string & task_name, const std::string& host_name);
+  std::unordered_map<std::string, int> host_cache_mem_used;
 
 
   // Map used to store the information of the host that will manages the load,
