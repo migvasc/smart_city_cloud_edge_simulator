@@ -19,6 +19,7 @@
 #include "SchedulingBestFit.hpp"
 #include "SchedulingBestCO2.hpp"
 #include "SchedulingBestCO2Volume.hpp"
+#include "SchedulingBestCO2Neighbours.hpp"
 #include "SchedulingHostType.hpp"
 
 #include "WriteBuffer.hpp"
@@ -39,6 +40,7 @@ private:
   int SCHEDULING_FIRSTFITSOLAR = 6;
   int SCHEDULING_GEFT = 7;
   int SCHEDULING_BASELINE_ON_OFF = 8;
+  int SCHEDULING_CO2_NEIGHBOUR = 9;
 
 
   SchedulingStrategy *schedulingstrategy;
