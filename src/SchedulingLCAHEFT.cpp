@@ -156,8 +156,12 @@ double SchedulingLCAHEFT::get_host_co2_area(simgrid::s4u::Host* host,shared_ptr<
 
     }
     
-    battery_co2 = energy_discharged * battery_power_co2*1/1000;;
-    solar_co2   = renewable_energy_used * pv_panel_power_co2*1/1000;
+    battery_co2 = energy_discharged * battery_power_co2*1/1000;
+    
+    // Solar energy will be always the same, since we do not change the pv area    
+    // therefore we have a fixed co2 emissions for the simulated day
+    // The solar panels will produce the same amount of electricity no matter the algorithm    
+    solar_co2   = 0; // renewable_energy_used * pv_panel_power_co2*1/1000;
 
 
     if(host_properties->find("lat")!=host_properties->end())

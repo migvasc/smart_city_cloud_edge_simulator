@@ -699,7 +699,8 @@ void DAGManager::update_battery_state(simgrid::s4u::Host* host)
     }
     
     battery_co2 = energy_discharged * battery_power_co2*1/1000;
-    solar_co2 = renewable_energy_used * pv_panel_power_co2*1/1000;
+    // Solar CO2 will be constante, since the solar panels will produce the same amount of electricity no matter the algorithm    
+    solar_co2 = 0;//renewable_energy_used * pv_panel_power_co2*1/1000;
 
     buf = static_cast<char*>(malloc(sizeof(char) * buf_size));
     //XBT_INFO("#CO2;%f;%s;%f;%f;%f;%f",simgrid::s4u::Engine::get_clock(),host->get_cname(),(grid_co2+battery_co2+solar_co2),grid_co2,battery_co2,solar_co2);
