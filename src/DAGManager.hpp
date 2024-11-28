@@ -18,7 +18,7 @@
 #include "SchedulingGEFT.hpp"
 #include "SchedulingBestFit.hpp"
 #include "SchedulingBestCO2.hpp"
-#include "SchedulingBestCO2Volume.hpp"
+#include "SchedulingLCAHEFT.hpp"
 #include "SchedulingBestCO2Neighbours.hpp"
 #include "SchedulingHostType.hpp"
 

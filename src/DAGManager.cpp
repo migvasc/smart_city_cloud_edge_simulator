@@ -174,7 +174,7 @@ void DAGManager::init()
     }
     if( SCHEDULING_ALGORITHM == SCHEDULING_CO2VOLUME)
     {
-        schedulingstrategy = new SchedulingBestCO2Volume(&hosts_cpuavailability, local_grid_power_co2, cloud_dc_power_co2,  pv_panel_power_co2,  battery_power_co2,  cloud_cluster,&hosts_renewable_energy,&hosts_batteries, &hosts_energy_consumption);
+        schedulingstrategy = new SchedulingLCAHEFT(&hosts_cpuavailability, local_grid_power_co2, cloud_dc_power_co2,  pv_panel_power_co2,  battery_power_co2,  cloud_cluster,&hosts_renewable_energy,&hosts_batteries, &hosts_energy_consumption);
     }
     if( SCHEDULING_ALGORITHM == SCHEDULING_CO2_NEIGHBOUR)
     {
