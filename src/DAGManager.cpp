@@ -74,7 +74,6 @@ void DAGManager::handle_task_finished(simgrid::s4u::Exec const& exec)
 
 void DAGManager::init()
 {
-
     // Used to access the parameters of the deploy file
     int arg_index = 1;
 
@@ -89,7 +88,6 @@ void DAGManager::init()
     double battery_discharge_efficiency = std::stod(argsClass[++arg_index]);
     std::string city_solar_traces = argsClass[++arg_index];
 
-
     for (auto& host : simgrid::s4u::Engine::get_instance()->get_all_hosts())
     {
         const std::unordered_map<std::string, std::string> * host_properties = host-> get_properties();
@@ -101,7 +99,7 @@ void DAGManager::init()
             {        
                 // We create the PV panels and batteries using information from the parameters        
                 hosts_pvpanels[host->get_name()] = new PVPanel(city_solar_traces,solar_panels_efficiency,solar_panels_area);
-                hosts_batteries[host->get_name()] = new LithiumIonBattery(battery_capacity, battery_dod,battery_charge_efficiency,battery_discharge_efficiency);        
+                hosts_batteries[host->get_name()] = new LithiumIonBattery(battery_capacity, battery_dod,battery_charge_efficiency,battery_discharge_efficiency);
 
             }
         }
@@ -115,12 +113,8 @@ void DAGManager::init()
         // We init the auxilary map with the information of the energy consumption
         hosts_energy_consumption[host->get_name()] = 0.0;
 
-
         // We init the host info for caching
-        host_cache_mem_used[host->get_name()] = 0;
-        
-
-
+        host_cache_mem_used[host->get_name()] = 0;        
 
     }
 
@@ -142,17 +136,13 @@ void DAGManager::init()
         schedulingstrategy = new SchedulingBestFit(&hosts_cpuavailability);
     }
 
-
     // If baseline with cache, we get the selected cache duration from the parameter
     cache_duration = std::stoi(argsClass[++arg_index]);
-
 
     if(cache_duration>-1)
     {
         use_cache = true;
     }
-
-
 
     output_dir = argsClass[++arg_index];
 
@@ -193,10 +183,10 @@ void DAGManager::init()
             const std::unordered_map<std::string, std::string> * host_properties = host-> get_properties();
 
             if(host_properties->find("host_type")!=host_properties->end())
-            {       
+            {
                 std::string host_type = host->get_property("host_type");
                 if (host_type.compare(selected_host_type)==0)
-                {       
+                {
                     selected_host_type_array.push_back(host);
                 }
             }
@@ -264,7 +254,7 @@ void DAGManager::init()
 
     // Log when a communication finishes
     simgrid::s4u::Comm::on_completion_cb([this](simgrid::s4u::Comm const& comm) {
-  //      XBT_INFO("#FC;%s;%f;%f;%s;%s\n", comm.get_cname(), comm.get_start_time(), comm.get_finish_time(),comm.get_source()->get_cname(),comm.get_destination()->get_cname());   
+        XBT_INFO("#FC;%s;%f;%f;%s;%s\n", comm.get_cname(), comm.get_start_time(), comm.get_finish_time(),comm.get_source()->get_cname(),comm.get_destination()->get_cname());   
     });    
 }
 
@@ -605,11 +595,21 @@ simgrid::s4u::Host* DAGManager::find_host(shared_ptr<SegmentTask> ready_task)
         //XBT_INFO("#SCHEDULE;%s;%d;%s;%f\n",ready_task->get_exec()->get_cname(), hosts_cpuavailability[candidate_host->get_name()],candidate_host->get_cname(),simgrid::s4u::Engine::get_clock());
         ready_task->set_allocated_host(candidate_host);
 
-        // These ini and end tasks are used to simulate the user 
-        // sending the request and receiving the result
+        // These ini and end tasks are used to simulate the user sending the request and receiving the result
         if ( (ready_task->get_task_data().compare("ini")!=0 &&  ready_task->get_task_data().compare("end")!=0  ))
         {
             hosts_cpuavailability[candidate_host->get_name()] -=1;
+        }
+
+        const std::unordered_map<std::string, std::string> * host_properties = candidate_host-> get_properties();
+
+        if(host_properties->find("host_type")!=host_properties->end())
+        {       
+            std::string host_type = candidate_host->get_property("host_type");
+            if (host_type.compare("cloud_host")==0 && candidate_host->get_pstate()==PSTATE_OFF)
+            {
+                turn_host_on(candidate_host);
+            }        
         }
     }
     else
@@ -633,6 +633,7 @@ void DAGManager::update_battery_state(simgrid::s4u::Host* host)
     double grid_co2 = 0;
     double battery_co2 = 0;
     double solar_co2 = 0;
+
     if (hosts_pvpanels.find(host->get_name())!=hosts_pvpanels.end())
     {
         renewable_power_prod = Util::convert_joules_to_wh(hosts_renewable_energy[host->get_name()]);
@@ -716,7 +717,7 @@ void DAGManager::update_battery_state(simgrid::s4u::Host* host)
  * considering both the PV panels and the batteries
 */
 void DAGManager::update_hosts_energy_information()
-{
+{    
     sg_host_energy_update_all();
     for (auto& host : simgrid::s4u::Engine::get_instance()->get_all_hosts())
     { 
@@ -731,6 +732,17 @@ void DAGManager::update_hosts_energy_information()
         
         // Finally, we update the information of the host energy consumed
         hosts_energy_consumption[host->get_name()] =  sg_host_get_consumed_energy(host);
+
+        const std::unordered_map<std::string, std::string> * host_properties = host-> get_properties();
+        if(host_properties->find("host_type")!=host_properties->end())
+        {       
+            std::string host_type = host->get_property("host_type");
+            if (host_type.compare("cloud_host")==0 && hosts_cpuavailability[host->get_name()]==host->get_core_count() && host->get_pstate()==PSTATE_ON)
+            {
+                turn_host_off(host);
+            }
+            
+        }
 
     }
 
