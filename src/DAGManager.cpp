@@ -55,7 +55,7 @@ void DAGManager::handle_task_finished(simgrid::s4u::Exec const& exec)
 
     if (exec.get_successors().size() ==0)
     {
-        this->finish_request(exec.get_name());
+        this->finish_request(exec.get_name());        
     }
 
     std::string request_name = result[0]+"-"+ result[1];
@@ -254,7 +254,7 @@ void DAGManager::init()
 
     // Log when a communication finishes
     simgrid::s4u::Comm::on_completion_cb([this](simgrid::s4u::Comm const& comm) {
-        XBT_INFO("#FC;%s;%f;%f;%s;%s\n", comm.get_cname(), comm.get_start_time(), comm.get_finish_time(),comm.get_source()->get_cname(),comm.get_destination()->get_cname());   
+        //XBT_INFO("#FC;%s;%f;%f;%s;%s\n", comm.get_cname(), comm.get_start_time(), comm.get_finish_time(),comm.get_source()->get_cname(),comm.get_destination()->get_cname());   
     });    
 }
 
@@ -588,8 +588,7 @@ simgrid::s4u::Host* DAGManager::find_host(shared_ptr<SegmentTask> ready_task)
     if (ready_task->get_allocated_host()==nullptr)
     {   
 
-        candidate_host =    schedulingstrategy->find_host(ready_task);
-
+        candidate_host =    schedulingstrategy->find_host(ready_task);        
         if (candidate_host == nullptr) return candidate_host;
 
         //XBT_INFO("#SCHEDULE;%s;%d;%s;%f\n",ready_task->get_exec()->get_cname(), hosts_cpuavailability[candidate_host->get_name()],candidate_host->get_cname(),simgrid::s4u::Engine::get_clock());
@@ -610,12 +609,19 @@ simgrid::s4u::Host* DAGManager::find_host(shared_ptr<SegmentTask> ready_task)
             {
                 turn_host_on(candidate_host);
             }        
-        }
-    }
+        }                                                        
+    }            
     else
     {
         candidate_host = ready_task->get_allocated_host();
     }
+
+    if (number_of_tasks_allocated.find(candidate_host->get_name())==number_of_tasks_allocated.end())
+    {
+        number_of_tasks_allocated[candidate_host->get_name()] = 0 ;    
+    }
+
+    number_of_tasks_allocated[candidate_host->get_name()]+=1;
 
     return candidate_host;
 }
@@ -733,16 +739,26 @@ void DAGManager::update_hosts_energy_information()
         // Finally, we update the information of the host energy consumed
         hosts_energy_consumption[host->get_name()] =  sg_host_get_consumed_energy(host);
 
+
         const std::unordered_map<std::string, std::string> * host_properties = host-> get_properties();
         if(host_properties->find("host_type")!=host_properties->end())
         {       
             std::string host_type = host->get_property("host_type");
-            if (host_type.compare("cloud_host")==0 && hosts_cpuavailability[host->get_name()]==host->get_core_count() && host->get_pstate()==PSTATE_ON)
+
+            int nb_task_allocated = 0;
+            if (number_of_tasks_allocated.find(host->get_name())!=number_of_tasks_allocated.end())
             {
-                turn_host_off(host);
+                nb_task_allocated = number_of_tasks_allocated[host->get_name()];
             }
             
+            if (host_type.compare("cloud_host")==0 && hosts_cpuavailability[host->get_name()]==host->get_core_count() && host->get_pstate()==PSTATE_ON && nb_task_allocated ==0)
+            {                
+                turn_host_off(host);
+            }
+            number_of_tasks_allocated[host->get_name()]=0;
+            
         }
+
 
     }
 
