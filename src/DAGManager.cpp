@@ -102,6 +102,10 @@ void DAGManager::init()
                 hosts_batteries[host->get_name()] = new LithiumIonBattery(battery_capacity, battery_dod,battery_charge_efficiency,battery_discharge_efficiency);
 
             }
+            else if(host_type.compare("cloud_host")==0)
+            {
+                current_number_of_hosts_on+=1;
+            }
         }
 
         // Initially, the host "is responsible for itself", that is, 
@@ -158,6 +162,11 @@ void DAGManager::init()
     local_grid_power_co2 = new ElectricityCO2eq(argsClass[++arg_index]);
     cloud_dc_power_co2 = new ElectricityCO2eq(argsClass[++arg_index]);
     
+    
+    
+    
+    
+
     if( SCHEDULING_ALGORITHM == SCHEDULING_CO2)
     {
         schedulingstrategy = new SchedulingBestCO2(&hosts_cpuavailability, local_grid_power_co2, cloud_dc_power_co2,  pv_panel_power_co2,  battery_power_co2,&hosts_renewable_energy,&hosts_batteries, &hosts_energy_consumption);
@@ -191,7 +200,7 @@ void DAGManager::init()
                 }
             }
         }
-        current_number_of_hosts_on+= selected_host_type_array.size();
+        current_number_of_hosts_on = selected_host_type_array.size();
         minimum_number_of_hosts_on = std::stoi(argsClass[++arg_index]);
         schedulingstrategy = new SchedulingHostType(&hosts_cpuavailability,selected_host_type_array );
     }

@@ -117,8 +117,8 @@ private:
 
   
   // Used to control minimum number of hosts on for scalability of the cloud
-  int minimum_number_of_hosts_on=-1;
-  int current_number_of_hosts_on=0;
+  int minimum_number_of_hosts_on = 0;
+  int current_number_of_hosts_on = 0;
 
 
   
