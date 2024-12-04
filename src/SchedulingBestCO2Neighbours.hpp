@@ -20,7 +20,6 @@ ElectricityCO2eq * cloud_dc_power_co2;
 double pv_panel_power_co2; 
 double battery_power_co2; 
 
-simgrid::s4u::Host* cloud_cluster;
 std::map<std::string, double> *hosts_renewable_energy;
 std::map<std::string, LithiumIonBattery*> *hosts_batteries;
 // Temporary map to include solar panels of hosts
@@ -31,7 +30,7 @@ std::set <std::string> cluster_set;
 std::map <std::string,std::map <std::string,vector<std::string>>> cluster_host_type;
 
 public:
-    SchedulingBestCO2Neighbours(map<string, int> *hosts_cpu_availability_, ElectricityCO2eq* local_grid_power_co2_, ElectricityCO2eq* cloud_dc_power_co2_, double pv_panel_power_co2_, double battery_power_co2_, simgrid::s4u::Host* cloud_cluster_,std::map<std::string, double> *hosts_renewable_energy_,std::map<std::string, LithiumIonBattery*> *hosts_batteries_, std::map<std::string, double> *hosts_energy_consumption_);
+    SchedulingBestCO2Neighbours(map<string, int> *hosts_cpu_availability_, ElectricityCO2eq* local_grid_power_co2_, ElectricityCO2eq* cloud_dc_power_co2_, double pv_panel_power_co2_, double battery_power_co2_,std::map<std::string, double> *hosts_renewable_energy_,std::map<std::string, LithiumIonBattery*> *hosts_batteries_, std::map<std::string, double> *hosts_energy_consumption_);
     simgrid::s4u::Host* find_host(shared_ptr<SegmentTask> ready_task);
     double get_host_expected_co2(simgrid::s4u::Host* host);
     void build_cluster_map();

@@ -1,0 +1,49 @@
+<?xml version='1.0'?>
+<!DOCTYPE platform SYSTEM "https://simgrid.org/simgrid.dtd">
+<platform version="4.1">
+  <actor host="bus_stop_0" function="dagmanager">
+    
+  <argument value="4"/>	
+      <!-- Area of the solar panels (m²) -->
+    <argument value="0.05"/>
+    <!-- Efficiency of the solar panels-->
+    <argument value="0.15"/>
+
+    <!-- Capacity of the batteries (Wh)-->
+    <argument value="40"/>
+
+    <!-- Battery Depth of Discharge-->
+    <argument value="0.8"/>
+    <!-- Battery charge process efficiency-->
+    <argument value="0.85"/>
+    <!-- Battery discharge process efficiency-->
+    <argument value="0.85"/>
+
+    <!-- input files for the solar traces -->                
+    <argument value="input/photo-voltaic/x_0_y_0.csv"/>
+
+    <!-- Cache duration in seconds -->                
+    <argument value="-1"/>
+    <!-- Output folder -->
+    <argument value="output/output_cloud_only_toulouse_100k/"/>
+
+    <!-- Request timeout in seconds -->
+    <argument value="80"/>
+
+    <!-- PV panel CO2eq/kwh-->
+    <argument value="30.0"/>  <!-- UNECE 2022 for France/europe-->
+    <!-- Battery CO2eq/kwh-->
+    <argument value="33.0"/>  <!-- NREL -->
+    <!-- Local grid co2-->
+    <argument value="input/co2eq/FR_2023_hourly.csv"/> 
+    <!-- Cloud electricity co2-->
+    <argument value="input/co2eq/US-NW-PACW_2023_hourly.csv"/> 
+    <!-- Selected host type-->
+    <argument value="cloud_host"/> 
+    <!-- Minumum number of hosts on (-1 if not applyed)-->
+    <argument value="3"/> 
+
+
+  </actor>
+  <actor host="bus_stop_0" function="dagdispatcher"/>
+</platform>

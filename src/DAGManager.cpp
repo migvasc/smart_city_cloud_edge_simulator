@@ -160,15 +160,15 @@ void DAGManager::init()
     
     if( SCHEDULING_ALGORITHM == SCHEDULING_CO2)
     {
-        schedulingstrategy = new SchedulingBestCO2(&hosts_cpuavailability, local_grid_power_co2, cloud_dc_power_co2,  pv_panel_power_co2,  battery_power_co2,  cloud_cluster,&hosts_renewable_energy,&hosts_batteries, &hosts_energy_consumption);
+        schedulingstrategy = new SchedulingBestCO2(&hosts_cpuavailability, local_grid_power_co2, cloud_dc_power_co2,  pv_panel_power_co2,  battery_power_co2,&hosts_renewable_energy,&hosts_batteries, &hosts_energy_consumption);
     }
     if( SCHEDULING_ALGORITHM == SCHEDULING_CO2VOLUME)
     {
-        schedulingstrategy = new SchedulingLCAHEFT(&hosts_cpuavailability, local_grid_power_co2, cloud_dc_power_co2,  pv_panel_power_co2,  battery_power_co2,  cloud_cluster,&hosts_renewable_energy,&hosts_batteries, &hosts_energy_consumption);
+        schedulingstrategy = new SchedulingLCAHEFT(&hosts_cpuavailability, local_grid_power_co2, cloud_dc_power_co2,  pv_panel_power_co2,  battery_power_co2,&hosts_renewable_energy,&hosts_batteries, &hosts_energy_consumption);
     }
     if( SCHEDULING_ALGORITHM == SCHEDULING_CO2_NEIGHBOUR)
     {
-        schedulingstrategy = new SchedulingBestCO2Neighbours(&hosts_cpuavailability, local_grid_power_co2, cloud_dc_power_co2,  pv_panel_power_co2,  battery_power_co2,  cloud_cluster,&hosts_renewable_energy,&hosts_batteries, &hosts_energy_consumption);
+        schedulingstrategy = new SchedulingBestCO2Neighbours(&hosts_cpuavailability, local_grid_power_co2, cloud_dc_power_co2,  pv_panel_power_co2,  battery_power_co2,&hosts_renewable_energy,&hosts_batteries, &hosts_energy_consumption);
     }
 
     // If fixed host, we get the selected host from the parameter
@@ -191,7 +191,8 @@ void DAGManager::init()
                 }
             }
         }
-        
+        current_number_of_hosts_on+= selected_host_type_array.size();
+        minimum_number_of_hosts_on = std::stoi(argsClass[++arg_index]);
         schedulingstrategy = new SchedulingHostType(&hosts_cpuavailability,selected_host_type_array );
     }
 
@@ -607,6 +608,7 @@ simgrid::s4u::Host* DAGManager::find_host(shared_ptr<SegmentTask> ready_task)
             std::string host_type = candidate_host->get_property("host_type");
             if (host_type.compare("cloud_host")==0 && candidate_host->get_pstate()==PSTATE_OFF)
             {
+                current_number_of_hosts_on++;
                 turn_host_on(candidate_host);
             }        
         }                                                        
@@ -753,7 +755,12 @@ void DAGManager::update_hosts_energy_information()
             
             if (host_type.compare("cloud_host")==0 && hosts_cpuavailability[host->get_name()]==host->get_core_count() && host->get_pstate()==PSTATE_ON && nb_task_allocated ==0)
             {                
-                turn_host_off(host);
+                if (current_number_of_hosts_on > minimum_number_of_hosts_on)
+                {
+                    turn_host_off(host);
+                    current_number_of_hosts_on--;
+                }
+                
             }
             number_of_tasks_allocated[host->get_name()]=0;
             

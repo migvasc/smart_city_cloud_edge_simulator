@@ -114,7 +114,12 @@ private:
   ElectricityCO2eq* cloud_dc_power_co2;
   double pv_panel_power_co2; 
   double battery_power_co2; 
-  simgrid::s4u::Host* cloud_cluster;
+
+  
+  // Used to control minimum number of hosts on for scalability of the cloud
+  int minimum_number_of_hosts_on=-1;
+  int current_number_of_hosts_on=0;
+
 
   
   // Attributes for writing the output

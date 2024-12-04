@@ -1,27 +1,23 @@
 
 #include "SchedulingBestCO2Neighbours.hpp"
 
-SchedulingBestCO2Neighbours::SchedulingBestCO2Neighbours(map<string, int> *hosts_cpu_availability_, ElectricityCO2eq* local_grid_power_co2_, ElectricityCO2eq* cloud_dc_power_co2_, double pv_panel_power_co2_, double battery_power_co2_, simgrid::s4u::Host* cloud_cluster_,std::map<std::string, double> *hosts_renewable_energy_,std::map<std::string, LithiumIonBattery*> *hosts_batteries_, std::map<std::string, double> *hosts_energy_consumption_)
+SchedulingBestCO2Neighbours::SchedulingBestCO2Neighbours(map<string, int> *hosts_cpu_availability_, ElectricityCO2eq* local_grid_power_co2_, ElectricityCO2eq* cloud_dc_power_co2_, double pv_panel_power_co2_, double battery_power_co2_,std::map<std::string, double> *hosts_renewable_energy_,std::map<std::string, LithiumIonBattery*> *hosts_batteries_, std::map<std::string, double> *hosts_energy_consumption_)
 {
     hosts_cpuavailability =hosts_cpu_availability_;
     local_grid_power_co2 =local_grid_power_co2_;
     cloud_dc_power_co2 = cloud_dc_power_co2_;
     pv_panel_power_co2 = pv_panel_power_co2_;
     battery_power_co2 = battery_power_co2_;
-    cloud_cluster =cloud_cluster_;
     hosts_renewable_energy = hosts_renewable_energy_;
     hosts_batteries = hosts_batteries_;
     hosts_energy_consumption = hosts_energy_consumption_;
     build_cluster_map();
-
 }
 
 simgrid::s4u::Host* SchedulingBestCO2Neighbours::find_host(shared_ptr<SegmentTask> ready_task)
 {
 
-    
     sg_host_energy_update_all();
-
     simgrid::s4u::Host* selected_host = nullptr;
     double min_co2 = 999999999999.0;
     double host_co2;
@@ -133,7 +129,7 @@ double SchedulingBestCO2Neighbours::get_host_expected_co2(simgrid::s4u::Host* ho
         renewable_energy_used = host_consumed_energy;
     }
     grid_energy_used = host_consumed_energy - renewable_energy_used - energy_discharged;
-
+    /*
     if(host==cloud_cluster)
     {
         grid_co2 =grid_energy_used * cloud_dc_power_co2->get_current_co2_eq(simgrid::s4u::Engine::get_clock());
@@ -142,7 +138,7 @@ double SchedulingBestCO2Neighbours::get_host_expected_co2(simgrid::s4u::Host* ho
     {
         grid_co2 =grid_energy_used * local_grid_power_co2->get_current_co2_eq(simgrid::s4u::Engine::get_clock());
     }
-
+    */
     battery_co2 = energy_discharged * battery_power_co2;
     solar_co2   = renewable_energy_used * pv_panel_power_co2;
 

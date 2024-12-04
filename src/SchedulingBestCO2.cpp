@@ -2,14 +2,13 @@
 #include "SchedulingBestCO2.hpp"
 #include "Util.hpp"
 
-SchedulingBestCO2::SchedulingBestCO2(map<string, int> *hosts_cpu_availability_, ElectricityCO2eq* local_grid_power_co2_, ElectricityCO2eq* cloud_dc_power_co2_, double pv_panel_power_co2_, double battery_power_co2_, simgrid::s4u::Host* cloud_cluster_,std::map<std::string, double> *hosts_renewable_energy_,std::map<std::string, LithiumIonBattery*> *hosts_batteries_, std::map<std::string, double> *hosts_energy_consumption_)
+SchedulingBestCO2::SchedulingBestCO2(map<string, int> *hosts_cpu_availability_, ElectricityCO2eq* local_grid_power_co2_, ElectricityCO2eq* cloud_dc_power_co2_, double pv_panel_power_co2_, double battery_power_co2_,std::map<std::string, double> *hosts_renewable_energy_,std::map<std::string, LithiumIonBattery*> *hosts_batteries_, std::map<std::string, double> *hosts_energy_consumption_)
 {
     hosts_cpuavailability =hosts_cpu_availability_;
     local_grid_power_co2 =local_grid_power_co2_;
     cloud_dc_power_co2 = cloud_dc_power_co2_;
     pv_panel_power_co2 = pv_panel_power_co2_;
     battery_power_co2 = battery_power_co2_;
-    cloud_cluster =cloud_cluster_;
     hosts_renewable_energy = hosts_renewable_energy_;
     hosts_batteries = hosts_batteries_;
     hosts_energy_consumption = hosts_energy_consumption_;
