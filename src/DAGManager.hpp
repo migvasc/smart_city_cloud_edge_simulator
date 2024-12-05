@@ -46,6 +46,8 @@ private:
   SchedulingStrategy *schedulingstrategy;
   // Host for the algorithm where all the tasks are scheduled to it (for example, offloading everything to the cloud)
 
+
+  int free_cores = 0;
   //Time slot duration in seconds (used for the energy envelope)
   double timeslot_duration = 60.0;
   // Auxiliary variable to keep track the next instant of time to update
