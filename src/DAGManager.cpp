@@ -161,17 +161,12 @@ void DAGManager::init()
     battery_power_co2 = std::stod(argsClass[++arg_index]);
     local_grid_power_co2 = new ElectricityCO2eq(argsClass[++arg_index]);
     cloud_dc_power_co2 = new ElectricityCO2eq(argsClass[++arg_index]);
-    
-    
-    
-    
-    
 
     if( SCHEDULING_ALGORITHM == SCHEDULING_CO2)
     {
         schedulingstrategy = new SchedulingBestCO2(&hosts_cpuavailability, local_grid_power_co2, cloud_dc_power_co2,  pv_panel_power_co2,  battery_power_co2,&hosts_renewable_energy,&hosts_batteries, &hosts_energy_consumption);
     }
-    if( SCHEDULING_ALGORITHM == SCHEDULING_CO2VOLUME)
+    if( SCHEDULING_ALGORITHM == SCHEDULING_LCAHEFT)
     {
         schedulingstrategy = new SchedulingLCAHEFT(&hosts_cpuavailability, local_grid_power_co2, cloud_dc_power_co2,  pv_panel_power_co2,  battery_power_co2,&hosts_renewable_energy,&hosts_batteries, &hosts_energy_consumption);
     }

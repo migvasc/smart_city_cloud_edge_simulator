@@ -58,17 +58,44 @@ double SchedulingLCAHEFT::get_host_co2_area(simgrid::s4u::Host* host,shared_ptr<
 
     // We also need to remove the power consumed by the host, to update the available renewable energy info
     double default_task_flops = 1350000000.0;
-    double max_power  = sg_host_get_wattmax_at(host,host->get_pstate());
-    double idle_power = sg_host_get_idle_consumption(host);
+
+    const std::unordered_map<std::string, std::string> * host_properties = host-> get_properties();
+
+    bool is_cloud_host = false;
+
+    if (host_properties->find("host_type")!=host_properties->end())
+    {               
+        std::string host_type = host->get_property("host_type");
+        if (host_type.compare("cloud_host")==0)
+        {
+            is_cloud_host = true;
+        }
+    }
+
+
+    int pstate_on = 1;
+
+    double max_power  = sg_host_get_wattmax_at(host,host->get_pstate());    
+    double idle_power = sg_host_get_idle_consumption(host);    
+    double host_speed = host->get_speed();
+    
+
+    if (is_cloud_host)
+    {        
+        max_power  = sg_host_get_wattmax_at(host,pstate_on);    
+        idle_power = sg_host_get_idle_consumption_at(host,pstate_on);    
+        host_speed = host->get_pstate_speed(pstate_on);
+        
+    }
+    double run_time = default_task_flops/host_speed;
     double power_per_core = (max_power - idle_power)/host->get_core_count();
 
-    double run_time = default_task_flops/host->get_speed();
+    
     int cores_used =  host->get_core_count() - (*hosts_cpuavailability)[host->get_name()] ;
     double dynamic_energy = cores_used * power_per_core;
     double task_energy_consumption = 0;
 
     double comm_time = 0;
-    const std::unordered_map<std::string, std::string> * host_properties = host-> get_properties();
     bool has_renewable_infra = false;
     cores_used += 1 ; // to represent that we will allocate a task to this host
 
@@ -97,7 +124,7 @@ double SchedulingLCAHEFT::get_host_co2_area(simgrid::s4u::Host* host,shared_ptr<
         {
 
             available_battery_energy = max( available_battery_energy+ available_renewable_energy,0.0);
-            available_renewable_energy=0;
+            available_renewable_energy = 0;
         }
 
 
@@ -139,27 +166,22 @@ double SchedulingLCAHEFT::get_host_co2_area(simgrid::s4u::Host* host,shared_ptr<
 
     grid_energy_used = brown_energy_wh;
 
-
-
-    if(host_properties->find("host_type")!=host_properties->end())
-    {       
-        std::string host_type = host->get_property("host_type");
-        if (host_type.compare("cloud_host")==0)
-        {
-            grid_co2 = grid_energy_used * cloud_dc_power_co2->get_current_co2_eq(simgrid::s4u::Engine::get_clock()) *1/1000; 
-        }
-        else
-        {
-            grid_co2 = grid_energy_used * local_grid_power_co2->get_current_co2_eq(simgrid::s4u::Engine::get_clock())*1/1000;
-        }   
-
+    if (is_cloud_host)
+    {
+        grid_co2 = grid_energy_used * cloud_dc_power_co2->get_current_co2_eq(simgrid::s4u::Engine::get_clock()) *1/1000; 
+    }
+    else
+    {
+        grid_co2 = grid_energy_used * local_grid_power_co2->get_current_co2_eq(simgrid::s4u::Engine::get_clock())*1/1000;
     }
     
+
     battery_co2 = energy_discharged * battery_power_co2*1/1000;
     
     // Solar energy will be always the same, since we do not change the pv area    
     // therefore we have a fixed co2 emissions for the simulated day
     // The solar panels will produce the same amount of electricity no matter the algorithm    
+    
     solar_co2   = 0; // renewable_energy_used * pv_panel_power_co2*1/1000;
 
 
@@ -167,13 +189,12 @@ double SchedulingLCAHEFT::get_host_co2_area(simgrid::s4u::Host* host,shared_ptr<
     {       
         double cand_host_lat =  std::stod(host->get_property("lat"));
         double cand_host_long = std::stod(host->get_property("long"));
-        double cand_host_z_coord  = std::stod(host->get_property("z_coord"));
-                        
+        double cand_host_z_coord  = std::stod(host->get_property("z_coord"));                
         double best_host_lat = std::stod(ready_task->get_pref_host()->get_property("lat"));
         double best_host_long = std::stod(ready_task->get_pref_host() ->get_property("long"));
         double best_host_z_coord = std::stod(ready_task->get_pref_host()->get_property("z_coord"));
-
         double latency = Util::getNetworkLatencyVivaldi(best_host_long,best_host_lat,best_host_z_coord,cand_host_long,cand_host_lat,cand_host_z_coord);
+
         comm_time+= 2*latency;
 
     }
