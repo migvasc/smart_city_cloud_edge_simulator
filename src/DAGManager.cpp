@@ -35,11 +35,7 @@ void DAGManager::operator()()
             }
         }
         update_valid_requests();
-        if (free_cores >0)
-        {
-            perform_schedule(); 
-        }
-        
+        perform_schedule(); 
         simgrid::s4u::this_actor::sleep_for(0.005);
     }        
 }
@@ -74,7 +70,6 @@ void DAGManager::handle_task_finished(simgrid::s4u::Exec const& exec)
     {
         requests_map[request_name]->request_received();
     }
-    free_cores++;
 }
 
 void DAGManager::init()
@@ -95,7 +90,6 @@ void DAGManager::init()
 
     for (auto& host : simgrid::s4u::Engine::get_instance()->get_all_hosts())
     {
-        free_cores+= host->get_core_count();
         const std::unordered_map<std::string, std::string> * host_properties = host-> get_properties();
 
         if(host_properties->find("host_type")!=host_properties->end())
@@ -559,7 +553,6 @@ void DAGManager::perform_schedule()
 
             //XBT_INFO("#START TASK;%s;%d;%s\n",task->get_cname(), hosts_cpuavailability[candidate_host->get_name()],candidate_host->get_cname());
             task->set_host(candidate_host);   
-            free_cores--;
             simgrid::s4u::Actor::create("worker", segment->get_pref_host(), execute,task);        
 
         }   
