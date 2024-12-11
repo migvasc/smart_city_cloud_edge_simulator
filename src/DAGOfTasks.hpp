@@ -26,11 +26,13 @@ private:
     // To control whether or not we can start the computations of the request
     // that is the path of the route
     bool ini_task_finished = false;
-
+    std::vector<shared_ptr<SegmentTask>> ready_tasks;
+    bool needs_to_update = false;
 public:
     explicit DAGOfTasks(std::string& input_file);
     std::vector<shared_ptr<SegmentTask>> get_DAG();
     std::vector<shared_ptr<SegmentTask>>   get_ready_tasks();
+    void   update_ready_tasks();
     std::vector<shared_ptr<SegmentTask>>   get_ready_tasks_cache( unordered_map<string,string>& cache,unordered_map<string,int>& time_cache, int cache_duration);
     
     simgrid::s4u::ExecPtr get_last_exec();
@@ -40,5 +42,6 @@ public:
     bool can_start_computations();
     void set_submission_time(double time);
     double get_submission_time();
+    void inform_dag_changed();
 };
 #endif

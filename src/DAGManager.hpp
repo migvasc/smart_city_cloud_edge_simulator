@@ -73,6 +73,10 @@ private:
 
 
 
+  // Variables to improve perf:
+
+  std::unordered_map<std::string, double> latency_cache;
+
   // VARIABLES FOR CACHING
 
   // Used to store where the cache is (which host)

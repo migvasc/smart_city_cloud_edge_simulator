@@ -2,7 +2,7 @@
 #include "SchedulingLCAHEFT.hpp"
 #include "Util.hpp"
 
-SchedulingLCAHEFT::SchedulingLCAHEFT(map<string, int> *hosts_cpu_availability_, ElectricityCO2eq* local_grid_power_co2_, ElectricityCO2eq* cloud_dc_power_co2_, double pv_panel_power_co2_, double battery_power_co2_,std::map<std::string, double> *hosts_renewable_energy_,std::map<std::string, LithiumIonBattery*> *hosts_batteries_, std::map<std::string, double> *hosts_energy_consumption_)
+SchedulingLCAHEFT::SchedulingLCAHEFT(map<string, int> *hosts_cpu_availability_, ElectricityCO2eq* local_grid_power_co2_, ElectricityCO2eq* cloud_dc_power_co2_, double pv_panel_power_co2_, double battery_power_co2_,std::map<std::string, double> *hosts_renewable_energy_,std::map<std::string, LithiumIonBattery*> *hosts_batteries_, std::map<std::string, double> *hosts_energy_consumption_,std::unordered_map<std::string, double> *lat_cache)
 {
     hosts_cpuavailability =hosts_cpu_availability_;
     local_grid_power_co2 =local_grid_power_co2_;
@@ -12,7 +12,7 @@ SchedulingLCAHEFT::SchedulingLCAHEFT(map<string, int> *hosts_cpu_availability_, 
     hosts_renewable_energy = hosts_renewable_energy_;
     hosts_batteries = hosts_batteries_;
     hosts_energy_consumption = hosts_energy_consumption_;
-
+    latency_cache = lat_cache;
 }
 
 simgrid::s4u::Host* SchedulingLCAHEFT::find_host(shared_ptr<SegmentTask> ready_task)
@@ -184,20 +184,85 @@ double SchedulingLCAHEFT::get_host_co2_area(simgrid::s4u::Host* host,shared_ptr<
     
     solar_co2   = 0; // renewable_energy_used * pv_panel_power_co2*1/1000;
 
+    //First, the communication from the parents
+    double max_parent_comms =0;
+    for(auto& parent :ready_task->get_parents() )
+    {
+        simgrid::s4u::Host* src_host = nullptr;;
+        if (parent.second->get_exec()->is_assigned()) 
+        {
+            src_host = parent.second->get_exec()->get_host();
+        }
+       
+        
+        std::string key = src_host->get_name() + "-" + host->get_name();
 
-    if(host_properties->find("lat")!=host_properties->end())
-    {       
-        double cand_host_lat =  std::stod(host->get_property("lat"));
-        double cand_host_long = std::stod(host->get_property("long"));
-        double cand_host_z_coord  = std::stod(host->get_property("z_coord"));                
-        double best_host_lat = std::stod(ready_task->get_pref_host()->get_property("lat"));
-        double best_host_long = std::stod(ready_task->get_pref_host() ->get_property("long"));
-        double best_host_z_coord = std::stod(ready_task->get_pref_host()->get_property("z_coord"));
-        double latency = Util::getNetworkLatencyVivaldi(best_host_long,best_host_lat,best_host_z_coord,cand_host_long,cand_host_lat,cand_host_z_coord);
+        double parent_latency = 0.0;    
 
-        comm_time+= 2*latency;
+        if (latency_cache->find(key)!=latency_cache->end())
+        {
+            parent_latency = (*latency_cache)[key];
+        }
+        else
+        {
+            const std::unordered_map<std::string, std::string> * host_properties = src_host-> get_properties();
+            if(host_properties->find("lat")!=host_properties->end())
+            {       
+                double parent_lat =  std::stod(src_host->get_property("lat"));
+                double parent_long = std::stod(src_host->get_property("long"));
+                double parent_z_coord = std::stod(src_host->get_property("z_coord"));
+                                
+                double cand_host_lat = std::stod(host->get_property("lat"));
+                double cand_host_long = std::stod(host ->get_property("long"));
+                double cand_host_z_coord = std::stod(host->get_property("z_coord"));
+
+                parent_latency = Util::getNetworkLatencyVivaldi(parent_long,parent_lat,parent_z_coord,cand_host_long,cand_host_lat,cand_host_z_coord);
+            }
+            (*latency_cache)[key] = parent_latency;
+        }
+                
+        if (parent_latency > max_parent_comms)
+        {
+            max_parent_comms = parent_latency;
+        }                
 
     }
+    // Since the communications occurs in parallel, it will use the value from the parent that has
+    // the longest communication delay
+    comm_time += max_parent_comms;
+
+    // Now, we validate if the host does not has the local data
+    if(host != ready_task->get_pref_host())
+    {
+
+        std::string key = ready_task->get_pref_host()->get_name() + "-" + host->get_name();                        
+        
+        if (latency_cache->find(key)!=latency_cache->end())
+        {
+            comm_time+= 2* (*latency_cache)[key];
+
+        }
+        else
+        {                                
+            const std::unordered_map<std::string, std::string> * host_properties = host-> get_properties();
+            if(host_properties->find("lat")!=host_properties->end())
+            {       
+                double cand_host_lat =  std::stod(host->get_property("lat"));
+                double cand_host_long = std::stod(host->get_property("long"));
+                double cand_host_z_coord  = std::stod(host->get_property("z_coord"));
+                                
+                double best_host_lat = std::stod(ready_task->get_pref_host()->get_property("lat"));
+                double best_host_long = std::stod(ready_task->get_pref_host() ->get_property("long"));
+                double best_host_z_coord = std::stod(ready_task->get_pref_host()->get_property("z_coord"));
+
+                double latency = Util::getNetworkLatencyVivaldi(best_host_long,best_host_lat,best_host_z_coord,cand_host_long,cand_host_lat,cand_host_z_coord);
+                (*latency_cache)[key]=latency;
+                comm_time+= 2*latency;
+            }
+        }            
+    }
+
+
 
     return (grid_co2 + solar_co2 + battery_co2)* (run_time + comm_time);
 

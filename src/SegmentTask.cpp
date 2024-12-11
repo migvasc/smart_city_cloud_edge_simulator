@@ -167,4 +167,5 @@ const std::string SegmentTask::get_task_data()
 void SegmentTask::set_task_data(const std::string & value)
 {
   this->task_data = value;
+
 }

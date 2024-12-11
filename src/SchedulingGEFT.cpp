@@ -6,7 +6,7 @@
 XBT_LOG_NEW_DEFAULT_CATEGORY(SchedulingGEFT, "SchedulingGEFT category");
 
 
-SchedulingGEFT::SchedulingGEFT(map<string, int> *hosts_cpu_availability,std::map<std::string, double> *hosts_renewables, std::map<std::string, double> *hosts_energy,std::map<std::string, LithiumIonBattery*> *hosts_bat,std::unordered_map<std::string, string> *task_cache) : SchedulingHEFT(hosts_cpu_availability,task_cache)
+SchedulingGEFT::SchedulingGEFT(map<string, int> *hosts_cpu_availability,std::map<std::string, double> *hosts_renewables, std::map<std::string, double> *hosts_energy,std::map<std::string, LithiumIonBattery*> *hosts_bat,std::unordered_map<std::string, string> *task_cache, std::unordered_map<std::string, double> *lat_cache) : SchedulingHEFT(hosts_cpu_availability,task_cache,lat_cache)
 {
 
     this->hosts_cpuavailability = hosts_cpu_availability;

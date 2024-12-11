@@ -8,10 +8,11 @@ XBT_LOG_NEW_DEFAULT_CATEGORY(SchedulingHEFT, "SchedulingHEFT category");
 
 
 
-SchedulingHEFT::SchedulingHEFT(map<string, int> *hosts_cpu_availability,std::unordered_map<std::string, string> * cache)
+SchedulingHEFT::SchedulingHEFT(map<string, int> *hosts_cpu_availability,std::unordered_map<std::string, string> * cache, std::unordered_map<std::string, double> *lat_cache)
 {
     this->hosts_cpuavailability = hosts_cpu_availability;
     this->task_cache = cache;
+    this->latency_cache = lat_cache;
 }
 
 
@@ -48,58 +49,36 @@ simgrid::s4u::Host* SchedulingHEFT::find_host(shared_ptr<SegmentTask> ready_task
             }
 
 
-            std::string task_state = "";
-
-            if (ready_task->get_exec()->get_state()== simgrid::s4u::Activity::State::INITED) task_state = "INITED";
-            if (ready_task->get_exec()->get_state()== simgrid::s4u::Activity::State::STARTING) task_state = "STARTING";
-            if (ready_task->get_exec()->get_state()== simgrid::s4u::Activity::State::STARTED) task_state = "STARTED";
-            if (ready_task->get_exec()->get_state()== simgrid::s4u::Activity::State::FAILED) task_state = "FAILED";
-            if (ready_task->get_exec()->get_state()== simgrid::s4u::Activity::State::CANCELED) task_state = "CANCELED";
-            if (ready_task->get_exec()->get_state()== simgrid::s4u::Activity::State::FINISHED) task_state = "FINISHED";
-
-            std::string parent_task_state = "";
-            if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::INITED) parent_task_state = "INITED";
-            if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::STARTING) parent_task_state = "STARTING";
-            if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::STARTED) parent_task_state = "STARTED";
-            if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::FAILED) parent_task_state = "FAILED";
-            if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::CANCELED) parent_task_state = "CANCELED";
-            if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::FINISHED) parent_task_state = "FINISHED";
+            std::string key = src_host->get_name() + "-" + candidate_host->get_name();
 
             double parent_latency = 0.0;    
 
-            const std::unordered_map<std::string, std::string> * host_properties = src_host-> get_properties();
-
-            if(host_properties->find("lat")!=host_properties->end())
-            {       
-                double parent_lat =  std::stod(src_host->get_property("lat"));
-                double parent_long = std::stod(src_host->get_property("long"));
-                double parent_z_coord = std::stod(src_host->get_property("z_coord"));
-                                
-                double cand_host_lat = std::stod(candidate_host->get_property("lat"));
-                double cand_host_long = std::stod(candidate_host ->get_property("long"));
-                double cand_host_z_coord = std::stod(candidate_host->get_property("z_coord"));
-
-                parent_latency = Util::getNetworkLatencyVivaldi(parent_long,parent_lat,parent_z_coord,cand_host_long,cand_host_lat,cand_host_z_coord);
-                if (parent_latency > max_parent_comms)
-                {
-                    max_parent_comms = parent_latency;
-                }                
+            if (latency_cache->find(key)!=latency_cache->end())
+            {
+                parent_latency = (*latency_cache)[key];
             }
             else
             {
-                std::vector<simgrid::s4u::Link *> links;                            
-                src_host->route_to(candidate_host,links,nullptr);    
+                const std::unordered_map<std::string, std::string> * host_properties = src_host-> get_properties();
+                if(host_properties->find("lat")!=host_properties->end())
+                {       
+                    double parent_lat =  std::stod(src_host->get_property("lat"));
+                    double parent_long = std::stod(src_host->get_property("long"));
+                    double parent_z_coord = std::stod(src_host->get_property("z_coord"));
+                                    
+                    double cand_host_lat = std::stod(candidate_host->get_property("lat"));
+                    double cand_host_long = std::stod(candidate_host ->get_property("long"));
+                    double cand_host_z_coord = std::stod(candidate_host->get_property("z_coord"));
 
-                for(auto link : links)
-                {
-                    parent_latency+=link->get_latency();
-                }                 
-
-                if (parent_latency > max_parent_comms)
-                {
-                    max_parent_comms = parent_latency;
-                }                
+                    parent_latency = Util::getNetworkLatencyVivaldi(parent_long,parent_lat,parent_z_coord,cand_host_long,cand_host_lat,cand_host_z_coord);
+                }
+                (*latency_cache)[key] = parent_latency;
             }
+                    
+            if (parent_latency > max_parent_comms)
+            {
+                max_parent_comms = parent_latency;
+            }                
 
         }
         // Since the communications occurs in parallel, it will use the value from the parent that has
@@ -109,36 +88,32 @@ simgrid::s4u::Host* SchedulingHEFT::find_host(shared_ptr<SegmentTask> ready_task
         // Now, we validate if the host does not has the local data
         if(candidate_host != ready_task->get_pref_host())
         {
-            const std::unordered_map<std::string, std::string> * host_properties = candidate_host-> get_properties();
 
-            if(host_properties->find("lat")!=host_properties->end())
-            {       
-                double cand_host_lat =  std::stod(candidate_host->get_property("lat"));
-                double cand_host_long = std::stod(candidate_host->get_property("long"));
-                double cand_host_z_coord  = std::stod(candidate_host->get_property("z_coord"));
-                                
-                double best_host_lat = std::stod(ready_task->get_pref_host()->get_property("lat"));
-                double best_host_long = std::stod(ready_task->get_pref_host() ->get_property("long"));
-                double best_host_z_coord = std::stod(ready_task->get_pref_host()->get_property("z_coord"));
-
-                double latency = Util::getNetworkLatencyVivaldi(best_host_long,best_host_lat,best_host_z_coord,cand_host_long,cand_host_lat,cand_host_z_coord);
-                comm_time+= 2*latency;
-
-            }
-
-            else
+            std::string key = ready_task->get_pref_host()->get_name() + "-" + candidate_host->get_name();                        
+            
+            if (latency_cache->find(key)!=latency_cache->end())
             {
-                std::vector<simgrid::s4u::Link *> links;                            
-                ready_task->get_pref_host()->route_to(candidate_host,links,nullptr);
+                comm_time+= 2* (*latency_cache)[key];
 
-                double latency = 0.0;    
-                for(auto link : links)
-                {
-                    latency+=link->get_latency();
-                }                 
-                comm_time+=2*latency;
             }
+            else
+            {                                
+                const std::unordered_map<std::string, std::string> * host_properties = candidate_host-> get_properties();
+                if(host_properties->find("lat")!=host_properties->end())
+                {       
+                    double cand_host_lat =  std::stod(candidate_host->get_property("lat"));
+                    double cand_host_long = std::stod(candidate_host->get_property("long"));
+                    double cand_host_z_coord  = std::stod(candidate_host->get_property("z_coord"));
+                                    
+                    double best_host_lat = std::stod(ready_task->get_pref_host()->get_property("lat"));
+                    double best_host_long = std::stod(ready_task->get_pref_host() ->get_property("long"));
+                    double best_host_z_coord = std::stod(ready_task->get_pref_host()->get_property("z_coord"));
 
+                    double latency = Util::getNetworkLatencyVivaldi(best_host_long,best_host_lat,best_host_z_coord,cand_host_long,cand_host_lat,cand_host_z_coord);
+                    (*latency_cache)[key]=latency;
+                    comm_time+= 2*latency;
+                }
+            }            
         }
         // Validates if the finish time (computation and communication) is the smallest 
         // given all the hosts
@@ -183,7 +158,9 @@ void SchedulingHEFT::create_task_ranking_recursive(simgrid::s4u::ActivityPtr tas
             max_rank = temp;
         }
     }
+
     rank[task->get_name()] = max_rank;
+
 }
 
 void SchedulingHEFT::create_tasks_ranking(std::vector<std::shared_ptr<SegmentTask>> &tasks)

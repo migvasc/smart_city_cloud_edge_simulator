@@ -16,20 +16,38 @@ std::vector<shared_ptr<SegmentTask>> DAGOfTasks::get_DAG()
     return this->dag;
 }
 
+
+void DAGOfTasks::inform_dag_changed()
+{
+  needs_to_update = true;
+}
+
 /*Get list of ready tasks*/
 std::vector<shared_ptr<SegmentTask>> DAGOfTasks::get_ready_tasks()
-{
-  std::vector<shared_ptr<SegmentTask>> ready_tasks;
-  std::map<simgrid::s4u::Exec*, unsigned int> candidate_execs;
-  for (auto& a : dag) {
-    // Only look at activity that have their dependencies solved but are not assigned
-    if (a->get_exec()->dependencies_solved() && !a->get_exec()->is_assigned() ) {
-      // if it is an exec, it's ready
-      if (auto* exec = dynamic_cast<simgrid::s4u::Exec*>(a->get_exec().get()))
-        ready_tasks.push_back(a);
-    }
+{  
+  if (needs_to_update)
+  {
+    update_ready_tasks();
   }
   return ready_tasks;
+}
+
+
+void DAGOfTasks::update_ready_tasks()
+{
+  ready_tasks.clear();
+
+
+  for (auto& a : dag) 
+  {
+      // Only look at activity that have their dependencies solved but are not assigned
+      if (!a->get_exec()->is_assigned() && a->get_exec()->dependencies_solved()  ) 
+      {                            
+        // if it is an exec, it's ready
+        if (auto* exec = dynamic_cast<simgrid::s4u::Exec*>(a->get_exec().get()))
+          ready_tasks.push_back(a);
+      }
+    }
 }
 
 std::vector<shared_ptr<SegmentTask>>  DAGOfTasks::get_ready_tasks_cache(unordered_map<string,string>& cache,unordered_map<string,int>& time_cache, int cache_duration )
@@ -285,7 +303,7 @@ void DAGOfTasks::create_DAG_from_JSON(const std::string& filename)
   dag.push_back(end);
   this->dag = dag;
   //test_cache();
-
+  this->update_ready_tasks();
 }
 
 void DAGOfTasks::test_cache()

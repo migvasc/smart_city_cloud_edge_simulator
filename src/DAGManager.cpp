@@ -53,12 +53,8 @@ void DAGManager::handle_task_finished(simgrid::s4u::Exec const& exec)
         this->hosts_cpuavailability[exec.get_host()->get_name()]= this->hosts_cpuavailability[exec.get_host()->get_name()]+1;
     }
 
-    if (exec.get_successors().size() ==0)
-    {
-        this->finish_request(exec.get_name());        
-    }
-
     std::string request_name = result[0]+"-"+ result[1];
+    
     if(! (task_name.compare("ini")==0 || task_name.compare("end")==0))
     {
         //XBT_INFO("COLOCOU A TAREFA %s da request %s em cache na maquina %s",task_name.c_str(),exec.get_cname(),exec.get_host()->get_cname());
@@ -70,6 +66,17 @@ void DAGManager::handle_task_finished(simgrid::s4u::Exec const& exec)
     {
         requests_map[request_name]->request_received();
     }
+
+
+    if (exec.get_successors().size() ==0)
+    {
+        this->finish_request(exec.get_name());        
+    }
+    else
+    {
+        requests_map[request_name]->inform_dag_changed();
+    }
+    
 }
 
 void DAGManager::init()
@@ -129,11 +136,11 @@ void DAGManager::init()
     }
     else if(  SCHEDULING_ALGORITHM == SCHEDULING_HEFT)
     {
-        schedulingstrategy = new SchedulingHEFT(&hosts_cpuavailability,&task_cache);
+        schedulingstrategy = new SchedulingHEFT(&hosts_cpuavailability,&task_cache,&latency_cache);
     }
     else if(  SCHEDULING_ALGORITHM == SCHEDULING_GEFT)
     {
-        schedulingstrategy = new SchedulingGEFT(&hosts_cpuavailability,&hosts_renewable_energy,&hosts_energy_consumption,&hosts_batteries,&task_cache);
+        schedulingstrategy = new SchedulingGEFT(&hosts_cpuavailability,&hosts_renewable_energy,&hosts_energy_consumption,&hosts_batteries,&task_cache,&latency_cache);
     }
     else if(  SCHEDULING_ALGORITHM == SCHEDULING_BESTFIT)
     {
@@ -168,7 +175,7 @@ void DAGManager::init()
     }
     if( SCHEDULING_ALGORITHM == SCHEDULING_LCAHEFT)
     {
-        schedulingstrategy = new SchedulingLCAHEFT(&hosts_cpuavailability, local_grid_power_co2, cloud_dc_power_co2,  pv_panel_power_co2,  battery_power_co2,&hosts_renewable_energy,&hosts_batteries, &hosts_energy_consumption);
+        schedulingstrategy = new SchedulingLCAHEFT(&hosts_cpuavailability, local_grid_power_co2, cloud_dc_power_co2,  pv_panel_power_co2,  battery_power_co2,&hosts_renewable_energy,&hosts_batteries, &hosts_energy_consumption,&latency_cache);
     }
     if( SCHEDULING_ALGORITHM == SCHEDULING_CO2_NEIGHBOUR)
     {
@@ -212,15 +219,6 @@ void DAGManager::init()
     // Log when a tasks starts
     simgrid::s4u::Exec::on_start_cb([this](simgrid::s4u::Exec const& exec) 
     {
-        std::string state = "";
-
-        if (exec.get_state()== simgrid::s4u::Activity::State::INITED) state = "INITED";
-        if (exec.get_state()== simgrid::s4u::Activity::State::STARTING) state = "STARTING";
-        if (exec.get_state()== simgrid::s4u::Activity::State::STARTED) state = "STARTED";
-        if (exec.get_state()== simgrid::s4u::Activity::State::FAILED) state = "FAILED";
-        if (exec.get_state()== simgrid::s4u::Activity::State::CANCELED) state = "CANCELED";
-        if (exec.get_state()== simgrid::s4u::Activity::State::FINISHED) state = "FINISHED";
-
 
         //XBT_INFO("#COMECOU EXEC DA TASK;%s;%f;%f;%s;%s", exec.get_cname(), exec.get_start_time(), exec.get_finish_time(),exec.get_host()->get_cname(),state.c_str());
         
@@ -470,17 +468,14 @@ void DAGManager::perform_schedule()
             for(auto& parent :segment->get_parents() )
             {
                 simgrid::s4u::Host* src_host;
-                
+
                 if (parent.second->get_exec()->is_assigned()) 
-                {
+                {                                                                                                    
                     src_host = parent.second->get_exec()->get_host();
                 }
                 else
                 {
-
-                    src_host = simgrid::s4u::Host::by_name(task_cache[parent.second->get_task_data()]);
-                    
-
+                    src_host = simgrid::s4u::Host::by_name(task_cache[parent.second->get_task_data()]);                    
                 }
 
                 if(src_host!=candidate_host)
@@ -528,13 +523,7 @@ void DAGManager::perform_schedule()
             for(auto& parent: segment->get_parents_in_cache())
             {
 
-                std::string parent_state = "";
-                if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::INITED) parent_state = "INITED";
-                if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::STARTING) parent_state = "STARTING";
-                if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::STARTED) parent_state = "STARTED";
-                if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::FAILED) parent_state = "FAILED";
-                if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::CANCELED) parent_state = "CANCELED";
-                if (parent.second->get_exec()->get_state()== simgrid::s4u::Activity::State::FINISHED) parent_state = "FINISHED";
+
                 //XBT_INFO("TAREFA PAI %s ta em cache e tem o state %s, entao vamos completar ela pq vai ser usada pra tarefa %s ",parent.first.c_str(),parent_state.c_str(),task->get_cname());
                 
                 if (parent.second->get_exec()->get_state()==simgrid::s4u::Activity::State::FINISHED || parent.second->completed())
@@ -565,7 +554,6 @@ void DAGManager::finish_request(const std::string last_task_id)
 {    
     for(auto& request : requests)
     {
-
         if (request->get_last_exec()->get_name().compare(last_task_id)==0)
         {        
             const int buf_size = 256;
@@ -680,7 +668,6 @@ void DAGManager::update_battery_state(simgrid::s4u::Host* host)
                 brown_energy_wh-=energy_discharged;
             }
             
-
         }
 
         battery_capacity = hosts_batteries[host->get_name()]->getUsableWattsHour();
