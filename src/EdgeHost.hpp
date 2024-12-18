@@ -5,7 +5,8 @@
 #include <unordered_map>
 #include "robin_hood.h"
 #include "simgrid/s4u.hpp"
-
+#include "Message.hpp"
+#include "SegmentTask.hpp"
 using namespace std; 
 
 
@@ -28,6 +29,8 @@ std::map<std::string, double> cache_usage;
 
 public:
     EdgeHost(std::string host_name, int mem_limit);
+    void operator()();
+    simgrid::s4u::Mailbox *mailbox;
     void add_task_in_cache(const std::string & task_name, int timeslot);
     void delete_task_from_cache(const std::string & task_name);
     void expire_tasks(int timeslot);

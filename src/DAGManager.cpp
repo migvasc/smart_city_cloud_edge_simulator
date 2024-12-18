@@ -15,6 +15,17 @@ XBT_LOG_NEW_DEFAULT_CATEGORY(DAGManager, "DAGManager category");
  *
  */
 
+static void energy_update_actor()
+{            
+    while(simgrid::s4u::Engine::get_clock()<90000.0)
+    {
+        Message *message = new Message(MESSAGE_UPDATE_ENERGY);
+        simgrid::s4u::Mailbox::by_name("dagmanager")->put(message,0);
+        simgrid::s4u::this_actor::sleep_for(60);
+    }    
+}
+
+
 DAGManager::DAGManager(std::vector<std::string> args)
 {      
     argsClass = args;    
@@ -24,41 +35,68 @@ void DAGManager::operator()()
 {
     register_object("dagmanager",this);
     init();
-    while(true)
-    {
-        if(int(simgrid::s4u::Engine::get_clock()) == next_time_to_update)
+    bool can_execute = true;
+
+    do 
+    {        
+        Message * message= mailbox->get<Message>();
+        if(message->type==MESSAGE_END_SIMULATION)
         {
-            update_hosts_energy_information();
-            if (SCHEDULING_ALGORITHM == SCHEDULING_BASELINE_ON_OFF)
-            {
-                evaluate_turn_on_or_off();
-            }
+            can_execute = false;
+            
         }
-        update_valid_requests();
-        perform_schedule(); 
-        simgrid::s4u::this_actor::sleep_for(0.005);
-    }        
+        
+        
+        handle_message(message); 
+        
+         
+    }
+    while (can_execute);
+    
 }
 
-void DAGManager::handle_task_finished(simgrid::s4u::Exec const& exec)
+void DAGManager::handle_task_finished(std::shared_ptr<SegmentTask> task)
 {
+    
+    task->complete();       
+
+    std::string state = "";
+    simgrid::s4u::ExecPtr exec = task->get_exec();
+    
+    if (exec->get_state()== simgrid::s4u::Activity::State::INITED) state = "INITED";
+    if (exec->get_state()== simgrid::s4u::Activity::State::STARTING) state = "STARTING";
+    if (exec->get_state()== simgrid::s4u::Activity::State::STARTED) state = "STARTED";
+    if (exec->get_state()== simgrid::s4u::Activity::State::FAILED) state = "FAILED";
+    if (exec->get_state()== simgrid::s4u::Activity::State::CANCELED) state = "CANCELED";
+    if (exec->get_state()== simgrid::s4u::Activity::State::FINISHED) state = "FINISHED";
+
+    //XBT_INFO("#FE;%s;%f;%f;%s;%s", exec->get_cname(), exec->get_start_time(), exec->get_finish_time(),exec->get_host()->get_cname(),state.c_str());   
+
+    const int buf_size = 256;
+    int nb_printed;
+    (void) nb_printed; // Avoids a warning if assertions are ignored
+    char * buf = static_cast<char*>(malloc(sizeof(char) * buf_size));
+    snprintf(buf, buf_size,"%s,%f,%f,%s,%s\n", exec->get_cname(), exec->get_start_time(), exec->get_finish_time(),exec->get_host()->get_cname(),state.c_str());
+    tasks_output->append_text(buf);
+    free(buf);
+
 
     //Get the task name to process the cache 
     vector<string> result;
-    boost::split(result, exec.get_name(), boost::is_any_of("-"));
+    boost::split(result, exec->get_name(), boost::is_any_of("-"));
     std::string task_name =result[2];
 
     if ( (task_name.compare("ini")!=0 &&  task_name.compare("end")!=0  ))
     {
-        this->hosts_cpuavailability[exec.get_host()->get_name()]= this->hosts_cpuavailability[exec.get_host()->get_name()]+1;
+        this->hosts_cpuavailability[exec->get_host()->get_name()]= this->hosts_cpuavailability[exec->get_host()->get_name()]+1;
     }
 
     std::string request_name = result[0]+"-"+ result[1];
-    
+
     if(! (task_name.compare("ini")==0 || task_name.compare("end")==0))
     {
         //XBT_INFO("COLOCOU A TAREFA %s da request %s em cache na maquina %s",task_name.c_str(),exec.get_cname(),exec.get_host()->get_cname());
-        task_cache[task_name] = exec.get_host()->get_name();
+        task_cache[task_name] = exec->get_host()->get_name();
         task_time_cache[task_name] = int (simgrid::s4u::Engine::get_clock()/cache_duration);
     }
 
@@ -67,15 +105,12 @@ void DAGManager::handle_task_finished(simgrid::s4u::Exec const& exec)
         requests_map[request_name]->request_received();
     }
 
-
-    if (exec.get_successors().size() ==0)
+    requests_map[request_name]->inform_dag_changed();
+    if (exec->get_successors().size() ==0)
     {
-        this->finish_request(exec.get_name());        
+        this->finish_request(exec->get_name());        
     }
-    else
-    {
-        requests_map[request_name]->inform_dag_changed();
-    }
+    
     
 }
 
@@ -113,6 +148,7 @@ void DAGManager::init()
             {
                 current_number_of_hosts_on+=1;
             }
+
         }
 
         // Initially, the host "is responsible for itself", that is, 
@@ -126,8 +162,14 @@ void DAGManager::init()
 
         // We init the host info for caching
         host_cache_mem_used[host->get_name()] = 0;        
-
+        int host_cache_memory=1;
+      
+        simgrid::s4u::ActorPtr someActor = simgrid::s4u::Actor::create("worker_"+host->get_name(), host, EdgeHost(host->get_name(),host_cache_memory));     
+        
     }
+
+    simgrid::s4u::ActorPtr someActor = simgrid::s4u::Actor::create("energy_update_actor", simgrid::s4u::this_actor::get_host(), energy_update_actor);     
+
 
 
     if (SCHEDULING_ALGORITHM == SCHEDULING_BASELINE)
@@ -212,7 +254,8 @@ void DAGManager::init()
         int host_cache_memory = std::stoi(argsClass[++arg_index]);
         for (auto& host : simgrid::s4u::Engine::get_instance()->get_all_hosts())
         {
-            hosts_info[host->get_name()] = new EdgeHost(host->get_name(),host_cache_memory);
+            //hosts_info[host->get_name()] = new EdgeHost(host->get_name(),host_cache_memory);
+            //hosts_info[host->get_name()]->
         }
     }
 
@@ -225,25 +268,8 @@ void DAGManager::init()
     });    
 
     // Log when a tasks finishes
-    simgrid::s4u::Exec::on_completion_cb([this](simgrid::s4u::Exec const& exec) 
+  /*  simgrid::s4u::Exec::on_completion_cb([this](simgrid::s4u::Exec const& exec) 
     {
-        std::string state = "";
-
-        if (exec.get_state()== simgrid::s4u::Activity::State::INITED) state = "INITED";
-        if (exec.get_state()== simgrid::s4u::Activity::State::STARTING) state = "STARTING";
-        if (exec.get_state()== simgrid::s4u::Activity::State::STARTED) state = "STARTED";
-        if (exec.get_state()== simgrid::s4u::Activity::State::FAILED) state = "FAILED";
-        if (exec.get_state()== simgrid::s4u::Activity::State::CANCELED) state = "CANCELED";
-        if (exec.get_state()== simgrid::s4u::Activity::State::FINISHED) state = "FINISHED";
-
-
-        const int buf_size = 256;
-        int nb_printed;
-        (void) nb_printed; // Avoids a warning if assertions are ignored
-        char * buf = static_cast<char*>(malloc(sizeof(char) * buf_size));
-        snprintf(buf, buf_size,"%s,%f,%f,%s,%s\n", exec.get_cname(), exec.get_start_time(), exec.get_finish_time(),exec.get_host()->get_cname(),state.c_str());
-        tasks_output->append_text(buf);
-        free(buf);
 
         //XBT_INFO("#FE;%s;%f;%f;%s;%s", exec.get_cname(), exec.get_start_time(), exec.get_finish_time(),exec.get_host()->get_cname(),state.c_str());
         if(exec.get_finish_time()!= -1.0)
@@ -252,10 +278,10 @@ void DAGManager::init()
 
             this->handle_task_finished(exec); 
         }
-        
+      
     });    
 
-    // Log when a communication finishes
+*/    // Log when a communication finishes
     simgrid::s4u::Comm::on_completion_cb([this](simgrid::s4u::Comm const& comm) {
         //XBT_INFO("#FC;%s;%f;%f;%s;%s\n", comm.get_cname(), comm.get_start_time(), comm.get_finish_time(),comm.get_source()->get_cname(),comm.get_destination()->get_cname());   
     });    
@@ -279,19 +305,35 @@ void DAGManager::handle_message(Message* message)
         switch (message->type)
         {
             case MESSAGE_DAG_SUBMISSION:
+            {
                 handle_request_submission(static_cast<DAGOfTasks*>(message->data));        
+                update_valid_requests();
+                perform_schedule();            
                 break;      
-            case MESSAGE_STOP:
+            }
+            case MESSAGE_END_SIMULATION:
+            {
                 requests_output->flush_buffer();
                 tasks_output->flush_buffer();
                 energy_output->flush_buffer();
                 co2_output->flush_buffer();
-                /*requests_output->close_buffer();
-                tasks_output->close_buffer();
-                energy_output->close_buffer();
-                */
-
                 break;      
+            }
+            case MESSAGE_UPDATE_ENERGY:
+            {
+                update_hosts_energy_information();
+                break;
+            }
+            case MESSAGE_TASK_COMPLETED:
+            {
+                std::string name = *(static_cast<std::string *>(message->data));                                
+                std::shared_ptr<SegmentTask> task = map_of_tasks[name];
+                handle_task_finished(task);
+                update_valid_requests();
+                perform_schedule();                    
+                break;                                                
+            }
+
             default:
                 break;
         }
@@ -310,6 +352,12 @@ void DAGManager::handle_request_submission(DAGOfTasks* dag)
         std::vector<std::shared_ptr<SegmentTask>>  tasks = dag->get_DAG();    
         casted->create_tasks_ranking(tasks);
     }
+
+    for(shared_ptr<SegmentTask> & task : dag->get_DAG())
+    {
+        map_of_tasks[task->get_exec()->get_name()] = task;
+    }
+
 }
 
 /**
@@ -450,102 +498,26 @@ void DAGManager::perform_schedule()
         // Flag used to validate if there is need to perform communications to get its required data,
         // for example, if the parent of a task was executed in a different host, or if the tasks will
         // be executed in a host that does not have all its necessary data
-        bool no_comm_needed = true;
+
 
         auto task = segment->get_exec();
         //XBT_INFO("processing task %s",task->get_cname());
         simgrid::s4u::Host* candidate_host = find_host(segment);
+
         if (candidate_host == nullptr)
         {
             //XBT_INFO("no host found for task %s q queria o bus stop %s",task->get_cname(),segment->get_pref_host()->get_cname());
             continue;
         }
         
-        // First we validate if all the parent tasks (if any) have been executed in different hosts than the canidate host
-        if (no_comm_needed)
-        {            
-            //XBT_INFO("VALIDATING IF NEED TO SEND DATA FROM 1 COMM FROM PARENTS");
-            for(auto& parent :segment->get_parents() )
-            {
-                simgrid::s4u::Host* src_host;
+        //XBT_INFO("#START TASK;%s;%d;%s\n",task->get_cname(), hosts_cpuavailability[candidate_host->get_name()],candidate_host->get_cname());
+        task->set_host(candidate_host);   
+        Message *message = new Message(MESSAGE_TASK_SUBMISSION,segment.get());
+        simgrid::s4u::Mailbox::by_name(candidate_host->get_name())->put(message,0);
+        // simgrid::s4u::Actor::create("worker", segment->get_pref_host(), execute,task);        
 
-                if (parent.second->get_exec()->is_assigned()) 
-                {                                                                                                    
-                    src_host = parent.second->get_exec()->get_host();
-                }
-                else
-                {
-                    src_host = simgrid::s4u::Host::by_name(task_cache[parent.second->get_task_data()]);                    
-                }
-
-                if(src_host!=candidate_host)
-                {
-                    //XBT_INFO("Task %s Needs to communicate from this parent %s",task->get_cname(),parent.first.c_str());
-                    no_comm_needed = false;
-                    simgrid::s4u::Actor::create("comm_worker", src_host, communicate,task,src_host,candidate_host);
-                }
-            }
-            segment->clear_parents();
-        }
-
-        // Then, we check if the candidate host has all the necessary data for the task
-        if(no_comm_needed && candidate_host!=segment->get_pref_host())
-        {
-            //XBT_INFO("hosts diffs %s vs %s",candidate_host->get_cname(),segment->get_pref_host()->get_cname());
-            if(segment->parent_coms.size()==0)
-            {
-                no_comm_needed = false;
-                simgrid::s4u::Actor::create("comm_worker_diff_best", candidate_host, communicate_different_best_host,segment,candidate_host,segment->get_pref_host());
-            }
-            else
-            {
-                no_comm_needed==true;
-                for (auto& com :segment->parent_coms )
-                {
-                    auto state= com->get_state();
-                    if(state != simgrid::s4u::Activity::State::FINISHED)
-                    {
-                        no_comm_needed == false;
-                        break;
-                    }                    
-                }
-            }
-        }
-        // No comunincation was needed for this task (due to parent or being allocated to diferent host)
-        // or all the necessary communication has been completed. We can start executing it.
-        if(no_comm_needed)
-        {
-           /* auto it = hosts_info[candidate_host->get_name()]->cache.find(task->get_name());
-            if (it != hosts_info[candidate_host->get_name()]->cache.end() && task->get_state() != simgrid::s4u::Activity::State::STARTED )
-            {
-                task->set_flops_amount(0.0);
-            }*/
-            for(auto& parent: segment->get_parents_in_cache())
-            {
-
-
-                //XBT_INFO("TAREFA PAI %s ta em cache e tem o state %s, entao vamos completar ela pq vai ser usada pra tarefa %s ",parent.first.c_str(),parent_state.c_str(),task->get_cname());
-                
-                if (parent.second->get_exec()->get_state()==simgrid::s4u::Activity::State::FINISHED || parent.second->completed())
-                {
-                  //  XBT_INFO("OPA A TAREFA JA TA COMPLETADA  %s ta em cache, entao vamos ignonrar ela pq vai ser usada pra tarefa %s",parent.first.c_str(),task->get_cname());
-                    continue;
-                }
-                if(!parent.second->get_exec()->is_assigned() )
-                {                
-                   parent.second->get_exec()->set_host(simgrid::s4u::Host::by_name(task_cache[parent.second->get_task_data()]));
-                }                
-
-                parent.second->complete();      
-                parent.second->get_exec()->unset_host();
-            }     
-
-            //XBT_INFO("#START TASK;%s;%d;%s\n",task->get_cname(), hosts_cpuavailability[candidate_host->get_name()],candidate_host->get_cname());
-            task->set_host(candidate_host);   
-            simgrid::s4u::Actor::create("worker", segment->get_pref_host(), execute,task);        
-
-        }   
-    }
+    }   
+    
     
     ready_tasks.clear();
 }

@@ -56,7 +56,7 @@ private:
   double cache_duration = -1;
 
   bool use_cache = false;
-
+  simgrid::s4u::Mailbox * mailbox = simgrid::s4u::Mailbox::by_name("dagmanager");
   // List with the current requests being processed
   std::vector<DAGOfTasks*> requests;
   
@@ -155,11 +155,11 @@ private:
   simgrid::s4u::Host* get_nearest_neighbour_host(simgrid::s4u::Host* host);
   // Get the network latency using Simgrid's Vivaldi network topology. More info: https://simgrid.org/doc/latest/Platform_routing.html#vivaldi
   double getNetworkLatencyVivaldi(double x1, double y1, double z1, double x2, double y2, double z2);
-
+  unordered_map<std::string,shared_ptr<SegmentTask>> map_of_tasks;
 public:
   explicit DAGManager(std::vector<std::string> args);
   void operator()();
-  void handle_task_finished(simgrid::s4u::Exec const& exec);
+  void handle_task_finished(std::shared_ptr<SegmentTask> task);
   void finish_request(const std::string last_task_id);  
   simgrid::s4u::Host* find_host(shared_ptr<SegmentTask> ready_task);
   simgrid::s4u::Host* find_host_bestfit(shared_ptr<SegmentTask> ready_task);

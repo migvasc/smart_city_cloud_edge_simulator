@@ -30,7 +30,10 @@ void DAGDispatcher::send_DAG_of_tasks(simgrid::xbt::ReplayAction& action){
     /*for(auto task : dag->get_DAG()){
         XBT_INFO("TASK '%s'",task->get_exec()->get_cname());
     }*/
-    MailBoxSingleton::get_instance()->send_message("dagmanager",new Message(MESSAGE_DAG_SUBMISSION,dag));
+
+    simgrid::s4u::Mailbox::by_name("dagmanager")->put(new Message(MESSAGE_DAG_SUBMISSION,dag),0);
+
+//    MailBoxSingleton::get_instance()->send_message("dagmanager",new Message(MESSAGE_DAG_SUBMISSION,dag));
 
 }
 
@@ -38,7 +41,8 @@ void DAGDispatcher::stop(simgrid::xbt::ReplayAction& action){
     double time  =  std::stod(action[2]);
     wait_for(time);
     //sg_host_energy_update_all();
-    MailBoxSingleton::get_instance()->send_message("dagmanager",new Message(MESSAGE_STOP));
+    // MailBoxSingleton::get_instance()->send_message("dagmanager",new Message(MESSAGE_END_SIMULATION));
+    simgrid::s4u::Mailbox::by_name("dagmanager")->put(new Message(MESSAGE_END_SIMULATION),0);
     wait_for(time+10);
     simgrid::s4u::Actor::kill_all();
     simgrid::s4u::this_actor::exit();

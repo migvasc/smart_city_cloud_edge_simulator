@@ -25,10 +25,8 @@ void DAGOfTasks::inform_dag_changed()
 /*Get list of ready tasks*/
 std::vector<shared_ptr<SegmentTask>> DAGOfTasks::get_ready_tasks()
 {  
-  if (needs_to_update)
-  {
-    update_ready_tasks();
-  }
+  
+  update_ready_tasks();  
   return ready_tasks;
 }
 
