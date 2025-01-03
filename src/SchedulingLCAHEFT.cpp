@@ -37,28 +37,20 @@ simgrid::s4u::Host* SchedulingLCAHEFT::find_host(shared_ptr<SegmentTask> ready_t
     return selected_host;
 }
 
-
-double SchedulingLCAHEFT::get_host_co2_area(simgrid::s4u::Host* host,shared_ptr<SegmentTask> ready_task)
+double SchedulingLCAHEFT::calculate_co2(shared_ptr<SegmentTask> ready_task,simgrid::s4u::Host * host)
 {
-    // Variables to store co2 info
     double grid_co2 = 0;
     double battery_co2 = 0;
     double solar_co2 = 0;
-
-    double brown_energy_wh    = 0.0; 
+    double grid_energy_wh    = 0.0; 
     double renewable_energy_used = 0;
-    double grid_energy_used = 0;
     double energy_discharged  = 0;
-
     double host_consumed_energy =  sg_host_get_consumed_energy(host) -  (*hosts_energy_consumption)[host->get_name()]  ;
-
     double renewable_power_timeslot = 0; 
     double available_renewable_energy = 0;
     double available_battery_energy = 0;
 
-    // We also need to remove the power consumed by the host, to update the available renewable energy info
-    double default_task_flops = 1350000000.0;
-
+    // We also need to remove the power consumed by the host, to update the available renewable energy info    
     const std::unordered_map<std::string, std::string> * host_properties = host-> get_properties();
 
     bool is_cloud_host = false;
@@ -72,44 +64,41 @@ double SchedulingLCAHEFT::get_host_co2_area(simgrid::s4u::Host* host,shared_ptr<
         }
     }
 
-
     int pstate_on = 1;
 
-    double max_power  = sg_host_get_wattmax_at(host,host->get_pstate());    
-    double idle_power = sg_host_get_idle_consumption(host);    
+    double max_power  = sg_host_get_wattmax_at(host,host->get_pstate());
+    double idle_power = sg_host_get_idle_consumption(host);
     double host_speed = host->get_speed();
     
-
     if (is_cloud_host)
     {        
-        max_power  = sg_host_get_wattmax_at(host,pstate_on);    
-        idle_power = sg_host_get_idle_consumption_at(host,pstate_on);    
+        max_power  = sg_host_get_wattmax_at(host,pstate_on);
+        idle_power = sg_host_get_idle_consumption_at(host,pstate_on);
         host_speed = host->get_pstate_speed(pstate_on);
-        
     }
-    double run_time = default_task_flops/host_speed;
+
+    double run_time = ready_task->get_exec()->get_remaining()/host_speed;
     double power_per_core = (max_power - idle_power)/host->get_core_count();
 
-    
-    int cores_used =  host->get_core_count() - (*hosts_cpuavailability)[host->get_name()] ;
+    int cores_used =  host->get_core_count() - (*hosts_cpuavailability)[host->get_name()];
+    cores_used += 1 ; // to represent that we will allocate a task to this host
+
     double dynamic_energy = cores_used * power_per_core;
     double task_energy_consumption = 0;
 
     double comm_time = 0;
+
     bool has_renewable_infra = false;
-    cores_used += 1 ; // to represent that we will allocate a task to this host
 
     // First we validate how much renewable we have left
     if ( hosts_renewable_energy->find(host->get_name()) !=hosts_renewable_energy->end())
     {
         renewable_power_timeslot = Util::convert_joules_to_wh((*hosts_renewable_energy)[host->get_name()]);
-        has_renewable_infra = true;
+        has_renewable_infra = true;                                
     }
    
-    
     host_consumed_energy = Util::convert_joules_to_wh(host_consumed_energy);
-    task_energy_consumption = (idle_power + dynamic_energy)*run_time;
-
+    task_energy_consumption = (idle_power + dynamic_energy) * run_time;
 
     if (has_renewable_infra)
     {
@@ -122,67 +111,70 @@ double SchedulingLCAHEFT::get_host_co2_area(simgrid::s4u::Host* host,shared_ptr<
         // If we do not have enough renewable power, we may need to use energy from the batteries
         if (available_renewable_energy < 0)
         {
-
+            // Here we allow the negative value to simulate the usage of battery energy to supply the host inside the window
             available_battery_energy = max( available_battery_energy+ available_renewable_energy,0.0);
             available_renewable_energy = 0;
         }
 
-
         // First we validate if the energy from the solar panels can be used for the task
         if (available_renewable_energy < task_energy_consumption)
         {
-
             renewable_energy_used = available_renewable_energy; 
-            brown_energy_wh =  task_energy_consumption - available_renewable_energy;
+            grid_energy_wh =  task_energy_consumption - available_renewable_energy;
             // Then we check if the energy from the batteries can be used for executing the task
-            if ( available_battery_energy >= brown_energy_wh)
+            if ( available_battery_energy >= grid_energy_wh)
             {
-                energy_discharged = brown_energy_wh;
-                brown_energy_wh = 0;
+                energy_discharged = grid_energy_wh;
+                grid_energy_wh = 0;
             }
             else
             {
                 energy_discharged = available_battery_energy;
-                brown_energy_wh-=energy_discharged;
-            }
-
+                grid_energy_wh -= energy_discharged;
+            }            
         }
         else
         {
+
             renewable_energy_used = task_energy_consumption;
-            brown_energy_wh = 0;
+            grid_energy_wh = 0;
             energy_discharged = 0;
-        }
-
-
+        }        
     }
     else
-    {
+    {        
         renewable_energy_used = 0;
-        brown_energy_wh = task_energy_consumption;
+        grid_energy_wh = task_energy_consumption;
         energy_discharged = 0;
-
     }
 
-    grid_energy_used = brown_energy_wh;
 
     if (is_cloud_host)
     {
-        grid_co2 = grid_energy_used * cloud_dc_power_co2->get_current_co2_eq(simgrid::s4u::Engine::get_clock()) *1/1000; 
-    }
+        grid_co2 = grid_energy_wh * cloud_dc_power_co2->get_current_co2_eq(simgrid::s4u::Engine::get_clock()) *1/1000; 
+    }        
     else
     {
-        grid_co2 = grid_energy_used * local_grid_power_co2->get_current_co2_eq(simgrid::s4u::Engine::get_clock())*1/1000;
+        grid_co2 = grid_energy_wh * local_grid_power_co2->get_current_co2_eq(simgrid::s4u::Engine::get_clock())*1/1000;
     }
     
-
     battery_co2 = energy_discharged * battery_power_co2*1/1000;
     
     // Solar energy will be always the same, since we do not change the pv area    
     // therefore we have a fixed co2 emissions for the simulated day
-    // The solar panels will produce the same amount of electricity no matter the algorithm    
-    
+    // The solar panels will produce the same amount of electricity no matter the algorithm        
     solar_co2   = 0; // renewable_energy_used * pv_panel_power_co2*1/1000;
+
+
+    return solar_co2 + grid_co2 + battery_co2;
+
+}
+
+double SchedulingLCAHEFT::calculate_response_time(shared_ptr<SegmentTask> ready_task,simgrid::s4u::Host * host)
+{
+    
+    double run_time = ready_task->get_exec()->get_remaining()/host->get_speed();
+    double comm_time = 0;
 
     //First, the communication from the parents
     double max_parent_comms =0;
@@ -262,8 +254,14 @@ double SchedulingLCAHEFT::get_host_co2_area(simgrid::s4u::Host* host,shared_ptr<
         }            
     }
 
+    return run_time + comm_time;
+}
 
 
-    return (grid_co2 + solar_co2 + battery_co2)* (run_time + comm_time);
-
+double SchedulingLCAHEFT::get_host_co2_area(simgrid::s4u::Host* host,shared_ptr<SegmentTask> ready_task)
+{
+    // Variables to store co2 info
+    double estimated_co2 = calculate_co2(ready_task,host);
+    double estimated_response_time = calculate_response_time(ready_task,host);
+    return estimated_co2 * estimated_response_time;
 }
