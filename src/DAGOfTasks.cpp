@@ -25,6 +25,7 @@ void DAGOfTasks::inform_dag_changed()
 /*Get list of ready tasks*/
 std::vector<shared_ptr<SegmentTask>> DAGOfTasks::get_ready_tasks()
 {  
+  needs_to_update= true;
   if (needs_to_update)
   {
     update_ready_tasks();
@@ -268,7 +269,7 @@ void DAGOfTasks::create_DAG_from_JSON(const std::string& filename)
     } 
   }  
 
-  std::shared_ptr<SegmentTask> ini = make_shared<SegmentTask>();
+  /*std::shared_ptr<SegmentTask> ini = make_shared<SegmentTask>();
   std::string req_ini_id = this->name + "-ini";
   simgrid::s4u::ExecPtr exec_task_ini =   simgrid::s4u::Exec::init()->set_name(req_ini_id)->set_flops_amount(0);
   ini->set_exec(exec_task_ini);
@@ -300,7 +301,7 @@ void DAGOfTasks::create_DAG_from_JSON(const std::string& filename)
   this->last_exec->add_successor(end->get_exec());
   this->last_exec = end->get_exec();
   dag.insert(dag.begin(),ini);
-  dag.push_back(end);
+  dag.push_back(end);*/
   this->dag = dag;
   //test_cache();
   this->update_ready_tasks();

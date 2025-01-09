@@ -68,7 +68,7 @@ void DAGManager::handle_task_finished(simgrid::s4u::Exec const& exec)
     }
 
 
-    if (exec.get_successors().size() ==0)
+    if (requests_map[request_name]->get_last_exec()->get_name().compare( exec.get_name() )== 0)
     {
         this->finish_request(exec.get_name());        
     }
