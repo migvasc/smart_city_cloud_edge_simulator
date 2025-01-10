@@ -62,6 +62,7 @@ private:
   
   // Map used to store the CPU cores availability of the hosts being used
   std::map<std::string, DAGOfTasks*> requests_map;
+  std::set<std::string> requests_delayed;
 
 
   // Map used to store the CPU cores availability of the hosts being used
@@ -144,7 +145,8 @@ private:
   void init();
   void handle_request_submission(DAGOfTasks* dag);
   std::vector<std::string> argsClass;
-  void perform_schedule();
+  void perform_schedule(vector<shared_ptr<SegmentTask>> ready_tasks);
+  vector<shared_ptr<SegmentTask>> get_ready_tasks_from_request(DAGOfTasks* request);
   vector<shared_ptr<SegmentTask>> get_ready_tasks_from_requests();
   vector<shared_ptr<SegmentTask>> get_ready_tasks_cache();
   double get_host_available_renewable_energy(simgrid::s4u::Host* host);

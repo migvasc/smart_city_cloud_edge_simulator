@@ -5,7 +5,9 @@
 #include <bits/stdc++.h>
 #include <boost/algorithm/string.hpp>
 #include "Util.hpp"
+
 XBT_LOG_NEW_DEFAULT_CATEGORY(DAGManager, "DAGManager category");
+
 /**
  * Manages the distributed edge infrastructure with on-site green (e.g. solar) energy productions.
  * The edge infrastructure is composed of low capacity nodes (as bus stops equipped with Raspberry PI nodes).
@@ -13,7 +15,7 @@ XBT_LOG_NEW_DEFAULT_CATEGORY(DAGManager, "DAGManager category");
  * Rather than directly interacting with the hosts, the DAGManager deploy and interact with worker applications which encapsulate the hosts desired behavior. 
  * The workload is composed of requests represented by a DAG of tasks.
  *
- */
+*/
 
 static void energy_update_actor()
 {            
@@ -106,12 +108,29 @@ void DAGManager::handle_task_finished(std::shared_ptr<SegmentTask> task)
     }
 
     requests_map[request_name]->inform_dag_changed();
-    if (exec->get_successors().size() ==0)
+    if (requests_map[request_name]->get_last_exec()->get_name().compare( exec->get_name() )== 0)
     {
         this->finish_request(exec->get_name());        
     }
     
-    
+    perform_schedule(get_ready_tasks_from_request(requests_map[request_name]));
+
+    if (requests_delayed.size()>0)
+    {
+        for (auto req_name : requests_delayed)
+        {
+            if (requests_map.find(req_name)!=requests_map.end())
+            {
+                perform_schedule(get_ready_tasks_from_request(requests_map[req_name]));
+            }
+            
+        }
+
+    }
+
+    // requests_delayed.clear();
+
+
 }
 
 void DAGManager::init()
@@ -164,13 +183,11 @@ void DAGManager::init()
         host_cache_mem_used[host->get_name()] = 0;        
         int host_cache_memory=1;
       
-        simgrid::s4u::ActorPtr someActor = simgrid::s4u::Actor::create("worker_"+host->get_name(), host, EdgeHost(host->get_name(),host_cache_memory));     
+        simgrid::s4u::ActorPtr someActor = simgrid::s4u::Actor::create("worker_"+host->get_name(), host, EdgeHost(host->get_name(),host_cache_memory));
         
     }
 
-    simgrid::s4u::ActorPtr someActor = simgrid::s4u::Actor::create("energy_update_actor", simgrid::s4u::this_actor::get_host(), energy_update_actor);     
-
-
+    simgrid::s4u::ActorPtr someActor = simgrid::s4u::Actor::create("energy_update_actor", simgrid::s4u::this_actor::get_host(), energy_update_actor);
 
     if (SCHEDULING_ALGORITHM == SCHEDULING_BASELINE)
     {
@@ -308,7 +325,7 @@ void DAGManager::handle_message(Message* message)
             {
                 handle_request_submission(static_cast<DAGOfTasks*>(message->data));        
                 update_valid_requests();
-                perform_schedule();            
+                       
                 break;      
             }
             case MESSAGE_END_SIMULATION:
@@ -330,7 +347,7 @@ void DAGManager::handle_message(Message* message)
                 std::shared_ptr<SegmentTask> task = map_of_tasks[name];
                 handle_task_finished(task);
                 update_valid_requests();
-                perform_schedule();                    
+                
                 break;                                                
             }
 
@@ -357,6 +374,23 @@ void DAGManager::handle_request_submission(DAGOfTasks* dag)
     {
         map_of_tasks[task->get_exec()->get_name()] = task;
     }
+
+    
+    perform_schedule(get_ready_tasks_from_request(dag));
+    if (requests_delayed.size()>0)
+    {
+        for (auto req_name : requests_delayed)
+        {
+            if (requests_map.find(req_name)!=requests_map.end())
+            {
+                perform_schedule(get_ready_tasks_from_request(requests_map[req_name]));
+            }
+            
+        }
+
+    }
+
+    //requests_delayed.clear();
 
 }
 
@@ -433,6 +467,24 @@ static void communicate_different_best_host(shared_ptr<SegmentTask>  segment, si
 
 }
 
+
+
+/**
+ * Returns the list of tasks from all the requests that have their dependencies solved and can be executed.
+ */
+vector<shared_ptr<SegmentTask>> DAGManager::get_ready_tasks_from_request(DAGOfTasks* request)
+{
+    vector<shared_ptr<SegmentTask>> ready_tasks; 
+    
+    for(auto& task : request->get_ready_tasks())
+    {
+        ready_tasks.push_back(task);
+    }
+
+    return ready_tasks;
+}
+
+
 /**
  * Returns the list of tasks from all the requests that have their dependencies solved and can be executed.
  */
@@ -476,18 +528,9 @@ bool sort_by_priority(shared_ptr<SegmentTask> a, shared_ptr<SegmentTask> b)
 /**
  * Allocates the tasks to the hosts, respecting the servers computational capacity and the selected scheduling policy.
  */
-void DAGManager::perform_schedule()
+void DAGManager::perform_schedule(vector<shared_ptr<SegmentTask>> ready_tasks)
 {   
-    //Lists of tasks that are ready to be scheduled in the current instant of time
-    vector<shared_ptr<SegmentTask>> ready_tasks;
-    if (use_cache)
-    {
-        ready_tasks = get_ready_tasks_cache(); 
-    }    
-    else
-    {
-        ready_tasks = get_ready_tasks_from_requests(); 
-    }
+    //Lists of tasks that are ready to be scheduled in the current instant of time    
     if(SCHEDULING_ALGORITHM == SCHEDULING_HEFT || SCHEDULING_ALGORITHM == SCHEDULING_GEFT)
     {
         std::stable_sort(ready_tasks.begin(),ready_tasks.end(),sort_by_priority);
@@ -507,6 +550,11 @@ void DAGManager::perform_schedule()
         if (candidate_host == nullptr)
         {
             //XBT_INFO("no host found for task %s q queria o bus stop %s",task->get_cname(),segment->get_pref_host()->get_cname());
+            vector<string> result;
+            boost::split(result, task->get_name(), boost::is_any_of("-"));
+            std::string task_name =result[2];
+            std::string request_name = result[0]+"-"+ result[1];            
+            requests_delayed.insert(request_name);
             continue;
         }
         
