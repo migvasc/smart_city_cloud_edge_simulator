@@ -25,9 +25,30 @@ simgrid::s4u::Host* SchedulingHEFT::find_host(shared_ptr<SegmentTask> ready_task
     for(auto candidate_host :hosts )
     {        
         if((*hosts_cpuavailability)[candidate_host->get_name()]==0) continue;
+        
         //XBT_INFO("ANALIZANDO O HOST %s pra tarefa %s",candidate_host->get_cname(),ready_task->get_exec()->get_cname());
 
-        double compute_time = ready_task->get_exec()->get_remaining() / candidate_host->get_speed();
+        bool is_cloud_host = false;
+
+        const std::unordered_map<std::string, std::string> * host_properties = candidate_host-> get_properties();        
+        if (host_properties->find("host_type")!=host_properties->end())
+        {                           
+            std::string host_type = candidate_host->get_property("host_type");
+            if (host_type.compare("cloud_host")==0)
+            {
+                is_cloud_host = true;
+            }                        
+        }
+
+        double host_speed = candidate_host->get_speed();
+
+        if(is_cloud_host)
+        {
+            host_speed = candidate_host->get_pstate_speed(1);
+        }
+        
+        double compute_time = ready_task->get_exec()->get_remaining() / host_speed;
+        
         double comm_time = 0;
 
         //First, the communication from the parents

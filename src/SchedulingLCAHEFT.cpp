@@ -33,7 +33,8 @@ simgrid::s4u::Host* SchedulingLCAHEFT::find_host(shared_ptr<SegmentTask> ready_t
                 min_co2 = host_co2;
             }
         }
-    }        
+    }
+            
     return selected_host;
 }
 
@@ -52,7 +53,6 @@ double SchedulingLCAHEFT::calculate_co2(shared_ptr<SegmentTask> ready_task,simgr
 
     // We also need to remove the power consumed by the host, to update the available renewable energy info    
     const std::unordered_map<std::string, std::string> * host_properties = host-> get_properties();
-
     bool is_cloud_host = false;
 
     if (host_properties->find("host_type")!=host_properties->end())
@@ -172,8 +172,26 @@ double SchedulingLCAHEFT::calculate_co2(shared_ptr<SegmentTask> ready_task,simgr
 
 double SchedulingLCAHEFT::calculate_response_time(shared_ptr<SegmentTask> ready_task,simgrid::s4u::Host * host)
 {
+
+    double host_speed = host->get_speed();
+    bool is_cloud_host = false;
+    const std::unordered_map<std::string, std::string> * host_properties = host-> get_properties();        
     
-    double run_time = ready_task->get_exec()->get_remaining()/host->get_speed();
+    if (host_properties->find("host_type")!=host_properties->end())
+    {                           
+        std::string host_type = host->get_property("host_type");
+        if (host_type.compare("cloud_host")==0)
+        {
+            is_cloud_host = true;
+        }                        
+    }
+    
+    if(is_cloud_host)
+    {
+        host_speed = host->get_pstate_speed(1);
+    }
+        
+    double run_time = ready_task->get_exec()->get_remaining()/host_speed;
     double comm_time = 0;
 
     //First, the communication from the parents
