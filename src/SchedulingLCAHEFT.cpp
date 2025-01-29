@@ -1,4 +1,3 @@
-
 #include "SchedulingLCAHEFT.hpp"
 #include "Util.hpp"
 
@@ -98,7 +97,7 @@ double SchedulingLCAHEFT::calculate_co2(shared_ptr<SegmentTask> ready_task,simgr
     }
    
     host_consumed_energy = Util::convert_joules_to_wh(host_consumed_energy);
-    task_energy_consumption = (idle_power + dynamic_energy) * run_time;
+    task_energy_consumption = Util::convert_joules_to_wh( ((idle_power + dynamic_energy) * run_time) );
 
     if (has_renewable_infra)
     {
@@ -273,6 +272,7 @@ double SchedulingLCAHEFT::calculate_response_time(shared_ptr<SegmentTask> ready_
     }
 
     return run_time + comm_time;
+
 }
 
 
