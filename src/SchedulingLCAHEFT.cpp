@@ -80,7 +80,7 @@ double SchedulingLCAHEFT::calculate_co2(shared_ptr<SegmentTask> ready_task,simgr
     double power_per_core = (max_power - idle_power)/host->get_core_count();
 
     int cores_used =  host->get_core_count() - (*hosts_cpuavailability)[host->get_name()];
-    cores_used += 1 ; // to represent that we will allocate a task to this host
+    //cores_used += 1 ; // to represent that we will allocate a task to this host
 
     double dynamic_energy = cores_used * power_per_core;
     double task_energy_consumption = 0;
@@ -96,8 +96,11 @@ double SchedulingLCAHEFT::calculate_co2(shared_ptr<SegmentTask> ready_task,simgr
         has_renewable_infra = true;                                
     }
    
-    host_consumed_energy = Util::convert_joules_to_wh(host_consumed_energy);
-    task_energy_consumption = Util::convert_joules_to_wh( ((idle_power + dynamic_energy) * run_time) );
+    // Energy consumed until now  + energy that the host wil consume during this instant of time (executing other tasks and being idle)
+    host_consumed_energy = Util::convert_joules_to_wh(host_consumed_energy) + Util::convert_joules_to_wh( ((idle_power + dynamic_energy) * run_time) );
+    
+    // Amount of energy needed to execute the task
+    task_energy_consumption = Util::convert_joules_to_wh( power_per_core * run_time) ;
 
     if (has_renewable_infra)
     {

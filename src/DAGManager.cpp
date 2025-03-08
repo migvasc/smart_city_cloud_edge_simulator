@@ -282,14 +282,15 @@ void DAGManager::handle_message(Message* message)
                 handle_request_submission(static_cast<DAGOfTasks*>(message->data));        
                 break;      
             case MESSAGE_STOP:
+                update_hosts_energy_information();
                 requests_output->flush_buffer();
                 tasks_output->flush_buffer();
                 energy_output->flush_buffer();
-                co2_output->flush_buffer();
-                /*requests_output->close_buffer();
+                co2_output->flush_buffer();                
+                requests_output->close_buffer();
                 tasks_output->close_buffer();
                 energy_output->close_buffer();
-                */
+                
 
                 break;      
             default:
