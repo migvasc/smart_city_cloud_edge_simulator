@@ -39,6 +39,8 @@ WriteBuffer::~WriteBuffer()
 
 void WriteBuffer::append_text(const char * text)
 {
+    // Buffer is already closed
+    if(buffer == nullptr) return;
     const size_t text_length = strlen(text);
 
     // Is the buffer big enough?

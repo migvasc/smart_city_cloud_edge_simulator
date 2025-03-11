@@ -175,7 +175,13 @@ void DAGManager::init()
     }
     if( SCHEDULING_ALGORITHM == SCHEDULING_LCAHEFT)
     {
-        schedulingstrategy = new SchedulingLCAHEFT(&hosts_cpuavailability, local_grid_power_co2, cloud_dc_power_co2,  pv_panel_power_co2,  battery_power_co2,&hosts_renewable_energy,&hosts_batteries, &hosts_energy_consumption,&latency_cache);
+        std::vector<simgrid::s4u::Host*> all_hosts;
+        for (auto& host : simgrid::s4u::Engine::get_instance()->get_all_hosts())
+        {
+            all_hosts.push_back(host);
+        }
+
+        schedulingstrategy = new SchedulingLCAHEFT(&hosts_cpuavailability, local_grid_power_co2, cloud_dc_power_co2,  pv_panel_power_co2,  battery_power_co2,&hosts_renewable_energy,&hosts_batteries, &hosts_energy_consumption,&latency_cache,all_hosts);
     }
     if( SCHEDULING_ALGORITHM == SCHEDULING_CO2_NEIGHBOUR)
     {
@@ -441,10 +447,20 @@ void DAGManager::perform_schedule()
     {
         ready_tasks = get_ready_tasks_from_requests(); 
     }
-    if(SCHEDULING_ALGORITHM == SCHEDULING_HEFT || SCHEDULING_ALGORITHM == SCHEDULING_GEFT)
+
+    if (ready_tasks.size()>0)
     {
-        std::stable_sort(ready_tasks.begin(),ready_tasks.end(),sort_by_priority);
+        if(SCHEDULING_ALGORITHM == SCHEDULING_HEFT || SCHEDULING_ALGORITHM == SCHEDULING_LCAHEFT)
+        {
+            std::stable_sort(ready_tasks.begin(),ready_tasks.end(),sort_by_priority);
+        }
+
+        if (SCHEDULING_ALGORITHM == SCHEDULING_LCAHEFT)
+        {
+            ((SchedulingLCAHEFT*) schedulingstrategy)->update_sorted_hosts();
+        }
     }
+    
 
     for(auto& segment : ready_tasks)
     {

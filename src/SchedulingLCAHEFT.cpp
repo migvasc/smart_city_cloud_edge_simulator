@@ -1,7 +1,7 @@
 #include "SchedulingLCAHEFT.hpp"
 #include "Util.hpp"
 
-SchedulingLCAHEFT::SchedulingLCAHEFT(map<string, int> *hosts_cpu_availability_, ElectricityCO2eq* local_grid_power_co2_, ElectricityCO2eq* cloud_dc_power_co2_, double pv_panel_power_co2_, double battery_power_co2_,std::map<std::string, double> *hosts_renewable_energy_,std::map<std::string, LithiumIonBattery*> *hosts_batteries_, std::map<std::string, double> *hosts_energy_consumption_,std::unordered_map<std::string, double> *lat_cache)
+SchedulingLCAHEFT::SchedulingLCAHEFT(map<string, int> *hosts_cpu_availability_, ElectricityCO2eq* local_grid_power_co2_, ElectricityCO2eq* cloud_dc_power_co2_, double pv_panel_power_co2_, double battery_power_co2_,std::map<std::string, double> *hosts_renewable_energy_,std::map<std::string, LithiumIonBattery*> *hosts_batteries_, std::map<std::string, double> *hosts_energy_consumption_,std::unordered_map<std::string, double> *lat_cache, std::vector<simgrid::s4u::Host*> all_hosts)
 {
     hosts_cpuavailability =hosts_cpu_availability_;
     local_grid_power_co2 =local_grid_power_co2_;
@@ -12,6 +12,7 @@ SchedulingLCAHEFT::SchedulingLCAHEFT(map<string, int> *hosts_cpu_availability_, 
     hosts_batteries = hosts_batteries_;
     hosts_energy_consumption = hosts_energy_consumption_;
     latency_cache = lat_cache;
+    sorted_hosts =all_hosts; 
 }
 
 simgrid::s4u::Host* SchedulingLCAHEFT::find_host(shared_ptr<SegmentTask> ready_task)
@@ -21,7 +22,7 @@ simgrid::s4u::Host* SchedulingLCAHEFT::find_host(shared_ptr<SegmentTask> ready_t
     simgrid::s4u::Host* selected_host = nullptr;
     double min_co2 = 999999999999.0;
     double host_co2;
-    for (auto candidate_host : simgrid::s4u::Engine::get_instance()->get_all_hosts())
+    for (auto candidate_host : sorted_hosts)
     {
         if((*hosts_cpuavailability)[candidate_host->get_name()] > 0)
         {
@@ -284,5 +285,48 @@ double SchedulingLCAHEFT::get_host_co2_area(simgrid::s4u::Host* host,shared_ptr<
     // Variables to store co2 info
     double estimated_co2 = calculate_co2(ready_task,host);
     double estimated_response_time = calculate_response_time(ready_task,host);
-    return estimated_co2 * estimated_response_time;
+    return estimated_co2 * estimated_response_time;    
+}
+
+
+void SchedulingLCAHEFT::update_sorted_hosts()
+{
+    std::stable_sort(sorted_hosts.begin(),sorted_hosts.end(),
+        [this](simgrid::s4u::Host * a, simgrid::s4u::Host * b) -> bool 
+    {
+            bool is_host_a_cloud = false;
+            bool is_host_b_cloud = false;
+
+        const std::unordered_map<std::string, std::string> * host_a_properties = a-> get_properties();
+        const std::unordered_map<std::string, std::string> * host_b_properties = b-> get_properties();
+
+        if (host_a_properties->find("host_type")!=host_a_properties->end())
+        {               
+            std::string host_type = a->get_property("host_type");
+            if (host_type.compare("cloud_host")==0)
+            {
+                is_host_a_cloud = true;
+            }
+        }
+
+        if (host_b_properties->find("host_type")!=host_b_properties->end())
+        {               
+            std::string host_type = b->get_property("host_type");
+            if (host_type.compare("cloud_host")==0)
+            {
+                is_host_b_cloud = true;
+            }
+        }
+
+        if (is_host_a_cloud && (!is_host_b_cloud))
+        {
+            return false;
+        }
+        if ((!is_host_a_cloud) &&  is_host_b_cloud)
+        {
+            return true;
+        }
+
+        return  (*hosts_cpuavailability)[a->get_name()]  > (*hosts_cpuavailability)[b->get_name()];       
+    });
 }
