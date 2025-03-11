@@ -289,15 +289,10 @@ void DAGManager::handle_message(Message* message)
                 break;      
             case MESSAGE_STOP:
                 update_hosts_energy_information();
-                requests_output->flush_buffer();
-                tasks_output->flush_buffer();
-                energy_output->flush_buffer();
-                co2_output->flush_buffer();                
-                requests_output->close_buffer();
-                tasks_output->close_buffer();
-                energy_output->close_buffer();
-                
-
+                delete requests_output;
+                delete tasks_output;
+                delete energy_output;
+                delete co2_output;
                 break;      
             default:
                 break;
