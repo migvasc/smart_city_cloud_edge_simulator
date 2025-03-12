@@ -40,8 +40,10 @@ double LithiumIonBattery::discharge(double energy)
 
     level_of_energy = level_of_energy - energy_to_be_discharged;
 
-    
-    return energy_to_be_discharged;
+    stateOfCharge = level_of_energy/capacity;
+    // Energy that we succed to discharge :
+    double energy_discharged = energy_to_be_discharged * dischargeEfficiency;
+    return energy_discharged;
 
 }
 
