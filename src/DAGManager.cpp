@@ -451,8 +451,12 @@ void DAGManager::perform_schedule()
         }
 
         if (SCHEDULING_ALGORITHM == SCHEDULING_LCAHEFT)
-        {
+        {                                                                                    
             ((SchedulingLCAHEFT*) schedulingstrategy)->update_sorted_hosts();
+        }
+        if (SCHEDULING_ALGORITHM == SCHEDULING_FIXED_HOST_TYPE)
+        {                                                                                    
+            ((SchedulingHostType*) schedulingstrategy)->update_sorted_hosts();
         }
     }
     
@@ -551,8 +555,7 @@ void DAGManager::perform_schedule()
                 parent.second->complete();      
                 parent.second->get_exec()->unset_host();
             }     
-
-            //XBT_INFO("#START TASK;%s;%d;%s\n",task->get_cname(), hosts_cpuavailability[candidate_host->get_name()],candidate_host->get_cname());
+                         
             task->set_host(candidate_host);   
             simgrid::s4u::Actor::create("worker", segment->get_pref_host(), execute,task);        
 

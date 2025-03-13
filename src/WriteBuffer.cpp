@@ -74,6 +74,8 @@ void WriteBuffer::flush_buffer()
 {
     f.write(buffer, static_cast<std::streamsize>(buffer_pos));
     buffer_pos = 0;
+    // Force writing the text content to the file
+    f.flush();
 }
 
 void WriteBuffer::close_buffer()

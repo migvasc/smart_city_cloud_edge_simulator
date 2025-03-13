@@ -327,6 +327,7 @@ void SchedulingLCAHEFT::update_sorted_hosts()
             return true;
         }
 
-        return  (*hosts_cpuavailability)[a->get_name()]  > (*hosts_cpuavailability)[b->get_name()];       
+        return  (*hosts_cpuavailability)[a->get_name()]  < (*hosts_cpuavailability)[b->get_name()];       
+        
     });
 }
