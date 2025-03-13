@@ -83,7 +83,7 @@ void DAGManager::init()
 {
     // Used to access the parameters of the deploy file
     int arg_index = 1;
-
+    
     // Uses the parameter info to define which scheduling heuristic will be used
     SCHEDULING_ALGORITHM  = std::stoi(argsClass[arg_index]);
 
@@ -123,6 +123,8 @@ void DAGManager::init()
 
         // We init the auxilary map with the information of the energy consumption
         hosts_energy_consumption[host->get_name()] = 0.0;
+        hosts_energy_consumption_check_point[host->get_name()] = 0.0;
+
 
         // We init the host info for caching
         host_cache_mem_used[host->get_name()] = 0;        
@@ -222,6 +224,16 @@ void DAGManager::init()
         }
     }
 
+    // Validate usage of checkpoints
+
+    checkpoint_time = std::stod(argsClass[++arg_index]);
+    
+    if(checkpoint_time!=-1)
+    {
+        apply_checkpoint();
+    }
+
+
     // Log when a tasks starts
     simgrid::s4u::Exec::on_start_cb([this](simgrid::s4u::Exec const& exec) 
     {
@@ -267,6 +279,94 @@ void DAGManager::init()
     });    
 }
 
+
+void DAGManager::apply_checkpoint()
+{
+    sg_host_energy_update_all();
+
+    for (auto& host : simgrid::s4u::Engine::get_instance()->get_all_hosts())
+    { 
+        turn_host_off(host);
+    }
+    sg_host_energy_update_all();
+
+    simgrid::s4u::this_actor::sleep_for(checkpoint_time);
+    for (auto& host : simgrid::s4u::Engine::get_instance()->get_all_hosts())
+    { 
+        turn_host_on(host);
+    }
+    sg_host_energy_update_all();
+    std::string input_file = output_dir + ( std::to_string(int(checkpoint_time))+"_checkpoint.csv");
+    ifstream input = ifstream(input_file);
+    try {
+        string  nextLine;
+        while(getline(input,nextLine))
+        {                                    
+            std::vector<std::string> nextInput;				
+            boost::algorithm::split(nextInput, nextLine, boost::is_any_of(","));
+            std::string host_name = nextInput[0];
+            double energy = atof(nextInput[1].c_str());
+            double battery_loe = atof(nextInput[2].c_str());
+
+            if (hosts_pvpanels.find(host_name)!=hosts_pvpanels.end())
+            {
+                hosts_batteries[host_name]->setLevelOfEnergy(battery_loe);
+            }
+            
+            hosts_energy_consumption_check_point[host_name] = Util::convert_wh_to_joules(energy) ;
+
+        }
+        input.close();
+    } catch (const std::exception& e) 
+    {            
+        cout << "Error at PVPanel advance_time " << simgrid::s4u::this_actor::get_name()  << " " << e.what() << endl;
+    }		
+
+
+}
+
+void DAGManager::create_checkpoint()
+{
+
+    //First we validate if we can create the checkpoint :
+    // all the hosts are idle !
+    if (this->requests.size() > 0)
+    {
+            return;        
+    }
+
+    sg_host_energy_update_all();
+    
+    int time = int(round(simgrid::s4u::Engine::get_clock()));
+    WriteBuffer* checkpoint = new WriteBuffer(output_dir + ( std::to_string(time)+"_checkpoint.csv"));
+    for (auto& host : simgrid::s4u::Engine::get_instance()->get_all_hosts())
+    { 
+        double host_energy_consumption =   Util::convert_joules_to_wh(sg_host_get_consumed_energy(host) - hosts_energy_consumption[host->get_name()]);
+        double battery_level_of_energy = -1;
+
+        if (hosts_pvpanels.find(host->get_name())!=hosts_pvpanels.end())
+        {
+            battery_level_of_energy =hosts_batteries[host->get_name()]->getLevelOfEnergy(); 
+        }
+        
+        const int buf_size = 256;
+        int nb_printed;
+        (void) nb_printed; // Avoids a warning if assertions are ignored
+        char * buf = static_cast<char*>(malloc(sizeof(char) * buf_size));
+        snprintf(buf, buf_size,"%s,%f,%f\n", host->get_name().c_str(), host_energy_consumption,battery_level_of_energy);
+        checkpoint->append_text(buf);
+        free(buf);
+    }
+
+    delete checkpoint;
+    requests_output->flush_buffer();
+    tasks_output->flush_buffer();
+    energy_output->flush_buffer();
+    co2_output->flush_buffer();
+}
+
+
+
 void DAGManager::turn_host_off(simgrid::s4u::Host *host)
 {
     host->set_pstate(0);
@@ -294,6 +394,9 @@ void DAGManager::handle_message(Message* message)
                 delete energy_output;
                 delete co2_output;
                 break;      
+            case MESSAGE_CREATE_CHECKPOINT:
+                create_checkpoint();                
+                break;
             default:
                 break;
         }
@@ -635,7 +738,7 @@ simgrid::s4u::Host* DAGManager::find_host(shared_ptr<SegmentTask> ready_task)
 
 void DAGManager::update_battery_state(simgrid::s4u::Host* host)
 {
-    double host_energy_consumption =   Util::convert_joules_to_wh(sg_host_get_consumed_energy(host) - hosts_energy_consumption[host->get_name()]);
+    double host_energy_consumption =   Util::convert_joules_to_wh(sg_host_get_consumed_energy(host) - hosts_energy_consumption[host->get_name()] +  hosts_energy_consumption_check_point[host->get_name()] );
     double brown_energy_wh   = host_energy_consumption; 
     double energy_discharged = 0.0; 
     double renewable_power_prod =0;
@@ -720,7 +823,7 @@ void DAGManager::update_battery_state(simgrid::s4u::Host* host)
     snprintf(buf, buf_size,"%f;%s;%f;%f;%f;%f\n",simgrid::s4u::Engine::get_clock(),host->get_cname(),(grid_co2+battery_co2+solar_co2),grid_co2,battery_co2,solar_co2);
     co2_output->append_text(buf);
     free(buf);
- 
+     
 }
 
 /**
@@ -743,7 +846,8 @@ void DAGManager::update_hosts_energy_information()
         
         // Finally, we update the information of the host energy consumed
         hosts_energy_consumption[host->get_name()] =  sg_host_get_consumed_energy(host);
-
+        // We already used the checkpoint, now we can reset it
+        hosts_energy_consumption_check_point[host->get_name()] =  0.0;
 
         const std::unordered_map<std::string, std::string> * host_properties = host-> get_properties();
         if(host_properties->find("host_type")!=host_properties->end())
@@ -806,7 +910,6 @@ void DAGManager::evaluate_turn_on_or_off()
         number_of_tasks_allocated[host->get_name()] = 0;
     }    
 }
-
 
 /**
  * Returns the host that is closest to a given host in terms of network latency.

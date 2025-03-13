@@ -12,6 +12,7 @@ public:
     explicit DAGDispatcher(std::vector<std::string> args);
     void operator()();
     static void send_DAG_of_tasks(simgrid::xbt::ReplayAction& action);
+    static void  create_checkpoint(simgrid::xbt::ReplayAction& action);
     static void stop(simgrid::xbt::ReplayAction& action);
     static void wait_for(double time);
     

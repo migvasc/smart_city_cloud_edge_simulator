@@ -23,6 +23,12 @@
 #include "SchedulingHostType.hpp"
 
 #include "WriteBuffer.hpp"
+#include <string>
+#include <iostream>
+#include <fstream>
+#include <boost/algorithm/string.hpp>
+#include <limits>
+#include <cmath>
 
 using namespace std::chrono; 
 
@@ -41,7 +47,7 @@ private:
   int SCHEDULING_GEFT = 7;
   int SCHEDULING_BASELINE_ON_OFF = 8;
   int SCHEDULING_CO2_NEIGHBOUR = 9;
-
+  double checkpoint_time = 0;
 
   SchedulingStrategy *schedulingstrategy;
   // Host for the algorithm where all the tasks are scheduled to it (for example, offloading everything to the cloud)
@@ -109,6 +115,7 @@ private:
 
   // Temporary map to include solar panels of hosts
   std::map<std::string, double> hosts_energy_consumption;
+  std::map<std::string, double> hosts_energy_consumption_check_point;
 
   // Envelope with available renewable energy for 5 min 
   std::map<std::string, double> hosts_renewable_energy;
@@ -159,13 +166,17 @@ private:
 public:
   explicit DAGManager(std::vector<std::string> args);
   void operator()();
-  void handle_task_finished(simgrid::s4u::Exec const& exec);
+  void handle_task_finished(simgrid::s4u::Exec const& exec);  
   void finish_request(const std::string last_task_id);  
   simgrid::s4u::Host* find_host(shared_ptr<SegmentTask> ready_task);
   simgrid::s4u::Host* find_host_bestfit(shared_ptr<SegmentTask> ready_task);
   simgrid::s4u::Host* find_host_HEFT(shared_ptr<SegmentTask> ready_task, bool renewable_energy_required);
   simgrid::s4u::Host* find_host_baseline(shared_ptr<SegmentTask> ready_task);
   simgrid::s4u::Host* find_host_renewable_energy(shared_ptr<SegmentTask> ready_task);
+
+  // Check points methods
+  void apply_checkpoint();
+  void create_checkpoint();
 
 };
 #endif

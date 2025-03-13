@@ -92,3 +92,14 @@ double LithiumIonBattery::getDischargeEfficiency()
 {
     return dischargeEfficiency;    
 }
+
+
+double LithiumIonBattery::getLevelOfEnergy()
+{
+    return level_of_energy;
+}
+
+void LithiumIonBattery::setLevelOfEnergy(double loe)
+{
+    level_of_energy = loe;
+}

@@ -79,6 +79,8 @@ public:
     double getUsableWattsHour();
     double getChargeEfficiency(); 
     double getDischargeEfficiency();
+    double getLevelOfEnergy();
+    void setLevelOfEnergy(double loe);
     /**
      * Sets the battery state of charge manually 
      * @param aSoC a double that represents the battery state of charge

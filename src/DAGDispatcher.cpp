@@ -54,3 +54,11 @@ void DAGDispatcher::wait_for(double time){
          
 }
 
+void DAGDispatcher::create_checkpoint(simgrid::xbt::ReplayAction& action){
+    double time  =  std::stod(action[2]);
+    wait_for(time);
+    MailBoxSingleton::get_instance()->send_message("dagmanager",new Message(MESSAGE_CREATE_CHECKPOINT));
+
+
+}
+

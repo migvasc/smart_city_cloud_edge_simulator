@@ -41,9 +41,8 @@ int main(int argc, char* argv[])
 
   /* Register the class and methods that will read the trace file */
   xbt_replay_action_register("send_DAG", DAGDispatcher::send_DAG_of_tasks);
-  //xbt_replay_action_register("sendVM", VMDispatcher::sendVM);
-  
   xbt_replay_action_register("stop", DAGDispatcher::stop);
+  xbt_replay_action_register("create_checkpoint", DAGDispatcher::create_checkpoint);
   e.set_config("network/latency-factor:1");
   /* Run the simulation */
   e.run();

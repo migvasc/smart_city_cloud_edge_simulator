@@ -15,8 +15,8 @@ WriteBuffer::WriteBuffer(const std::string & filename, size_t buffer_size)
 {
     xbt_assert(buffer_size > 0, "Invalid buffer size (%zu)", buffer_size);
     buffer = new char[buffer_size];
-
-    f.open(filename, std::ios_base::trunc);
+    file_path = filename;
+    f.open(filename, std::ios_base::trunc);    
     xbt_assert(f.is_open(), "Cannot write file '%s'", filename.c_str());
 }
 
@@ -73,7 +73,10 @@ void WriteBuffer::append_text(const char * text)
 void WriteBuffer::flush_buffer()
 {
     f.write(buffer, static_cast<std::streamsize>(buffer_pos));
+    f.flush(); // Força gravação imediata no disco
     buffer_pos = 0;
+    //f.close();
+    //f.open(file_path, std::ios_base::trunc);    
 }
 
 void WriteBuffer::close_buffer()

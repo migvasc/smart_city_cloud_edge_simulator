@@ -49,6 +49,7 @@ public:
     void flush_buffer();
     void close_buffer();
 private:
+    std::string file_path;
     std::ofstream f;            //!< The file stream on which the buffer is outputted
     const size_t buffer_size;   //!< The buffer maximum size
     char * buffer = nullptr;    //!< The buffer
