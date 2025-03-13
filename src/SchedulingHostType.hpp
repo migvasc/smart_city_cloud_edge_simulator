@@ -15,5 +15,7 @@ std::vector<simgrid::s4u::Host*> selected_host_type_array;
 public:
     SchedulingHostType(map<string, int> *hosts_cpu_availability, std::vector<simgrid::s4u::Host*> selected_host_type_array);
     simgrid::s4u::Host* find_host(shared_ptr<SegmentTask> ready_task);
+    void update_sorted_hosts();
+
 };
 #endif

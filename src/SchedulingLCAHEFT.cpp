@@ -1,7 +1,7 @@
 #include "SchedulingLCAHEFT.hpp"
 #include "Util.hpp"
 
-SchedulingLCAHEFT::SchedulingLCAHEFT(map<string, int> *hosts_cpu_availability_, ElectricityCO2eq* local_grid_power_co2_, ElectricityCO2eq* cloud_dc_power_co2_, double pv_panel_power_co2_, double battery_power_co2_,std::map<std::string, double> *hosts_renewable_energy_,std::map<std::string, LithiumIonBattery*> *hosts_batteries_, std::map<std::string, double> *hosts_energy_consumption_,std::unordered_map<std::string, double> *lat_cache, std::vector<simgrid::s4u::Host*> all_hosts)
+SchedulingLCAHEFT::SchedulingLCAHEFT(map<string, int> *hosts_cpu_availability_, ElectricityCO2eq* local_grid_power_co2_, ElectricityCO2eq* cloud_dc_power_co2_, double pv_panel_power_co2_, double battery_power_co2_,std::map<std::string, double> *hosts_renewable_energy_,std::map<std::string, LithiumIonBattery*> *hosts_batteries_, std::map<std::string, double> *hosts_energy_consumption_,std::map<std::string, double> *hosts_energy_consumption_checkpoint_,std::unordered_map<std::string, double> *lat_cache, std::vector<simgrid::s4u::Host*> all_hosts)
 {
     hosts_cpuavailability =hosts_cpu_availability_;
     local_grid_power_co2 =local_grid_power_co2_;
@@ -11,6 +11,7 @@ SchedulingLCAHEFT::SchedulingLCAHEFT(map<string, int> *hosts_cpu_availability_, 
     hosts_renewable_energy = hosts_renewable_energy_;
     hosts_batteries = hosts_batteries_;
     hosts_energy_consumption = hosts_energy_consumption_;
+    hosts_energy_consumption_check_point = hosts_energy_consumption_checkpoint_;
     latency_cache = lat_cache;
     sorted_hosts =all_hosts; 
 }
@@ -46,7 +47,7 @@ double SchedulingLCAHEFT::calculate_co2(shared_ptr<SegmentTask> ready_task,simgr
     double grid_energy_wh    = 0.0; 
     double renewable_energy_used = 0;
     double energy_discharged  = 0;
-    double host_consumed_energy =  sg_host_get_consumed_energy(host) -  (*hosts_energy_consumption)[host->get_name()]  ;
+    double host_consumed_energy =  sg_host_get_consumed_energy(host) -  (*hosts_energy_consumption)[host->get_name()] + -  (*hosts_energy_consumption_check_point)[host->get_name()]  ;
     double renewable_power_timeslot = 0; 
     double available_renewable_energy = 0;
     double available_battery_energy = 0;
@@ -327,6 +328,7 @@ void SchedulingLCAHEFT::update_sorted_hosts()
             return true;
         }
 
-        return  (*hosts_cpuavailability)[a->get_name()]  > (*hosts_cpuavailability)[b->get_name()];       
+        return  (*hosts_cpuavailability)[a->get_name()]  < (*hosts_cpuavailability)[b->get_name()];       
+        
     });
 }

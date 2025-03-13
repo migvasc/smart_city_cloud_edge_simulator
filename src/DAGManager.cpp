@@ -183,7 +183,7 @@ void DAGManager::init()
             all_hosts.push_back(host);
         }
 
-        schedulingstrategy = new SchedulingLCAHEFT(&hosts_cpuavailability, local_grid_power_co2, cloud_dc_power_co2,  pv_panel_power_co2,  battery_power_co2,&hosts_renewable_energy,&hosts_batteries, &hosts_energy_consumption,&latency_cache,all_hosts);
+        schedulingstrategy = new SchedulingLCAHEFT(&hosts_cpuavailability, local_grid_power_co2, cloud_dc_power_co2,  pv_panel_power_co2,  battery_power_co2,&hosts_renewable_energy,&hosts_batteries, &hosts_energy_consumption, &hosts_energy_consumption_check_point,&latency_cache,all_hosts);
     }
     if( SCHEDULING_ALGORITHM == SCHEDULING_CO2_NEIGHBOUR)
     {
@@ -321,6 +321,11 @@ void DAGManager::apply_checkpoint()
     {            
         cout << "Error at PVPanel advance_time " << simgrid::s4u::this_actor::get_name()  << " " << e.what() << endl;
     }		
+
+    while(next_time_to_update <checkpoint_time )
+    {
+        next_time_to_update+=timeslot_duration;
+    }
 
 
 }
@@ -554,8 +559,12 @@ void DAGManager::perform_schedule()
         }
 
         if (SCHEDULING_ALGORITHM == SCHEDULING_LCAHEFT)
-        {
+        {                                                                                    
             ((SchedulingLCAHEFT*) schedulingstrategy)->update_sorted_hosts();
+        }
+        if (SCHEDULING_ALGORITHM == SCHEDULING_FIXED_HOST_TYPE)
+        {                                                                                    
+            ((SchedulingHostType*) schedulingstrategy)->update_sorted_hosts();
         }
     }
     
@@ -654,8 +663,7 @@ void DAGManager::perform_schedule()
                 parent.second->complete();      
                 parent.second->get_exec()->unset_host();
             }     
-
-            //XBT_INFO("#START TASK;%s;%d;%s\n",task->get_cname(), hosts_cpuavailability[candidate_host->get_name()],candidate_host->get_cname());
+                         
             task->set_host(candidate_host);   
             simgrid::s4u::Actor::create("worker", segment->get_pref_host(), execute,task);        
 

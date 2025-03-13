@@ -75,8 +75,8 @@ void WriteBuffer::flush_buffer()
     f.write(buffer, static_cast<std::streamsize>(buffer_pos));
     f.flush(); // Força gravação imediata no disco
     buffer_pos = 0;
-    //f.close();
-    //f.open(file_path, std::ios_base::trunc);    
+    // Force writing the text content to the file
+    f.flush();
 }
 
 void WriteBuffer::close_buffer()
